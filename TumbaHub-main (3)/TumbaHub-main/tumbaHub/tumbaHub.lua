@@ -103,6 +103,15 @@ Mega.LoadModule("features/bot.lua")
 -- Load the main GUI
 Mega.LoadModule("gui/main_window.lua")
 
+-- Auto-load last configuration and start 5s background save
+if Mega.ConfigSystem then
+    task.spawn(function()
+        Mega.ConfigSystem.LoadLastConfig()
+        Mega.ConfigSystem.StartAutosave(5)
+    end)
+end
+
+
 print("🔥 TUMBA MEGA SYSTEM (Refactored) LOADED SUCCESSFULLY!")
 print("🎮 Use RightShift to open the menu")
 

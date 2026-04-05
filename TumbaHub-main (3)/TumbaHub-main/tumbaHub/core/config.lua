@@ -127,3 +127,45 @@ function Mega.ConfigSystem.GetList()
     
     return list
 end
+
+function Mega.ConfigSystem.LoadLastConfig()
+    if not isfile or not readfile then return end
+    
+    local lastPath = "tumbaHub/configs/LastConfig.txt"
+    if isfile(lastPath) then
+        local success, name = pcall(readfile, lastPath)
+        if success and name ~= "" then
+            Mega.ConfigSystem.Load(name)
+            if Mega.Localization then
+                Mega.Localization.CurrentLanguage = Mega.LoadLanguage() -- Restore language separately just in case
+            end
+            return true
+        end
+    end
+    
+    -- Default fallback if nothing was saved
+    if isfile("tumbaHub/configs/TumbaConfig_default.json") then
+        Mega.ConfigSystem.Load("default")
+        return true
+    end
+    return false
+end
+
+function Mega.ConfigSystem.StartAutosave(interval)
+    task.spawn(function()
+        while task.wait(interval or 5) do
+            if Mega.Unloaded then break end
+            
+            -- Deterministic choice of what to save to
+            local targetName = "default"
+            local lastPath = "tumbaHub/configs/LastConfig.txt"
+            if isfile and isfile(lastPath) then
+                local s, name = pcall(readfile, lastPath)
+                if s and name ~= "" then targetName = name end
+            end
+            
+            Mega.ConfigSystem.Save(targetName)
+        end
+    end)
+end
+
