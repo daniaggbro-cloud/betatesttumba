@@ -255,6 +255,7 @@ local function getClosestPlayer()
     return closestPlayer
 end
 
+local function aimbotLoop()
     local targetPlayer = (States.AimAssist.Active and States.AimAssist.Enabled) and getClosestPlayer() or nil
     UpdateTargetHUD(targetPlayer)
     
