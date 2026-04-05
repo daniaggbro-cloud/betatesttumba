@@ -71,5 +71,23 @@ UI.CreateButton(TabFrame, "button_aim_fov_color", function() Mega.ShowNotificati
 --#region -- Aim Keybind
 UI.CreateSection(TabFrame, "section_aim_key")
 UI.CreateKeybindButton(TabFrame, "keybind_aim", "Keybinds.AimAssist")
+UI.CreateToggle(TabFrame, "toggle_aim_mobile_btn", "AimAssist.MobileBtn", function(state)
+    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("aimassist", state) end
+end)
+
+-- Register mobile button
+if Mega.MobileHUD then
+    Mega.MobileHUD.CreateActionButton("aimassist", "Aim", "rbxassetid://6031215966", function()
+        local newState = not Mega.States.AimAssist.Enabled
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_aim"] then
+            Mega.Objects.Toggles["toggle_aim"](newState)
+        end
+    end, function() return Mega.States.AimAssist.Enabled end)
+    
+    task.spawn(function()
+        task.wait(1)
+        Mega.MobileHUD.SetVisible("aimassist", Mega.States.AimAssist.MobileBtn)
+    end)
+end
 --#endregion
 

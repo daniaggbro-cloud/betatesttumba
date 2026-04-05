@@ -60,8 +60,27 @@ end, {
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
-    UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
+    UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura"),
+    UI.CreateToggle(nil, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)
+        if Mega.MobileHUD then Mega.MobileHUD.SetVisible("killaura", state) end
+    end)
 })
+
+-- Register mobile button
+if Mega.MobileHUD then
+    Mega.MobileHUD.CreateActionButton("killaura", "Killaura", "rbxassetid://6031280882", function()
+        local newState = not Mega.States.Combat.Killaura.Enabled
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_killaura"] then
+            Mega.Objects.Toggles["toggle_killaura"](newState)
+        end
+    end, function() return Mega.States.Combat.Killaura.Enabled end)
+    
+    -- Load state slightly delayed to ensure settings are loaded
+    task.spawn(function()
+        task.wait(1)
+        Mega.MobileHUD.SetVisible("killaura", Mega.States.Combat.Killaura.MobileBtn)
+    end)
+end
 --#endregion
 
 --#region -- Bed Nuke

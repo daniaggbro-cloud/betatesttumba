@@ -108,8 +108,26 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_scaffold", "Player.Scaffold.Enable
 end, {
     UI.CreateKeybindButton(nil, "keybind_scaffold", "Keybinds.Scaffold"),
     UI.CreateSlider(nil, "slider_scaffold_yoffset", "Player.Scaffold.YOffset", -100, 0, function(val) Mega.States.Player.Scaffold.YOffset = val / 10 end),
-    UI.CreateSlider(nil, "slider_scaffold_predict", "Player.Scaffold.Predict", 0, 100, function(val) Mega.States.Player.Scaffold.Predict = val / 100 end)
+    UI.CreateSlider(nil, "slider_scaffold_predict", "Player.Scaffold.Predict", 0, 100, function(val) Mega.States.Player.Scaffold.Predict = val / 100 end),
+    UI.CreateToggle(nil, "toggle_scaffold_mobile_btn", "Player.Scaffold.MobileBtn", function(state)
+        if Mega.MobileHUD then Mega.MobileHUD.SetVisible("scaffold", state) end
+    end)
 })
+
+-- Register mobile button
+if Mega.MobileHUD then
+    Mega.MobileHUD.CreateActionButton("scaffold", "Scaffold", "rbxassetid://6034818379", function()
+        local newState = not Mega.States.Player.Scaffold.Enabled
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_scaffold"] then
+            Mega.Objects.Toggles["toggle_scaffold"](newState)
+        end
+    end, function() return Mega.States.Player.Scaffold.Enabled end)
+    
+    task.spawn(function()
+        task.wait(1)
+        Mega.MobileHUD.SetVisible("scaffold", Mega.States.Player.Scaffold.MobileBtn)
+    end)
+end
 --#endregion
 
 --#region -- Misc Movement
