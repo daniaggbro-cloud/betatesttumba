@@ -41,6 +41,7 @@ UI.CreateSection(TabFrame, "section_aim_settings")
 UI.CreateToggle(TabFrame, "toggle_aim_show_fov", "AimAssist.ShowFOV")
 UI.CreateToggle(TabFrame, "toggle_aim_silent", "AimAssist.SilentAim")
 UI.CreateToggle(TabFrame, "toggle_aim_prediction", "AimAssist.Prediction")
+UI.CreateToggle(TabFrame, "toggle_aim_target_hud", "AimAssist.TargetHUD")
 UI.CreateToggle(TabFrame, "toggle_aim_toggle_mode", "AimAssist.ToggleMode")
 
 UI.CreateSlider(TabFrame, "slider_aim_fov", "AimAssist.FOV", 10, 1500)
