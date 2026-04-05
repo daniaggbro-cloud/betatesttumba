@@ -416,7 +416,7 @@ ToggleButton.Position = UDim2.new(0.5, -25, 0, 20) -- Center Top
 ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 ToggleButton.BackgroundTransparency = 0 -- Solid background for photo
 -- Вставь сюда RAW-ссылку на свою картинку на GitHub!
-local customLogoUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/tumbahub_logo.png"
+local customLogoUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/Gemini_Generated_Image_icht6ficht6ficht.png"
 ToggleButton.Image = Mega.GetImageFromURL(customLogoUrl, "TumbaHub_CustomLogo.png")
 ToggleButton.ImageColor3 = Color3.new(1, 1, 1)
 ToggleButton.Active = true
