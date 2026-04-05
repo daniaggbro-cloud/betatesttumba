@@ -103,7 +103,11 @@ Mega.LoadModule("core/config.lua")
 -- Load libraries
 Mega.LoadModule("library/notifications.lua")
 Mega.LoadModule("library/ui_builder.lua")
-Mega.LoadModule("core/mobile_hud.lua")
+
+-- Load Mobile HUD only if touch is supported
+if Services.UserInputService.TouchEnabled then
+    Mega.LoadModule("core/mobile_hud.lua")
+end
 
 -- Load features
 Mega.LoadModule("features/esp.lua")

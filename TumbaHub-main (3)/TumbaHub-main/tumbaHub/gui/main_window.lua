@@ -69,7 +69,8 @@ Mega.Objects.MenuScale = MenuScale
 
 local function UpdateScale()
     local viewportSize = Services.Workspace.CurrentCamera.ViewportSize
-    local isMobile = Services.UserInputService.TouchEnabled
+    -- Detection: Touch enabled but NO keyboard = Phone/Tablet
+    local isRealMobile = Services.UserInputService.TouchEnabled and not Services.UserInputService.KeyboardEnabled
     
     local baseWidth = 1100
     local baseHeight = 650
@@ -78,7 +79,7 @@ local function UpdateScale()
     local scaleY = viewportSize.Y / (baseHeight + 50)
     local targetScale = math.min(scaleX, scaleY)
     
-    if isMobile then
+    if isRealMobile then
         -- On mobile, we want to use as much screen as possible while staying centered
         targetScale = math.clamp(targetScale, 0.4, 0.95)
     else
