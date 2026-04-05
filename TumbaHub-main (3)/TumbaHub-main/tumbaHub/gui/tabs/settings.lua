@@ -139,6 +139,21 @@ UI.CreateToggle(TabFrame, "toggle_mobile_button", "Temp.ShowMobileButton", funct
         Mega.Services.CoreGui.TumbaMobileToggle.Enabled = state
     end
 end)
+
+-- New Mobile HUD Section
+UI.CreateSection(TabFrame, "section_settings_mobile_hud")
+
+UI.CreateToggle(TabFrame, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)
+    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("killaura", state) end
+end)
+
+UI.CreateToggle(TabFrame, "toggle_aim_mobile_btn", "AimAssist.MobileBtn", function(state)
+    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("aimassist", state) end
+end)
+
+UI.CreateToggle(TabFrame, "toggle_scaffold_mobile_btn", "Player.Scaffold.MobileBtn", function(state)
+    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("scaffold", state) end
+end)
 --#endregion
 
 --#region -- Config Management

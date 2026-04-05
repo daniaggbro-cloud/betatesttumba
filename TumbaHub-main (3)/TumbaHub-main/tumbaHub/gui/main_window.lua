@@ -65,6 +65,31 @@ MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 
 -- UIScale for smart responsiveness
 local MenuScale = Instance.new("UIScale", MainFrame)
+Mega.Objects.MenuScale = MenuScale
+
+local function UpdateScale()
+    local viewportSize = Services.Workspace.CurrentCamera.ViewportSize
+    local isMobile = Services.UserInputService.TouchEnabled
+    
+    local baseWidth = 1100
+    local baseHeight = 650
+    
+    local scaleX = viewportSize.X / (baseWidth + 50)
+    local scaleY = viewportSize.Y / (baseHeight + 50)
+    local targetScale = math.min(scaleX, scaleY)
+    
+    if isMobile then
+        -- On mobile, we want to use as much screen as possible while staying centered
+        targetScale = math.clamp(targetScale, 0.4, 0.95)
+    else
+        targetScale = math.clamp(targetScale, 0.5, 1)
+    end
+    
+    MenuScale.Scale = targetScale
+end
+
+UpdateScale()
+Mega.Objects.Connections.MenuScaleUpdate = Services.Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
 MainFrame.BackgroundColor3 = Settings.Menu.BackgroundColor
 MainFrame.BackgroundTransparency = Settings.Menu.Transparency
 MainFrame.BorderSizePixel = 0
