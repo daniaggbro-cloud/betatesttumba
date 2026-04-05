@@ -401,6 +401,9 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
 
     local listening = false
     KeybindButton.MouseButton1Click:Connect(function()
+        if UserInputService.TouchEnabled then
+            ShowNotification("📱 На телефоне лучше включи галочку 'Показывать на экране' в самом низу!", 5)
+        end
         listening = true
         KeybindButton.Text = GetText("keybind_listening")
     end)

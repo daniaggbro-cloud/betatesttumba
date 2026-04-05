@@ -60,7 +60,8 @@ local isMobile = Services.UserInputService.TouchEnabled
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 1100, 0, 650)
-MainFrame.Position = UDim2.new(0.5, -550, 0.5, -325)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 
 -- UIScale for smart responsiveness
 local MenuScale = Instance.new("UIScale", MainFrame)
