@@ -34,7 +34,12 @@ function Mega.GetImageFromURL(url, fileName)
                 writefile(fileName, data)
             end)
         end
-        return getcustomasset(fileName)
+        if isfile(fileName) then
+            local customAsset = getcustomasset(fileName)
+            if customAsset and string.match(customAsset, "rbxasset://.*%w+") then
+                return customAsset
+            end
+        end
     end
     return "rbxassetid://13388222306" -- Fallback if exploit doesn't support custom assets
 end

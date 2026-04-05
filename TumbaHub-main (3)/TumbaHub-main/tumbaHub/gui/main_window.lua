@@ -439,31 +439,43 @@ shadow.ImageTransparency = 0.6
 shadow.ZIndex = -1
 
 -- Custom Smooth Drag Logic (Replaces deprecated Draggable)
-local dragging, dragStart, startPos
+-- Custom Smooth Drag Logic with Click Detection
+local dragging = false
+local dragStart = nil
+local startPos = nil
+local hasDragged = false
+
 ToggleButton.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
+        hasDragged = false
         dragStart = input.Position
         startPos = ToggleButton.Position
     end
 end)
+
 Services.UserInputService.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
+        if delta.Magnitude > 5 then
+            hasDragged = true
+        end
         Services.TweenService:Create(ToggleButton, TweenInfo.new(0.08, Enum.EasingStyle.Sine), {
             Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         }):Play()
     end
 end)
+
 Services.UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
+        if dragging then
+            dragging = false
+            if not hasDragged then
+                -- Register as a click if we didn't drag it!
+                TumbaGUI.Enabled = not TumbaGUI.Enabled
+            end
+        end
     end
-end)
-
--- Click logic
-ToggleButton.MouseButton1Click:Connect(function()
-    TumbaGUI.Enabled = not TumbaGUI.Enabled
 end)
 
 -- Dynamic Updater
