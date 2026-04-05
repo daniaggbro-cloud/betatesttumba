@@ -143,12 +143,15 @@ end, {
 local function onRenderStep()
     local char = Mega.Services.LocalPlayer.Character
     if not char then return end
+    
+    local humanoid = char:FindFirstChild("Humanoid")
+    if not humanoid then return end
 
     if Mega.States.Player.Speed then
-        char.Humanoid.WalkSpeed = Mega.States.Player.SpeedValue
+        humanoid.WalkSpeed = Mega.States.Player.SpeedValue
     else
-        if char.Humanoid.WalkSpeed == Mega.States.Player.SpeedValue then
-             char.Humanoid.WalkSpeed = 16 -- Default speed
+        if humanoid.WalkSpeed == Mega.States.Player.SpeedValue then
+             humanoid.WalkSpeed = 16 -- Default speed
         end
     end
 end
