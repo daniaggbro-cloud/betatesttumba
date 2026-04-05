@@ -343,7 +343,7 @@ function Mega.UpdateStatus()
     local activeCount = 0
     local function AddStatus(text, color)
         local item = Instance.new("Frame", StatusIndicator)
-        item.Size = UDim2.new(0, Services.TextService:GetTextSize(text, 14, Enum.Font.GothamBold).X + 24, 0, 28)
+        item.Size = UDim2.new(0, Services.TextService:GetTextSize(text, 14, Enum.Font.GothamBold, Vector2.new(1000, 1000)).X + 24, 0, 28)
         item.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
         item.BackgroundTransparency = 0.3
         item.LayoutOrder = activeCount
