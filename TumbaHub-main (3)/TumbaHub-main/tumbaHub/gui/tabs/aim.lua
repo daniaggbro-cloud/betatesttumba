@@ -41,8 +41,9 @@ UI.CreateSection(TabFrame, "section_aim_settings")
 UI.CreateToggle(TabFrame, "toggle_aim_show_fov", "AimAssist.ShowFOV")
 UI.CreateToggle(TabFrame, "toggle_aim_silent", "AimAssist.SilentAim")
 UI.CreateToggle(TabFrame, "toggle_aim_prediction", "AimAssist.Prediction")
+UI.CreateToggle(TabFrame, "toggle_aim_toggle_mode", "AimAssist.ToggleMode")
 
-UI.CreateSlider(TabFrame, "slider_aim_fov", "AimAssist.FOV", 10, 500)
+UI.CreateSlider(TabFrame, "slider_aim_fov", "AimAssist.FOV", 10, 1500)
 UI.CreateSlider(TabFrame, "slider_aim_smooth", "AimAssist.Smoothness", 0, 100, function(val)
     Mega.States.AimAssist.Smoothness = val / 100 -- Convert from 0-100 to 0-1
 end)

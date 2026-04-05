@@ -9,6 +9,8 @@ local Camera = Services.Workspace.CurrentCamera
 
 local aimbotConnection = nil
 local fovCircle = nil
+local aimInputBeganConnection = nil
+local aimInputEndedConnection = nil
 
 local function updateFovCircle()
     if not fovCircle then
@@ -46,15 +48,15 @@ local function getClosestPlayer()
                 end
 
                 local targetPosition, onScreen = Camera:WorldToViewportPoint(root.Position)
-            if onScreen then
-                    local distance = (mousePosition - Vector2.new(targetPosition.X, targetPosition.Y)).Magnitude
-                    if distance <= (States.AimAssist.FOV or 120) then
+                if onScreen then
+                    local fovDistance = (mousePosition - Vector2.new(targetPosition.X, targetPosition.Y)).Magnitude
+                    if fovDistance <= (States.AimAssist.FOV or 120) then
                         local lpPos = localPlayer.Character and localPlayer.Character.PrimaryPart and localPlayer.Character.PrimaryPart.Position
                         local realDistance = lpPos and (lpPos - root.Position).Magnitude or 0
                         
                         if realDistance <= (States.AimAssist.Range or 100) then
-                            if distance < closestDistance then
-                                closestDistance = distance
+                            if realDistance < closestDistance then
+                                closestDistance = realDistance
                                 closestPlayer = player
                             end
                         end
@@ -95,22 +97,36 @@ function Mega.Features.Aimbot.SetEnabled(state)
     States.AimAssist.Enabled = state
     updateFovCircle()
     if state then
+        -- Default to Toggle Mode if nil
+        if States.AimAssist.ToggleMode == nil then States.AimAssist.ToggleMode = true end
+
         -- Listen for key press to activate aim
         local function getAimKey()
             return Enum.KeyCode[States.Keybinds.AimAssist or "R"]
         end
 
-        Services.UserInputService.InputBegan:Connect(function(input, gp)
-            if gp then return end
-            if input.KeyCode == getAimKey() then
-                States.AimAssist.Active = true
-            end
-        end)
-        Services.UserInputService.InputEnded:Connect(function(input)
-            if input.KeyCode == getAimKey() then
-                States.AimAssist.Active = false
-            end
-        end)
+        if not aimInputBeganConnection then
+            aimInputBeganConnection = Services.UserInputService.InputBegan:Connect(function(input, gp)
+                if gp then return end
+                if input.KeyCode == getAimKey() then
+                    if States.AimAssist.ToggleMode then
+                        States.AimAssist.Active = not States.AimAssist.Active
+                    else
+                        States.AimAssist.Active = true
+                    end
+                end
+            end)
+        end
+        
+        if not aimInputEndedConnection then
+            aimInputEndedConnection = Services.UserInputService.InputEnded:Connect(function(input)
+                if input.KeyCode == getAimKey() then
+                    if not States.AimAssist.ToggleMode then
+                        States.AimAssist.Active = false
+                    end
+                end
+            end)
+        end
         
         if not aimbotConnection then
             aimbotConnection = Services.RunService.RenderStepped:Connect(aimbotLoop)
@@ -119,6 +135,14 @@ function Mega.Features.Aimbot.SetEnabled(state)
         if aimbotConnection then
             aimbotConnection:Disconnect()
             aimbotConnection = nil
+        end
+        if aimInputBeganConnection then
+            aimInputBeganConnection:Disconnect()
+            aimInputBeganConnection = nil
+        end
+        if aimInputEndedConnection then
+            aimInputEndedConnection:Disconnect()
+            aimInputEndedConnection = nil
         end
         States.AimAssist.Active = false
     end
