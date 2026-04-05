@@ -29,19 +29,22 @@ local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumb
 function Mega.GetImageFromURL(url, fileName)
     if isfile and writefile and getcustomasset then
         if not isfile(fileName) then
-            pcall(function()
-                local data = game:HttpGet(url)
+            local success, data = pcall(function() return game:HttpGet(url) end)
+            if success and data and #data > 0 then
                 writefile(fileName, data)
-            end)
+            else
+                warn("TumbaHub: Failed to download image from " .. url)
+            end
         end
         if isfile(fileName) then
             local customAsset = getcustomasset(fileName)
-            if customAsset and string.match(customAsset, "rbxasset://.*%w+") then
+            if customAsset then
                 return customAsset
             end
         end
     end
-    return "rbxassetid://13388222306" -- Fallback if exploit doesn't support custom assets
+    -- Ultimate Fallback (Classic Tumba Logo)
+    return "rbxassetid://13388222306"
 end
 
 -- Module Loader
