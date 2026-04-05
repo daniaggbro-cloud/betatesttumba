@@ -59,13 +59,11 @@ local isMobile = Services.UserInputService.TouchEnabled
 -- Draggable Main Frame
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-if isMobile then
-    MainFrame.Size = UDim2.new(0.95, 0, 0.9, 0)
-    MainFrame.Position = UDim2.new(0.025, 0, 0.05, 0)
-else
-    MainFrame.Size = UDim2.new(0, 1100, 0, 650)
-    MainFrame.Position = UDim2.new(0.5, -550, 0.5, -325)
-end
+MainFrame.Size = UDim2.new(0, 1100, 0, 650)
+MainFrame.Position = UDim2.new(0.5, -550, 0.5, -325)
+
+-- UIScale for smart responsiveness
+local MenuScale = Instance.new("UIScale", MainFrame)
 MainFrame.BackgroundColor3 = Settings.Menu.BackgroundColor
 MainFrame.BackgroundTransparency = Settings.Menu.Transparency
 MainFrame.BorderSizePixel = 0
@@ -152,11 +150,7 @@ Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 10)
 
 -- Sidebar & Content
 local Sidebar = Instance.new("Frame")
-if isMobile then
-    Sidebar.Size = UDim2.new(0, 150, 1, -65)
-else
-    Sidebar.Size = UDim2.new(0, 200, 1, -65)
-end
+Sidebar.Size = UDim2.new(0, 200, 1, -65)
 Sidebar.Position = UDim2.new(0, 10, 0, 60)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 Sidebar.BackgroundTransparency = 0.3
@@ -174,13 +168,8 @@ local TabListLayout = Instance.new("UIListLayout", TabContainer)
 TabListLayout.Padding = UDim.new(0, 3)
 
 local ContentContainer = Instance.new("Frame")
-if isMobile then
-    ContentContainer.Size = UDim2.new(1, -170, 1, -70)
-    ContentContainer.Position = UDim2.new(0, 160, 0, 60)
-else
-    ContentContainer.Size = UDim2.new(1, -230, 1, -70)
-    ContentContainer.Position = UDim2.new(0, 220, 0, 60)
-end
+ContentContainer.Size = UDim2.new(1, -230, 1, -70)
+ContentContainer.Position = UDim2.new(0, 220, 0, 60)
 ContentContainer.BackgroundTransparency = 1
 ContentContainer.Parent = MainFrame
 Mega.Objects.ContentContainer = ContentContainer
@@ -188,7 +177,7 @@ Mega.Objects.ContentContainer = ContentContainer
 -- Minimize Logic
 local isMinimized = false
 local originalSize = MainFrame.Size
-local miniSize = isMobile and UDim2.new(0.95, 0, 0, 55) or UDim2.new(0, 220, 0, 55)
+local miniSize = UDim2.new(0, 220, 0, 55)
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     local targetSize = isMinimized and miniSize or originalSize
@@ -391,10 +380,21 @@ function Mega.UpdateStatus()
     if States.Player.NoClip then AddStatus("NoClip", Color3.fromRGB(150, 255, 150)) end
 end
 
--- Auto-update status
+-- Auto-update status and apply UIScale
 Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
     if TumbaGUI.Enabled then
         Mega.UpdateStatus()
+    end
+    
+    -- Smart UI Scaling for Main Menu
+    if workspace.CurrentCamera then
+        local vp = workspace.CurrentCamera.ViewportSize
+        -- If width < 1200 or height < 700 we need to scale down
+        if vp.X > 0 and vp.Y > 0 then
+            local scaleX = (vp.X * 0.95) / 1100
+            local scaleY = (vp.Y * 0.90) / 650
+            MenuScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.3, 1)
+        end
     end
 end)
 
@@ -506,16 +506,21 @@ if not Mega.HasSavedLanguage() then
     LanguagePrompt.Parent = Services.CoreGui
     LanguagePrompt.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    local isMobile = Services.UserInputService.TouchEnabled
-
     local Background = Instance.new("Frame")
-    if isMobile then
-        Background.Size = UDim2.new(0.9, 0, 0.8, 0)
-        Background.Position = UDim2.new(0.05, 0, 0.1, 0)
-    else
-        Background.Size = UDim2.new(0, 300, 0, 470)
-        Background.Position = UDim2.new(0.5, -150, 0.5, -210)
-    end
+    Background.Size = UDim2.new(0, 300, 0, 470)
+    Background.Position = UDim2.new(0.5, -150, 0.5, -210)
+    
+    local LangScale = Instance.new("UIScale", Background)
+    local LangScaleUpdate = Services.RunService.RenderStepped:Connect(function()
+        if workspace.CurrentCamera then
+            local vp = workspace.CurrentCamera.ViewportSize
+            if vp.X > 0 and vp.Y > 0 then
+                local scaleX = (vp.X * 0.95) / 300
+                local scaleY = (vp.Y * 0.90) / 470
+                LangScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.3, 1)
+            end
+        end
+    end)
     Background.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     Background.BorderSizePixel = 0
     Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 10)
@@ -548,6 +553,10 @@ if not Mega.HasSavedLanguage() then
         Mega.Localization.CurrentLanguage = lang
         Mega.SaveLanguage(lang)
         LoadStartupConfig()
+        
+        -- Clean up scale loop
+        pcall(function() LangScaleUpdate:Disconnect() end)
+        
         LanguagePrompt:Destroy()
         if Mega.ShowNotification then
             Mega.ShowNotification("Меню открывается на RightShift", 5)
