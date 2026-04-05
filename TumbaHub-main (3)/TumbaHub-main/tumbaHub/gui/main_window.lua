@@ -54,11 +54,18 @@ TumbaGUI.ResetOnSpawn = false
 TumbaGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 Mega.Objects.GUI = TumbaGUI
 
+local isMobile = Services.UserInputService.TouchEnabled
+
 -- Draggable Main Frame
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 1100, 0, 650)
-MainFrame.Position = UDim2.new(0.5, -550, 0.5, -325)
+if isMobile then
+    MainFrame.Size = UDim2.new(0.95, 0, 0.9, 0)
+    MainFrame.Position = UDim2.new(0.025, 0, 0.05, 0)
+else
+    MainFrame.Size = UDim2.new(0, 1100, 0, 650)
+    MainFrame.Position = UDim2.new(0.5, -550, 0.5, -325)
+end
 MainFrame.BackgroundColor3 = Settings.Menu.BackgroundColor
 MainFrame.BackgroundTransparency = Settings.Menu.Transparency
 MainFrame.BorderSizePixel = 0
@@ -145,7 +152,11 @@ Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 10)
 
 -- Sidebar & Content
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 200, 1, -65)
+if isMobile then
+    Sidebar.Size = UDim2.new(0, 150, 1, -65)
+else
+    Sidebar.Size = UDim2.new(0, 200, 1, -65)
+end
 Sidebar.Position = UDim2.new(0, 10, 0, 60)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 Sidebar.BackgroundTransparency = 0.3
@@ -163,8 +174,13 @@ local TabListLayout = Instance.new("UIListLayout", TabContainer)
 TabListLayout.Padding = UDim.new(0, 3)
 
 local ContentContainer = Instance.new("Frame")
-ContentContainer.Size = UDim2.new(1, -230, 1, -70)
-ContentContainer.Position = UDim2.new(0, 220, 0, 60)
+if isMobile then
+    ContentContainer.Size = UDim2.new(1, -170, 1, -70)
+    ContentContainer.Position = UDim2.new(0, 160, 0, 60)
+else
+    ContentContainer.Size = UDim2.new(1, -230, 1, -70)
+    ContentContainer.Position = UDim2.new(0, 220, 0, 60)
+end
 ContentContainer.BackgroundTransparency = 1
 ContentContainer.Parent = MainFrame
 Mega.Objects.ContentContainer = ContentContainer
@@ -172,7 +188,7 @@ Mega.Objects.ContentContainer = ContentContainer
 -- Minimize Logic
 local isMinimized = false
 local originalSize = MainFrame.Size
-local miniSize = UDim2.new(0, 220, 0, 55)
+local miniSize = isMobile and UDim2.new(0.95, 0, 0, 55) or UDim2.new(0, 220, 0, 55)
 MinimizeButton.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     local targetSize = isMinimized and miniSize or originalSize
@@ -490,9 +506,16 @@ if not Mega.HasSavedLanguage() then
     LanguagePrompt.Parent = Services.CoreGui
     LanguagePrompt.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
+    local isMobile = Services.UserInputService.TouchEnabled
+
     local Background = Instance.new("Frame")
-    Background.Size = UDim2.new(0, 300, 0, 470)
-    Background.Position = UDim2.new(0.5, -150, 0.5, -210)
+    if isMobile then
+        Background.Size = UDim2.new(0.9, 0, 0.8, 0)
+        Background.Position = UDim2.new(0.05, 0, 0.1, 0)
+    else
+        Background.Size = UDim2.new(0, 300, 0, 470)
+        Background.Position = UDim2.new(0.5, -150, 0.5, -210)
+    end
     Background.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     Background.BorderSizePixel = 0
     Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 10)
