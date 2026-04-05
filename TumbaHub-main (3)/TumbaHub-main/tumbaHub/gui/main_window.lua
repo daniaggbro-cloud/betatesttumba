@@ -382,6 +382,48 @@ Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStep
     end
 end)
 
+-- Mobile Toggle GUI
+if Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
+    Services.CoreGui.TumbaMobileToggle:Destroy()
+end
+
+-- Always create the GUI, but maybe warn if we are on PC, or just rely on TouchEnabled
+if Services.UserInputService.TouchEnabled then
+    local MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
+    MobileGUI.Name = "TumbaMobileToggle"
+    MobileGUI.ResetOnSpawn = false
+    MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    
+    local ToggleButton = Instance.new("TextButton", MobileGUI)
+    ToggleButton.Name = "ToggleButton"
+    ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+    ToggleButton.Position = UDim2.new(0.5, -25, 0, 20) -- Center Top
+    ToggleButton.BackgroundColor3 = Settings.Menu.BackgroundColor
+    ToggleButton.BackgroundTransparency = 0.3
+    ToggleButton.Text = "T"
+    ToggleButton.TextColor3 = Settings.Menu.AccentColor
+    ToggleButton.TextSize = 28
+    ToggleButton.Font = Enum.Font.GothamBlack
+    ToggleButton.Active = true
+    ToggleButton.Draggable = true
+    
+    Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
+    local btnStroke = Instance.new("UIStroke", ToggleButton)
+    btnStroke.Color = Settings.Menu.AccentColor
+    btnStroke.Thickness = 2
+    btnStroke.Transparency = 0.2
+    
+    ToggleButton.MouseButton1Click:Connect(function()
+        TumbaGUI.Enabled = not TumbaGUI.Enabled
+    end)
+    
+    -- Keep color in sync
+    Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
+        ToggleButton.TextColor3 = Settings.Menu.AccentColor
+        btnStroke.Color = Settings.Menu.AccentColor
+    end)
+end
+
 end -- End of Mega.InitializeMainGUI
 
 local function LoadStartupConfig()
