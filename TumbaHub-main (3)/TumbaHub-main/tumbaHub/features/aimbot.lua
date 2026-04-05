@@ -230,21 +230,20 @@ local function getClosestPlayer()
             
             if root and hum and hum.Health > 0 then
                 -- Team check to prevent aiming at friends
-                if player.Team and localPlayer.Team and player.Team == localPlayer.Team then
-                    continue
-                end
-
-                local targetPosition, onScreen = Camera:WorldToViewportPoint(root.Position)
-                if onScreen then
-                    local fovDistance = (mousePosition - Vector2.new(targetPosition.X, targetPosition.Y)).Magnitude
-                    if fovDistance <= (States.AimAssist.FOV or 120) then
-                        local lpPos = localPlayer.Character and localPlayer.Character.PrimaryPart and localPlayer.Character.PrimaryPart.Position
-                        local realDistance = lpPos and (lpPos - root.Position).Magnitude or 0
-                        
-                        if realDistance <= (States.AimAssist.Range or 100) then
-                            if realDistance < closestDistance then
-                                closestDistance = realDistance
-                                closestPlayer = player
+                local isTeammate = player.Team and localPlayer.Team and player.Team == localPlayer.Team
+                if not isTeammate then
+                    local targetPosition, onScreen = Camera:WorldToViewportPoint(root.Position)
+                    if onScreen then
+                        local fovDistance = (mousePosition - Vector2.new(targetPosition.X, targetPosition.Y)).Magnitude
+                        if fovDistance <= (States.AimAssist.FOV or 120) then
+                            local lpPos = localPlayer.Character and localPlayer.Character.PrimaryPart and localPlayer.Character.PrimaryPart.Position
+                            local realDistance = lpPos and (lpPos - root.Position).Magnitude or 0
+                            
+                            if realDistance <= (States.AimAssist.Range or 100) then
+                                if realDistance < closestDistance then
+                                    closestDistance = realDistance
+                                    closestPlayer = player
+                                end
                             end
                         end
                     end
