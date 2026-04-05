@@ -46,7 +46,12 @@ end
 
 local ItemMeta = {}
 pcall(function()
-    ItemMeta = require(Services.ReplicatedStorage.TS.item["item-meta"]).items
+    local envParams = getrenv and getrenv() or _ENV
+    if envParams.require then
+        ItemMeta = envParams.require(Services.ReplicatedStorage.TS.item["item-meta"]).items
+    else
+        ItemMeta = require(Services.ReplicatedStorage.TS.item["item-meta"]).items
+    end
 end)
 
 for _, name in ipairs({"TumbaChestESP", "TumbaChestESP_V2", "TumbaChestESP_V3", "TumbaChestESP_V4", "TumbaChestESP_V5"}) do

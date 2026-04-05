@@ -28,7 +28,8 @@ table.clear(connections)
 task.spawn(function()
     local function hookKnockback(modulePath, controllerName)
         pcall(function()
-            local knockbackModule = require(modulePath)
+            local envParams = getrenv and getrenv() or _ENV
+            local knockbackModule = envParams.require and envParams.require(modulePath) or require(modulePath)
             if knockbackModule then
                 local controller = knockbackModule[controllerName] or knockbackModule.default
                 if controller then
