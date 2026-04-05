@@ -473,12 +473,14 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     local SettingsLayout = Instance.new("UIListLayout", SettingsContainer)
     SettingsLayout.Padding = UDim.new(0, 8)
     SettingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     
     -- This will make the container resize automatically based on its children
     SettingsContainer.AutomaticSize = Enum.AutomaticSize.Y
     
     -- Parent all the setting elements to the container
-    for _, element in ipairs(settingsElements or {}) do
+    for i, element in ipairs(settingsElements or {}) do
+        element.LayoutOrder = i
         element.Parent = SettingsContainer
     end
 
@@ -488,10 +490,8 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     SettingsButton.MouseButton1Click:Connect(function()
         isExpanded = not isExpanded
         
-        -- Wait a frame for the content size to be calculated
-        task.wait()
-        
-        local settingsHeight = SettingsContainer.AbsoluteSize.Y
+        -- Safe height calculation (UIListLayout AbsoluteContentSize handles AutomaticSize timing issues)
+        local settingsHeight = SettingsLayout.AbsoluteContentSize.Y
         local targetHeight = isExpanded and (initialHeight + settingsHeight + ComponentLayout.Padding.Offset) or initialHeight
         
         local tween = TweenService:Create(ComponentFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Size = UDim2.new(0.95, 0, 0, targetHeight) })

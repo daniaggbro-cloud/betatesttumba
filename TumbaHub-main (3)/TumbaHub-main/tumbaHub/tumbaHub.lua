@@ -26,6 +26,19 @@ Mega = {
 
 local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
 
+function Mega.GetImageFromURL(url, fileName)
+    if isfile and writefile and getcustomasset then
+        if not isfile(fileName) then
+            pcall(function()
+                local data = game:HttpGet(url)
+                writefile(fileName, data)
+            end)
+        end
+        return getcustomasset(fileName)
+    end
+    return "rbxassetid://13388222306" -- Fallback if exploit doesn't support custom assets
+end
+
 -- Module Loader
 function Mega.LoadModule(path)
     if Mega.LoadedModules[path] then
