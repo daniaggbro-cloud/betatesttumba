@@ -38,6 +38,7 @@ end)
 
 local function isShopItem(v)
     if not v then return false end
+    if not v:IsDescendantOf(Services.Workspace) then return true end
     if v:FindFirstAncestorOfClass("ViewportFrame") then return true end
     
     local pg = Services.LocalPlayer:FindFirstChild("PlayerGui")
