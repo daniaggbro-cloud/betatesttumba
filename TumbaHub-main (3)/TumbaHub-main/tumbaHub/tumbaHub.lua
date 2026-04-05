@@ -112,7 +112,7 @@ if queue_on_teleport then
     local teleportCode = [[
         task.wait(1)
         if isfile and readfile then
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/baconthegamer69-hash/TumbaHub/main/tumbaHub/tumbaHub.lua"))()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/refs/heads/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/tumbaHub.lua", true))()
             end
     ]]
     queue_on_teleport(teleportCode)

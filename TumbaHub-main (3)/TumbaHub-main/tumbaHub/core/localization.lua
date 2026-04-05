@@ -183,6 +183,8 @@ Mega.Localization = {
         ["keybind_scaffold"] = { ru = "🔑 Клавиша Scaffold", en = "🔑 Scaffold Key", es = "🔑 Tecla Scaffold", pt = "🔑 Tecla Scaffold", ko = "🔑 스캐폴드 키", ja = "🔑 足場キー", uk = "🔑 Клавіша Scaffold" },
         ["toggle_aim_silent"] = { ru = "Тихий прицел", en = "Silent Aim", es = "Puntería Silenciosa", pt = "Mira Silenciosa", ko = "무음 조준", ja = "サイレントエイム", uk = "Тихий приціл" },
         ["toggle_aim_prediction"] = { ru = "Предсказание движения", en = "Movement Prediction", es = "Predicción de Movimiento", pt = "Previsão de Movimento", ko = "움직임 예측", ja = "移動予測", uk = "Передбачення руху" },
+        ["toggle_aim_target_hud"] = { ru = "Отображать Target HUD", en = "Show Target HUD", es = "Mostrar Target HUD", pt = "Mostrar Target HUD", ko = "Target HUD 표시", ja = "Target HUD 表示", uk = "Відображати Target HUD" },
+        ["toggle_aim_toggle_mode"] = { ru = "Режим переключения (Toggle)", en = "Toggle Mode", es = "Modo de alternancia (Toggle)", pt = "Modo de alternância (Toggle)", ko = "전환 모드 (Toggle)", ja = "切り替えモード (Toggle)", uk = "Режим перемикання (Toggle)" },
         ["section_player_movement"] = { ru = "⚡ ДВИЖЕНИЕ", en = "⚡ MOVEMENT", es = "⚡ MOVIMIENTO", pt = "⚡ MOVIMENTO", ko = "⚡ 이동", ja = "⚡ 移動", uk = "⚡ РУХ" },
         ["toggle_speed"] = { ru = "Спидхак", en = "Speedhack", es = "Hack de Velocidad", pt = "Hack de Velocidade", ko = "속도 해킹", ja = "スピードハック", uk = "Спідхак" },
         ["slider_speed"] = { ru = "Скорость", en = "Speed", es = "Velocidad", pt = "Velocidade", ko = "속도", ja = "速度", uk = "Швидкість" },
