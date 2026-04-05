@@ -387,42 +387,86 @@ if Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
     Services.CoreGui.TumbaMobileToggle:Destroy()
 end
 
--- Always create the GUI, but maybe warn if we are on PC, or just rely on TouchEnabled
-if Services.UserInputService.TouchEnabled then
-    local MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
-    MobileGUI.Name = "TumbaMobileToggle"
-    MobileGUI.ResetOnSpawn = false
-    MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    
-    local ToggleButton = Instance.new("TextButton", MobileGUI)
-    ToggleButton.Name = "ToggleButton"
-    ToggleButton.Size = UDim2.new(0, 50, 0, 50)
-    ToggleButton.Position = UDim2.new(0.5, -25, 0, 20) -- Center Top
-    ToggleButton.BackgroundColor3 = Settings.Menu.BackgroundColor
-    ToggleButton.BackgroundTransparency = 0.3
-    ToggleButton.Text = "T"
-    ToggleButton.TextColor3 = Settings.Menu.AccentColor
-    ToggleButton.TextSize = 28
-    ToggleButton.Font = Enum.Font.GothamBlack
-    ToggleButton.Active = true
-    ToggleButton.Draggable = true
-    
-    Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
-    local btnStroke = Instance.new("UIStroke", ToggleButton)
+-- Premium Mobile Button GUI
+local MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
+MobileGUI.Name = "TumbaMobileToggle"
+MobileGUI.ResetOnSpawn = false
+MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+local ToggleButton = Instance.new("ImageButton", MobileGUI)
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0.5, -25, 0, 20) -- Center Top
+ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+ToggleButton.BackgroundTransparency = 0.2
+ToggleButton.Image = "rbxassetid://6031090990" -- Sleek menu icon
+ToggleButton.ImageColor3 = Color3.new(1, 1, 1)
+ToggleButton.Active = true
+
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
+
+local btnStroke = Instance.new("UIStroke", ToggleButton)
+btnStroke.Color = Settings.Menu.AccentColor
+btnStroke.Thickness = 2.5
+btnStroke.Transparency = 0.1
+
+-- Glowing drop shadow
+local shadow = Instance.new("ImageLabel", ToggleButton)
+shadow.Size = UDim2.new(1, 20, 1, 20)
+shadow.Position = UDim2.new(0, -10, 0, -10)
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://1316045217"
+shadow.ImageColor3 = Settings.Menu.AccentColor
+shadow.ImageTransparency = 0.6
+shadow.ZIndex = -1
+
+-- Custom Smooth Drag Logic (Replaces deprecated Draggable)
+local dragging, dragStart, startPos
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleButton.Position
+    end
+end)
+Services.UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.08, Enum.EasingStyle.Sine), {
+            Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        }):Play()
+    end
+end)
+Services.UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- Click logic
+ToggleButton.MouseButton1Click:Connect(function()
+    TumbaGUI.Enabled = not TumbaGUI.Enabled
+end)
+
+-- Dynamic Updater
+Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
     btnStroke.Color = Settings.Menu.AccentColor
-    btnStroke.Thickness = 2
-    btnStroke.Transparency = 0.2
+    shadow.ImageColor3 = Settings.Menu.AccentColor
     
-    ToggleButton.MouseButton1Click:Connect(function()
-        TumbaGUI.Enabled = not TumbaGUI.Enabled
-    end)
+    -- Sync visibility with Settings
+    local showBtn = Settings.Menu.ShowMobileButton
+    if showBtn == nil then showBtn = Services.UserInputService.TouchEnabled end
+    MobileGUI.Enabled = showBtn
     
-    -- Keep color in sync
-    Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
-        ToggleButton.TextColor3 = Settings.Menu.AccentColor
-        btnStroke.Color = Settings.Menu.AccentColor
-    end)
-end
+    -- Visual feedback based on open state
+    if TumbaGUI.Enabled then
+        btnStroke.Transparency = 0.1
+        shadow.ImageTransparency = 0.4
+    else
+        btnStroke.Transparency = 0.3
+        shadow.ImageTransparency = 0.8
+    end
+end)
 
 end -- End of Mega.InitializeMainGUI
 

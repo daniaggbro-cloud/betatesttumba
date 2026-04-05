@@ -127,6 +127,18 @@ Mega.States.Temp.ShowNotifications = Mega.Settings.System.ShowNotifications
 UI.CreateToggle(TabFrame, "toggle_show_notifications", "Temp.ShowNotifications", function(state)
     Mega.Settings.System.ShowNotifications = state
 end)
+
+if Mega.Settings.Menu.ShowMobileButton == nil then
+    Mega.Settings.Menu.ShowMobileButton = Mega.Services.UserInputService.TouchEnabled
+end
+Mega.States.Temp.ShowMobileButton = Mega.Settings.Menu.ShowMobileButton
+UI.CreateToggle(TabFrame, "toggle_mobile_button", "Temp.ShowMobileButton", function(state)
+    Mega.Settings.Menu.ShowMobileButton = state
+    -- Instantly toggle visibility if the GUI exists
+    if Mega.Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
+        Mega.Services.CoreGui.TumbaMobileToggle.Enabled = state
+    end
+end)
 --#endregion
 
 --#region -- Config Management
