@@ -442,7 +442,7 @@ ToggleButton.Position = UDim2.new(0.5, -25, 0, 20) -- Center Top
 ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 ToggleButton.BackgroundTransparency = 0 -- Solid background for photo
 -- Вставь сюда RAW-ссылку на свою картинку на GitHub!
-local customLogoUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/Gemini_Generated_Image_icht6ficht6ficht.png"
+local customLogoUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/%D0%97%D0%BD%D1%96%D0%BC%D0%BE%D0%BA%20%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202026-04-06%20004609.png"
 ToggleButton.Image = Mega.GetImageFromURL(customLogoUrl, "TumbaHub_CustomLogo.png")
 ToggleButton.ImageColor3 = Color3.new(1, 1, 1)
 ToggleButton.Active = true
@@ -510,8 +510,8 @@ Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:C
     shadow.ImageColor3 = Settings.Menu.AccentColor
     
     -- Sync visibility with Settings
-    local showBtn = Settings.Menu.ShowMobileButton
-    if showBtn == nil then showBtn = Services.UserInputService.TouchEnabled end
+    local showBtn = Settings.Menu.ShowMenuIcon
+    if showBtn == nil then showBtn = true end -- Default to true
     MobileGUI.Enabled = showBtn
     
     -- Visual feedback based on open state

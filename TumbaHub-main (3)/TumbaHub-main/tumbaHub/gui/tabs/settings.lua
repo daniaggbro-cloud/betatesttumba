@@ -128,12 +128,12 @@ UI.CreateToggle(TabFrame, "toggle_show_notifications", "Temp.ShowNotifications",
     Mega.Settings.System.ShowNotifications = state
 end)
 
-if Mega.Settings.Menu.ShowMobileButton == nil then
-    Mega.Settings.Menu.ShowMobileButton = Mega.Services.UserInputService.TouchEnabled
+if Mega.Settings.Menu.ShowMenuIcon == nil then
+    Mega.Settings.Menu.ShowMenuIcon = true -- Default to true for both platforms
 end
-Mega.States.Temp.ShowMobileButton = Mega.Settings.Menu.ShowMobileButton
-UI.CreateToggle(TabFrame, "toggle_mobile_button", "Temp.ShowMobileButton", function(state)
-    Mega.Settings.Menu.ShowMobileButton = state
+Mega.States.Temp.ShowMenuIcon = Mega.Settings.Menu.ShowMenuIcon
+UI.CreateToggle(TabFrame, "toggle_menu_icon", "Temp.ShowMenuIcon", function(state)
+    Mega.Settings.Menu.ShowMenuIcon = state
     -- Instantly toggle visibility if the GUI exists
     if Mega.Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
         Mega.Services.CoreGui.TumbaMobileToggle.Enabled = state
