@@ -437,10 +437,11 @@ MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
 local ToggleButton = Instance.new("ImageButton", MobileGUI)
 ToggleButton.Name = "ToggleButton"
-ToggleButton.Size = UDim2.new(0, 50, 0, 50)
-ToggleButton.Position = UDim2.new(0.5, -25, 0, 20) -- Center Top
-ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-ToggleButton.BackgroundTransparency = 0 -- Solid background for photo
+ToggleButton.Name = "TumbaMenuIcon"
+ToggleButton.Size = UDim2.new(0, 44, 0, 44) -- Slightly smaller for elegance
+ToggleButton.Position = UDim2.new(0.5, -22, 0, 15) -- Perfect Top Center
+ToggleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+ToggleButton.BackgroundTransparency = 0.1
 -- Вставь сюда RAW-ссылку на свою картинку на GitHub!
 local customLogoUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/%D0%97%D0%BD%D1%96%D0%BC%D0%BE%D0%BA%20%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202026-04-06%20004609.png"
 ToggleButton.Image = Mega.GetImageFromURL(customLogoUrl, "TumbaHub_Logo_vFinal.png")
@@ -451,17 +452,24 @@ Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
 
 local btnStroke = Instance.new("UIStroke", ToggleButton)
 btnStroke.Color = Settings.Menu.AccentColor
-btnStroke.Thickness = 2.5
-btnStroke.Transparency = 0.1
+btnStroke.Thickness = 1.8 -- Thinner, sharper border
+btnStroke.Transparency = 0.05
+btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Secondary Internal Shine for detailing
+local innerStroke = Instance.new("UIStroke", ToggleButton)
+innerStroke.Color = Color3.new(1, 1, 1)
+innerStroke.Thickness = 0.8
+innerStroke.Transparency = 0.6 -- Subtle white inner rim
 
 -- Glowing drop shadow
 local shadow = Instance.new("ImageLabel", ToggleButton)
-shadow.Size = UDim2.new(1, 20, 1, 20)
-shadow.Position = UDim2.new(0, -10, 0, -10)
+shadow.Size = UDim2.new(1, 24, 1, 24)
+shadow.Position = UDim2.new(0, -12, 0, -12)
 shadow.BackgroundTransparency = 1
 shadow.Image = "rbxassetid://1316045217"
 shadow.ImageColor3 = Settings.Menu.AccentColor
-shadow.ImageTransparency = 0.6
+shadow.ImageTransparency = 0.5 -- More intense glow
 shadow.ZIndex = -1
 
 -- Custom Smooth Drag Logic (Replaces deprecated Draggable)
