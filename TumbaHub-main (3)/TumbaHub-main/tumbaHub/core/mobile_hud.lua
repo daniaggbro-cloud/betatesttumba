@@ -139,5 +139,3 @@ function Mega.MobileHUD.SetVisible(id, isVisible)
         Mega.Objects.MobileButtons[id].Visible = isVisible
     end
 end
-
-print("📱 Mobile HUD Module loaded!")

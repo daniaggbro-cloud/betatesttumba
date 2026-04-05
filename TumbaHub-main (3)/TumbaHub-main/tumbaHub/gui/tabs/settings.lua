@@ -129,7 +129,7 @@ UI.CreateToggle(TabFrame, "toggle_show_notifications", "Temp.ShowNotifications",
 end)
 
 if Mega.Settings.Menu.ShowMenuIcon == nil then
-    Mega.Settings.Menu.ShowMenuIcon = true -- Default to true for both platforms
+    Mega.Settings.Menu.ShowMenuIcon = false -- Default to false for all platforms, player must explicitly enable it
 end
 Mega.States.Temp.ShowMenuIcon = Mega.Settings.Menu.ShowMenuIcon
 UI.CreateToggle(TabFrame, "toggle_menu_icon", "Temp.ShowMenuIcon", function(state)

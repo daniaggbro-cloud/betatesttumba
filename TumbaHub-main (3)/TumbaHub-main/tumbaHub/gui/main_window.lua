@@ -520,7 +520,7 @@ Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:C
     
     -- Sync visibility with Settings
     local showBtn = Settings.Menu.ShowMenuIcon
-    if showBtn == nil then showBtn = true end -- Default to true
+    if showBtn == nil then showBtn = false end -- Default to false
     MobileGUI.Enabled = showBtn
     
     -- Visual feedback based on open state
