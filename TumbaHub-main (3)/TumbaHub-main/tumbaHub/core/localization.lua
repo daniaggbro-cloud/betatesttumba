@@ -127,6 +127,17 @@ Mega.Localization = {
         ["toggle_bot_spider"] = { ru = "Авто-Спайдер", en = "Auto-Spider", es = "Auto-Araña", pt = "Auto-Aranha", ko = "자동 스파이더", ja = "オートスパイダー", uk = "Авто-Спайдер" },
         ["title_bar"] = { ru = "💎 TUMBA MEGA SYSTEM v%s 💎", en = "💎 TUMBA MEGA SYSTEM v%s 💎", es = "💎 SISTEMA MEGA TUMBA v%s 💎", pt = "💎 SISTEMA MEGA TUMBA v%s 💎", ko = "💎 TUMBA 메가 시스템 v%s 💎", ja = "💎 TUMBA メガシステム v%s 💎", uk = "💎 TUMBA MEGA SYSTEM v%s 💎" },
         ["title_bar_with_tab"] = { ru = "💎 %s - TUMBA MEGA SYSTEM 💎", en = "💎 %s - TUMBA MEGA SYSTEM 💎", es = "💎 %s - SISTEMA MEGA TUMBA 💎", pt = "💎 %s - SISTEMA MEGA TUMBA 💎", ko = "💎 %s - TUMBA 메가 시스템 💎", ja = "💎 %s - TUMBA メガシステム 💎", uk = "💎 %s - TUMBA MEGA SYSTEM 💎" },
+        ["toggle_esp_names"] = { ru = "Имена игроков", en = "Player Names", es = "Nombres", pt = "Nomes", ko = "이름", ja = "名前", uk = "Імена" },
+        ["toggle_esp_health"] = { ru = "Полоса здоровья", en = "Health Bar", es = "Barra de Vida", pt = "Barra de Vida", ko = "체력 바", ja = "ヘルスバー", uk = "Смуга здоров'я" },
+        ["toggle_esp_health_text"] = { ru = "Цифры здоровья (HP)", en = "Health Text (HP)", es = "Texto de Vida", pt = "Texto de Vida", ko = "체력 텍스트", ja = "ヘルステキスト", uk = "Цифри здоров'я (HP)" },
+        ["toggle_esp_tool"] = { ru = "Оружие в руках", en = "Held Tool", es = "Herramienta", pt = "Ferramenta", ko = "장착한 툴", ja = "持っているツール", uk = "Зброя в руках" },
+        ["toggle_esp_distance"] = { ru = "Радиус (Дистанция)", en = "Distance", es = "Distancia", pt = "Distância", ko = "거리", ja = "距離", uk = "Дистанція" },
+        ["toggle_esp_skeleton"] = { ru = "Скелет (Кости)", en = "Skeleton", es = "Esqueleto", pt = "Esqueleto", ko = "스켈레톤", ja = "スケルトン", uk = "Скелет" },
+        ["toggle_esp_chams"] = { ru = "Заливка (Chams)", en = "Chams (Highlight)", es = "Chams", pt = "Chams", ko = "챔스 (하이라이트)", ja = "チャムス", uk = "Заливка моделі" },
+        ["toggle_esp_tracers"] = { ru = "Линии (Трейсеры)", en = "Tracers", es = "Trazadoras", pt = "Traçantes", ko = "트레이서", ja = "トレーサー", uk = "Лінії (Трейсери)" },
+        ["dropdown_tracer_origin"] = { ru = "Начало трейсера", en = "Tracer Origin", es = "Origen del Trazado", pt = "Origem do Traçante", ko = "트레이서 시작점", ja = "トレーサーの起点", uk = "Початок трейсеру" },
+        ["toggle_esp_boxes"] = { ru = "Квадраты (Боксы)", en = "Boxes", es = "Cajas", pt = "Caixas", ko = "상자", ja = "ボックス", uk = "Квадрати (Бокси)" },
+        ["toggle_esp_outline"] = { ru = "Обводка бокса (Outline)", en = "Box Outline", es = "Borde de Caja", pt = "Contorno da Caixa", ko = "상자 윤곽선", ja = "ボックスアウトライン", uk = "Обведення боксу" },
         ["keybind_listening"] = { ru = "Нажмите клавишу...", en = "Press a key...", es = "Presiona una tecla...", pt = "Pressione uma tecla...", ko = "키를 누르세요...", ja = "キーを押してください...", uk = "Натисніть клавішу..." },
         ["keybind_none"] = { ru = "Нет привязки", en = "None", es = "Ninguno", pt = "Nenhum", ko = "없음", ja = "なし", uk = "Немає прив'язки" },
         ["keybind_current"] = { ru = "%s: %s", en = "%s: %s", es = "%s: %s", pt = "%s: %s", ko = "%s: %s", ja = "%s: %s", uk = "%s: %s" },
@@ -316,6 +327,10 @@ Mega.Localization = {
         ["print_menu_closed"] = { ru = "📱 Меню закрыто", en = "📱 Menu closed", es = "📱 Menú cerrado", pt = "📱 Menu fechado", ko = "📱 메뉴 닫힘", ja = "📱 メニュー閉じ", uk = "📱 Меню закрито" },
         ["esp_studs"] = { ru = "%d studs", en = "%d studs", es = "%d studs", pt = "%d studs", ko = "%d 스터드", ja = "%d スタッド", uk = "%d стадів" },
         ["esp_hp"] = { ru = "HP: %d", en = "HP: %d", es = "HP: %d", pt = "HP: %d", ko = "HP: %d", ja = "HP: %d", uk = "HP: %d" },
+        ["Bottom"] = { ru = "Снизу", en = "Bottom", es = "Abajo", pt = "Abaixo", ko = "아래", ja = "下", uk = "Знизу" },
+        ["Top"] = { ru = "Сверху", en = "Top", es = "Arriba", pt = "Acima", ko = "위", ja = "上", uk = "Зверху" },
+        ["Center"] = { ru = "По Центру", en = "Center", es = "Centro", pt = "Centro", ko = "중앙", ja = "中央", uk = "По центру" },
+        ["Mouse"] = { ru = "От Курсора", en = "Mouse", es = "Ratón", pt = "Rato", ko = "마우스", ja = "マウス", uk = "Від курсору" }
     }
 }
 

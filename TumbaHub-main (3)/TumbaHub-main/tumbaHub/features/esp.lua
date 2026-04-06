@@ -152,13 +152,39 @@ local function CreateESP(player)
     if player == Services.Players.LocalPlayer then return end
 
     local esp = {
+        boxOutline = Drawing.new("Square"),
         box = Drawing.new("Square"),
         name = Drawing.new("Text"),
         distance = Drawing.new("Text"),
+        toolText = Drawing.new("Text"),
         healthBarBack = Drawing.new("Square"),
         healthBarFront = Drawing.new("Square"),
-        tracer = Drawing.new("Line")
+        healthText = Drawing.new("Text"),
+        tracer = Drawing.new("Line"),
+        skeleton = {},
+        chams = Instance.new("Highlight")
     }
+
+    esp.chams.Name = player.Name .. "_Chams"
+    esp.chams.Parent = espFolder
+    esp.chams.Enabled = false
+    esp.chams.FillTransparency = 0.5
+    esp.chams.OutlineTransparency = 0.2
+
+    local skeletonLinks = {"Head_Torso", "Torso_LeftArm", "Torso_RightArm", "Torso_LeftLeg", "Torso_RightLeg", "LeftArm_LeftHand", "RightArm_RightHand", "LeftLeg_LeftFoot", "RightLeg_RightFoot"}
+    for _, linkName in ipairs(skeletonLinks) do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        line.Thickness = 1.5
+        line.ZIndex = 2
+        esp.skeleton[linkName] = line
+    end
+
+    esp.boxOutline.Visible = false
+    esp.boxOutline.Thickness = 4
+    esp.boxOutline.Filled = false
+    esp.boxOutline.Color = Color3.new(0, 0, 0)
+    esp.boxOutline.ZIndex = 0
 
     esp.box.Visible = false
     esp.box.Thickness = 2
@@ -176,6 +202,12 @@ local function CreateESP(player)
     esp.distance.Center = true
     esp.distance.Outline = true
     esp.distance.ZIndex = 1
+    
+    esp.toolText.Visible = false
+    esp.toolText.Size = 12
+    esp.toolText.Center = true
+    esp.toolText.Outline = true
+    esp.toolText.ZIndex = 1
 
     esp.healthBarBack.Visible = false
     esp.healthBarBack.Thickness = 1
@@ -185,6 +217,12 @@ local function CreateESP(player)
     esp.healthBarFront.Visible = false
     esp.healthBarFront.Thickness = 1
     esp.healthBarFront.Filled = true
+    
+    esp.healthText.Visible = false
+    esp.healthText.Size = 10
+    esp.healthText.Center = false
+    esp.healthText.Outline = true
+    esp.healthText.ZIndex = 1
 
     esp.tracer.Visible = false
     esp.tracer.Thickness = 1
@@ -195,8 +233,14 @@ end
 
 local function RemoveESP(player)
     if Mega.Objects.ESP[player] then
-        for _, drawing in pairs(Mega.Objects.ESP[player]) do
-            drawing:Remove()
+        for k, drawing in pairs(Mega.Objects.ESP[player]) do
+            if k == "skeleton" then
+                for _, line in pairs(drawing) do line:Remove() end
+            elseif k == "chams" then
+                drawing:Destroy()
+            else
+                drawing:Remove()
+            end
         end
         Mega.Objects.ESP[player] = nil
     end
@@ -220,16 +264,85 @@ local function UpdateESPColors()
             esp.box.Color = color
             esp.name.Color = color
             esp.distance.Color = color
+            esp.toolText.Color = color
             esp.tracer.Color = color
+            esp.chams.FillColor = color
+            esp.chams.OutlineColor = color
+            for _, line in pairs(esp.skeleton) do
+                line.Color = color
+            end
         end
     end
+end
+
+local function setESPVisibility(esp, visible)
+    esp.boxOutline.Visible = visible
+    esp.box.Visible = visible
+    esp.name.Visible = visible
+    esp.distance.Visible = visible
+    esp.toolText.Visible = visible
+    esp.healthBarBack.Visible = visible
+    esp.healthBarFront.Visible = visible
+    esp.healthText.Visible = visible
+    esp.tracer.Visible = visible
+    esp.chams.Enabled = false
+    for _, line in pairs(esp.skeleton) do line.Visible = false end
+end
+
+local function drawSkeleton(esp, char, camera, isVisible)
+    if not isVisible then 
+        for _, line in pairs(esp.skeleton) do line.Visible = false end
+        return 
+    end
+    
+    local parts = {
+        Head = char:FindFirstChild("Head"),
+        Torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"),
+        LeftArm = char:FindFirstChild("LeftUpperArm") or char:FindFirstChild("Left Arm"),
+        RightArm = char:FindFirstChild("RightUpperArm") or char:FindFirstChild("Right Arm"),
+        LeftLeg = char:FindFirstChild("LeftUpperLeg") or char:FindFirstChild("Left Leg"),
+        RightLeg = char:FindFirstChild("RightUpperLeg") or char:FindFirstChild("Right Leg"),
+        LeftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm"),
+        RightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm"),
+        LeftFoot = char:FindFirstChild("LeftFoot") or char:FindFirstChild("Left Leg"),
+        RightFoot = char:FindFirstChild("RightFoot") or char:FindFirstChild("Right Leg"),
+    }
+    
+    local function drawLine(part1, part2, lineObj)
+        if part1 and part2 then
+            local pos1, vis1 = camera:WorldToViewportPoint(part1.Position)
+            local pos2, vis2 = camera:WorldToViewportPoint(part2.Position)
+            if vis1 or vis2 then
+                lineObj.Visible = true
+                lineObj.From = Vector2.new(pos1.X, pos1.Y)
+                lineObj.To = Vector2.new(pos2.X, pos2.Y)
+            else
+                lineObj.Visible = false
+            end
+        else
+            lineObj.Visible = false
+        end
+    end
+
+    drawLine(parts.Head, parts.Torso, esp.skeleton["Head_Torso"])
+    drawLine(parts.Torso, parts.LeftArm, esp.skeleton["Torso_LeftArm"])
+    drawLine(parts.Torso, parts.RightArm, esp.skeleton["Torso_RightArm"])
+    drawLine(parts.Torso, parts.LeftLeg, esp.skeleton["Torso_LeftLeg"])
+    drawLine(parts.Torso, parts.RightLeg, esp.skeleton["Torso_RightLeg"])
+    drawLine(parts.LeftArm, parts.LeftHand, esp.skeleton["LeftArm_LeftHand"])
+    drawLine(parts.RightArm, parts.RightHand, esp.skeleton["RightArm_RightHand"])
+    drawLine(parts.LeftLeg, parts.LeftFoot, esp.skeleton["LeftLeg_LeftFoot"])
+    drawLine(parts.RightLeg, parts.RightFoot, esp.skeleton["RightLeg_RightFoot"])
 end
 
 local function UpdateESP()
     local camera = Services.Workspace.CurrentCamera
     if not camera then return end
     
-    local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+    local vp = camera.ViewportSize
+    local screenCenter = Vector2.new(vp.X / 2, vp.Y / 2)
+    local screenBottom = Vector2.new(vp.X / 2, vp.Y)
+    local screenTop = Vector2.new(vp.X / 2, 0)
     
     local lp = Services.Players.LocalPlayer
     local localChar = lp and lp.Character
@@ -240,7 +353,6 @@ local function UpdateESP()
             RemoveESP(player)
         else
             local isVisible = false
-            
             if player and player.Parent and player.Character and localRoot then
                 local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
                 local head = player.Character:FindFirstChild("Head")
@@ -248,7 +360,6 @@ local function UpdateESP()
 
                 if rootPart and head and humanoid and humanoid.Health > 0 then
                     local isTeammate = lp and player.Team and lp.Team and (player.Team == lp.Team)
-                    
                     if not (isTeammate and not States.ESP.ShowTeam) then
                         local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
                         local distance = (localRoot.Position - rootPart.Position).Magnitude
@@ -258,19 +369,32 @@ local function UpdateESP()
                         local maxHealth = humanoid.MaxHealth
                         if maxHealth <= 0 or maxHealth ~= maxHealth then maxHealth = 100 end
 
-                        if onScreen and distance <= States.ESP.MaxDistance and screenPos.X == screenPos.X and distance == distance then
-                            if distance < 0.1 then distance = 0.1 end
+                        if onScreen and distance <= States.ESP.MaxDistance and distance > 0.1 then
                             isVisible = true
                             local scale = 1000 / distance
                             local width = scale * 2
                             local height = scale * 3
+                            
+                            -- Tracer Origin
+                            local tOrigin = screenBottom
+                            if States.ESP.TracerOrigin == "Top" then tOrigin = screenTop
+                            elseif States.ESP.TracerOrigin == "Center" then tOrigin = screenCenter
+                            elseif States.ESP.TracerOrigin == "Mouse" then 
+                                local mp = Services.UserInputService:GetMouseLocation()
+                                tOrigin = Vector2.new(mp.X, mp.Y)
+                            end
 
                             if States.ESP.Boxes then
                                 esp.box.Visible = States.ESP.Enabled
                                 esp.box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
                                 esp.box.Size = Vector2.new(width, height)
+                                
+                                esp.boxOutline.Visible = States.ESP.Enabled and States.ESP.Outline
+                                esp.boxOutline.Position = esp.box.Position
+                                esp.boxOutline.Size = esp.box.Size
                             else
                                 esp.box.Visible = false
+                                esp.boxOutline.Visible = false
                             end
 
                             if States.ESP.Names then
@@ -281,12 +405,28 @@ local function UpdateESP()
                                 esp.name.Visible = false
                             end
 
+                            local textOffset = 10
                             if States.ESP.Distance then
                                 esp.distance.Visible = States.ESP.Enabled
-                                esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + 10)
+                                esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + textOffset)
                                 esp.distance.Text = Mega.GetText("esp_studs", math.floor(distance))
+                                textOffset = textOffset + 14
                             else
                                 esp.distance.Visible = false
+                            end
+                            
+                            if States.ESP.HeldItem then
+                                local tool = player.Character:FindFirstChildOfClass("Tool")
+                                if tool then
+                                    esp.toolText.Visible = States.ESP.Enabled
+                                    esp.toolText.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + textOffset)
+                                    esp.toolText.Text = tool.Name
+                                    textOffset = textOffset + 14
+                                else
+                                    esp.toolText.Visible = false
+                                end
+                            else
+                                esp.toolText.Visible = false
                             end
 
                             if States.ESP.Health then
@@ -302,30 +442,45 @@ local function UpdateESP()
                                 esp.healthBarFront.Color = barColor
                                 esp.healthBarFront.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2 + (height - barHeight))
                                 esp.healthBarFront.Size = Vector2.new(4, barHeight)
+                                
+                                if States.ESP.HealthText then
+                                    esp.healthText.Visible = States.ESP.Enabled
+                                    esp.healthText.Position = Vector2.new(screenPos.X - width / 2 - 28, screenPos.Y - height / 2 + (height - barHeight) - 6)
+                                    esp.healthText.Text = tostring(math.floor(health))
+                                    esp.healthText.Color = barColor
+                                else
+                                    esp.healthText.Visible = false
+                                end
                             else
                                 esp.healthBarBack.Visible = false
                                 esp.healthBarFront.Visible = false
+                                esp.healthText.Visible = false
                             end
 
                             if States.ESP.Tracers then
                                 esp.tracer.Visible = States.ESP.Enabled
                                 esp.tracer.From = Vector2.new(screenPos.X, screenPos.Y + height / 2)
-                                esp.tracer.To = screenCenter
+                                esp.tracer.To = tOrigin
                             else
                                 esp.tracer.Visible = false
+                            end
+                            
+                            if States.ESP.Chams then
+                                esp.chams.Adornee = player.Character
+                                -- Important: if head/root present, char is rendered
+                                esp.chams.Enabled = States.ESP.Enabled
+                            else
+                                esp.chams.Enabled = false
                             end
                         end
                     end
                 end
-                
-                if not isVisible then
-                    esp.box.Visible = false
-                    esp.name.Visible = false
-                    esp.distance.Visible = false
-                    esp.healthBarBack.Visible = false
-                    esp.healthBarFront.Visible = false
-                    esp.tracer.Visible = false
-                end
+            end
+            
+            drawSkeleton(esp, player.Character, camera, isVisible and States.ESP.Skeleton and States.ESP.Enabled)
+
+            if not isVisible then
+                setESPVisibility(esp, false)
             end
         end
     end
@@ -359,13 +514,9 @@ function Mega.Features.ESP.SetEnabled(state)
             Mega.Objects.ESPRenderConnection = nil
         end
         for player, esp in pairs(Mega.Objects.ESP) do
-            esp.box.Visible = false
-            esp.name.Visible = false
-            esp.distance.Visible = false
-            esp.healthBarBack.Visible = false
-            esp.healthBarFront.Visible = false
-            esp.tracer.Visible = false
+            setESPVisibility(esp, false)
         end
     end
 end
 --#endregion
+
