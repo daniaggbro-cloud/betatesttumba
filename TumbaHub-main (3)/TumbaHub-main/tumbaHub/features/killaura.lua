@@ -16,10 +16,12 @@ local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, LookAt = true }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, LookAt = true, UseFOV = false, FOVAngle = 90 }
 elseif States.Combat.Killaura.TargetESP == nil then
     States.Combat.Killaura.TargetESP = true
     States.Combat.Killaura.LookAt = true
+    States.Combat.Killaura.UseFOV = false
+    States.Combat.Killaura.FOVAngle = 90
 end
 
 if not Mega.Objects.KillauraConnections then Mega.Objects.KillauraConnections = {} end
@@ -109,6 +111,20 @@ local killauraActive = false
 local lastAttackTime = 0
 -- Лимит убран для синхронизации с каждым кадром игры (Heartbeat)
 
+local function isWithinFOV(targetPart)
+    if not States.Combat.Killaura.UseFOV then return true end
+    
+    local camera = workspace.CurrentCamera
+    if not camera then return true end
+    
+    local lookVector = camera.CFrame.LookVector
+    local directionToTarget = (targetPart.Position - camera.CFrame.Position).Unit
+    local dot = lookVector:Dot(directionToTarget)
+    local angle = math.deg(math.acos(dot))
+    
+    return angle <= (States.Combat.Killaura.FOVAngle or 90)
+end
+
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
@@ -140,7 +156,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                             
                             if tHrp and hum and hum.Health > 0 then
                                 local dist = (hrp.Position - tHrp.Position).Magnitude
-                                if dist < closestDist and dist > 0 then
+                                if dist < closestDist and dist > 0 and isWithinFOV(tHrp) then
                                     closestDist = dist
                                     closestTarget = tChar
                                 end
@@ -165,7 +181,7 @@ function Mega.Features.Killaura.SetEnabled(state)
 
                                     if isEnemy then
                                         local dist = (hrp.Position - tHrp.Position).Magnitude
-                                        if dist < closestDist and dist > 0 then
+                                        if dist < closestDist and dist > 0 and isWithinFOV(tHrp) then
                                             closestDist = dist
                                             closestTarget = obj
                                         end
