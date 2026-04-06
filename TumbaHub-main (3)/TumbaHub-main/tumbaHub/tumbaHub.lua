@@ -27,7 +27,7 @@ Mega = {
 local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
 
 function Mega.GetImageFromURL(url, fileName)
-    local folderPath = "tumbaHub/icon/"
+    local folderPath = "tumbaHub/icons_v2/"
     local fullPath = folderPath .. fileName
     
     if isfile and writefile and makefolder and getcustomasset then
