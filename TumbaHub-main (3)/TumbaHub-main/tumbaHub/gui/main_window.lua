@@ -302,8 +302,25 @@ MinimizeButton.MouseButton1Click:Connect(function()
 end)
 -- CloseButton logic removed as requested
 
+-- Tab Icons Mapping (GitHub Paths)
+local iconBaseUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/"
+Mega.Icons = {
+    ["tab_home"] = iconBaseUrl .. "home.png",
+    ["tab_updates"] = iconBaseUrl .. "updates.png",
+    ["tab_esp"] = iconBaseUrl .. "esp.png",
+    ["tab_aim"] = iconBaseUrl .. "aim.png",
+    ["tab_player"] = iconBaseUrl .. "player.png",
+    ["tab_combat"] = iconBaseUrl .. "combat.png",
+    ["tab_visuals"] = iconBaseUrl .. "visuals.png",
+    ["tab_farm"] = iconBaseUrl .. "kit.png",
+    ["tab_users"] = iconBaseUrl .. "users.png",
+    ["tab_utils"] = iconBaseUrl .. "utils.png",
+    ["tab_settings"] = iconBaseUrl .. "settings.png",
+    ["tab_bot"] = iconBaseUrl .. "bot.png"
+}
+
 -- Tab System
-local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_bot", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings" }
+local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot" }
 local TabButtons = {}
 Mega.Objects.TabFrames = {}
 
@@ -313,8 +330,12 @@ local function SelectTab(tabKey, tabButton)
     -- De-select all other buttons
     for k, btn in pairs(TabButtons) do
         local otherInd = btn:FindFirstChild("Indicator")
+        local icon = btn:FindFirstChild("Icon")
         if otherInd then
             Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
+        end
+        if icon then
+            Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Color3.fromRGB(150, 150, 170), ImageTransparency = 0.3 }):Play()
         end
         Services.TweenService:Create(btn, TweenInfo.new(0.3), {
             BackgroundColor3 = Color3.fromRGB(20, 20, 30),
@@ -326,6 +347,10 @@ local function SelectTab(tabKey, tabButton)
     -- Select the current button
     if indicator then
         Services.TweenService:Create(indicator, TweenInfo.new(0.3), { Size = UDim2.new(0, 4, 0.6, 0), BackgroundTransparency = 0 }):Play()
+    end
+    local currentIcon = tabButton:FindFirstChild("Icon")
+    if currentIcon then
+        Services.TweenService:Create(currentIcon, TweenInfo.new(0.3), { ImageColor3 = Color3.new(1, 1, 1), ImageTransparency = 0 }):Play()
     end
     Services.TweenService:Create(tabButton, TweenInfo.new(0.3), {
         BackgroundColor3 = Settings.Menu.AccentColor,
@@ -367,7 +392,16 @@ for _, tabKey in ipairs(TabKeys) do
     TabButton.TextXAlignment = Enum.TextXAlignment.Left
     TabButton.AutoButtonColor = false
     Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIPadding", TabButton).PaddingLeft = UDim.new(0, 15)
+    Instance.new("UIPadding", TabButton).PaddingLeft = UDim.new(0, 40) -- Increased for icon space
+    
+    local Icon = Instance.new("ImageLabel", TabButton)
+    Icon.Name = "Icon"
+    Icon.Size = UDim2.new(0, 18, 0, 18)
+    Icon.Position = UDim2.new(0, 12, 0.5, -9)
+    Icon.BackgroundTransparency = 1
+    Icon.Image = Mega.GetImageFromURL(Mega.Icons[tabKey] or "", tabKey .. ".png")
+    Icon.ImageColor3 = Color3.fromRGB(150, 150, 170)
+    Icon.ImageTransparency = 0.3
     
     local Indicator = Instance.new("Frame", TabButton)
     Indicator.Name = "Indicator"
@@ -380,10 +414,12 @@ for _, tabKey in ipairs(TabKeys) do
     TabButton.MouseEnter:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end
         Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.3, TextColor3 = Color3.new(1, 1, 1) }):Play()
+        Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0 }):Play()
     end)
     TabButton.MouseLeave:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end
         Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
+        Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0.3 }):Play()
     end)
     
     TabButton.MouseButton1Click:Connect(function() SelectTab(tabKey, TabButton) end)
