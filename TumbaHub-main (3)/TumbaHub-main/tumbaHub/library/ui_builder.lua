@@ -543,6 +543,14 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     local isExpanded = false
     local initialHeight = ComponentFrame.AbsoluteSize.Y
     
+    SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        if isExpanded then
+            local settingsHeight = SettingsLayout.AbsoluteContentSize.Y
+            local targetHeight = initialHeight + settingsHeight + ComponentLayout.Padding.Offset
+            ComponentFrame.Size = UDim2.new(0.95, 0, 0, targetHeight)
+        end
+    end)
+
     SettingsButton.MouseButton1Click:Connect(function()
         isExpanded = not isExpanded
         

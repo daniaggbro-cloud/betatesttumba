@@ -103,13 +103,6 @@ local function CreateColorPicker(parent, textKey, initialColor, callback)
         isOpen = not isOpen
         local targetHeight = isOpen and 155 or 35
         Mega.Services.TweenService:Create(MainContainer, TweenInfo.new(0.2), {Size = UDim2.new(0.95, 0, 0, targetHeight)}):Play()
-        
-        task.delay(0.25, function()
-            local settingsContainer = MainContainer.Parent
-            if settingsContainer and settingsContainer:FindFirstChildOfClass("UIListLayout") then
-                settingsContainer.Size = UDim2.new(0.95, 0, 0, settingsContainer:FindFirstChildOfClass("UIListLayout").AbsoluteContentSize.Y + 10)
-            end
-        end)
     end)
     
     return MainContainer
