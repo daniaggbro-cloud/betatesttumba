@@ -61,7 +61,7 @@ end, {
     UI.CreateToggle(nil, "toggle_killaura_use_fov", "Combat.Killaura.UseFOV"),
     UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
     UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
-    UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
+    UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 22),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura"),
     UI.CreateToggle(nil, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)

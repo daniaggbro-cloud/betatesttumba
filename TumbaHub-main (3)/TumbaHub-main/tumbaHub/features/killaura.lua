@@ -110,7 +110,26 @@ end
 
 local killauraActive = false
 local lastAttackTime = 0
+local isManualAttacking = false
 -- Лимит убран для синхронизации с каждым кадром игры (Heartbeat)
+
+-- Отслеживание кликов игрока с фильтром интерфейса
+if not Mega.Objects.KillauraInputConnections then
+    Mega.Objects.KillauraInputConnections = {}
+    
+    table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputBegan:Connect(function(input, processed)
+        if processed then return end -- Игнорируем клики по интерфейсу (меню, ползунки)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isManualAttacking = true
+        end
+    end))
+    
+    table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isManualAttacking = false
+        end
+    end))
+end
 
 local function isWithinFOV(targetPart)
     if not States.Combat.Killaura.UseFOV then return true end
@@ -215,9 +234,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                     -- Check "Only on Click" condition
                     local canAttack = true
                     if States.Combat.Killaura.OnlyOnClick then
-                        local isPressing = Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or 
-                                           Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.Touch)
-                        if not isPressing then canAttack = false end
+                        if not isManualAttacking then canAttack = false end
                     end
 
                     -- Если задержка 0 и проверка пройдена, бьем без остановки на каждом кадре
