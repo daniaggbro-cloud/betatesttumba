@@ -157,8 +157,9 @@ MinimizeButton.Name = "MinimizeButton"
 MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
 MinimizeButton.Position = UDim2.new(1, -42, 0, 12)
 MinimizeButton.BackgroundTransparency = 1
--- Используем твою систему загрузки для иконки сворачивания
-MinimizeButton.Image = Mega.GetImageFromURL("", "minimize.png")
+-- Используем прямую RAW ссылку для корректной загрузки иконки
+local minimizeUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/minimize.png"
+MinimizeButton.Image = Mega.GetImageFromURL(minimizeUrl, "minimize.png")
 MinimizeButton.ImageColor3 = Color3.new(1, 1, 1)
 
 local btnCorner = Instance.new("UICorner", MinimizeButton)
