@@ -12,7 +12,7 @@ function Mega.UI.CreateSection(parent, titleKey)
     local Section = Instance.new("Frame")
     Section.Name = titleKey .. "Section"
     Section.Size = UDim2.new(0.95, 0, 0, 45)
-    Section.BackgroundColor3 = Color3.fromRGB(25, 30, 42)
+    Section.BackgroundColor3 = Mega.Settings.Menu.ElementColor
     Section.BackgroundTransparency = 0.5 -- Sleeker glass look
     Section.BorderSizePixel = 0
 
@@ -27,8 +27,8 @@ function Mega.UI.CreateSection(parent, titleKey)
     
     local SectionGradient = Instance.new("UIGradient")
     SectionGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 35, 50)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 45, 65))
+        ColorSequenceKeypoint.new(0, Mega.Settings.Menu.SectionGradient1),
+        ColorSequenceKeypoint.new(1, Mega.Settings.Menu.SectionGradient2)
     }
     SectionGradient.Rotation = 45
     SectionGradient.Parent = Section
@@ -84,7 +84,7 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     ToggleButton.Name = "Toggle"
     ToggleButton.Size = UDim2.new(0, 44, 0, 22)
     ToggleButton.Position = UDim2.new(1, -54, 0.5, -11)
-    ToggleButton.BackgroundColor3 = initialState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80)
+    ToggleButton.BackgroundColor3 = initialState and Mega.Settings.Menu.AccentColor or Mega.Settings.Menu.ToggleOffColor
     ToggleButton.BorderSizePixel = 0
     ToggleButton.Text = ""
     ToggleButton.AutoButtonColor = false
@@ -98,7 +98,7 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     ToggleCircle.Name = "Circle"
     ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
     ToggleCircle.Position = initialState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
-    ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleCircle.BackgroundColor3 = Mega.Settings.Menu.BackgroundColor
     ToggleCircle.Parent = ToggleButton
     
     local CircleCorner = Instance.new("UICorner")
@@ -143,7 +143,7 @@ function Mega.UI.CreateButton(parent, textKey, callback)
     local Button = Instance.new("TextButton")
     Button.Name = textKey .. "Button"
     Button.Size = UDim2.new(0.9, 0, 0, 40)
-    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    Button.BackgroundColor3 = Mega.Settings.Menu.ElementColor
     Button.BorderSizePixel = 0
     Button.Text = GetText(textKey)
     Button.TextColor3 = Mega.Settings.Menu.TextColor
@@ -170,7 +170,7 @@ function Mega.UI.CreateButton(parent, textKey, callback)
     end)
     Button.MouseLeave:Connect(function() 
         TweenService:Create(Button, TweenInfo.new(0.3), { 
-            BackgroundColor3 = Color3.fromRGB(35, 35, 45),
+            BackgroundColor3 = Mega.Settings.Menu.ElementColor,
             BackgroundTransparency = 0
         }):Play() 
         TweenService:Create(ButtonStroke, TweenInfo.new(0.3), { Transparency = 0.8 }):Play()
@@ -223,7 +223,7 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
     SliderTrack.Name = "Track"
     SliderTrack.Size = UDim2.new(1, 0, 0, 6)
     SliderTrack.Position = UDim2.new(0, 0, 0, 35)
-    SliderTrack.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    SliderTrack.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
     SliderTrack.BorderSizePixel = 0
     SliderTrack.Parent = SliderFrame
 
@@ -317,10 +317,10 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     local DropdownButton = Instance.new("TextButton")
     DropdownButton.Size = UDim2.new(0.4, 0, 1, 0)
     DropdownButton.Position = UDim2.new(0.6, 0, 0, 0)
-    DropdownButton.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
+    DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor
     DropdownButton.BorderSizePixel = 0
     DropdownButton.Text = optionsAreKeys and GetText(initialValue) or initialValue
-    DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DropdownButton.TextColor3 = Mega.Settings.Menu.TextColor
     DropdownButton.TextSize = 11
     DropdownButton.Font = Enum.Font.GothamBold
     DropdownButton.AutoButtonColor = false
@@ -335,7 +335,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Size = UDim2.new(0.4, 0, 0, 0) -- Initial height 0
     DropdownList.Position = UDim2.new(0.6, 0, 1, 5)
-    DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 42)
+    DropdownList.BackgroundColor3 = Mega.Settings.Menu.SidebarColor
     DropdownList.BorderSizePixel = 0
     DropdownList.ScrollBarThickness = 2
     DropdownList.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
@@ -361,11 +361,11 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         local translatedOption = optionsAreKeys and GetText(optionKey) or optionKey
         local ListItem = Instance.new("TextButton")
         ListItem.Size = UDim2.new(1, 0, 0, 30)
-        ListItem.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
+        ListItem.BackgroundColor3 = Mega.Settings.Menu.ElementColor
         ListItem.BackgroundTransparency = 0.2
         ListItem.BorderSizePixel = 0
         ListItem.Text = tostring(translatedOption)
-        ListItem.TextColor3 = Color3.fromRGB(230, 230, 230)
+        ListItem.TextColor3 = Mega.Settings.Menu.TextColor
         ListItem.TextSize = 12
         ListItem.Font = Enum.Font.GothamSemibold
         ListItem.AutoButtonColor = true
@@ -433,7 +433,7 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
     local KeybindButton = Instance.new("TextButton")
     KeybindButton.Size = UDim2.new(0.3, 0, 0, 25)
     KeybindButton.Position = UDim2.new(0.65, 0, 0.5, -12.5)
-    KeybindButton.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+    KeybindButton.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
     KeybindButton.Text = currentKey or GetText("keybind_none")
     KeybindButton.TextColor3 = Mega.Settings.Menu.TextColor
     KeybindButton.TextSize = 11
@@ -509,7 +509,7 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     SettingsButton.Name = "SettingsButton"
     SettingsButton.Size = UDim2.new(0, 35, 0, 25)
     SettingsButton.Position = UDim2.new(1, -45, 0.5, -12.5)
-    SettingsButton.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+    SettingsButton.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
     SettingsButton.Text = "⚙️"
     SettingsButton.TextColor3 = Mega.Settings.Menu.TextColor
     SettingsButton.TextSize = 18

@@ -101,6 +101,22 @@ UI.CreateDropdown(TabFrame, "dropdown_language", "Localization.CurrentLanguage",
     end
 end, true)
 
+if not Mega.States.Temp.BaseTheme then
+    Mega.States.Temp.BaseTheme = Mega.Settings.Menu.CurrentTheme or "Dark"
+end
+
+UI.CreateDropdown(TabFrame, "dropdown_base_theme", "Temp.BaseTheme", {"Dark", "Vanilla"}, function(val)
+    if Mega.SetTheme then
+        Mega.SetTheme(val)
+        -- We also need to restore the chosen accent color if they want. SetTheme resets it to default for that theme.
+        local col = themeColors[Mega.States.Temp.ThemeName]
+        if col then Mega.Settings.Menu.AccentColor = col end
+        
+        if Mega.ShowNotification then Mega.ShowNotification("Theme changed to " .. val, 2) end
+        if Mega.ReloadGUI then task.spawn(function() task.wait(0.2); Mega.ReloadGUI() end) end
+    end
+end, false)
+
 UI.CreateDropdown(TabFrame, "button_change_theme", "Temp.ThemeName", themeOptions, function(val)
     local col = themeColors[val]
     if col then

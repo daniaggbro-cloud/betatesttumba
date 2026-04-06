@@ -91,8 +91,8 @@ end
 
 UpdateScale()
 Mega.Objects.Connections.MenuScaleUpdate = Services.Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
-MainFrame.BackgroundTransparency = 0.1
+MainFrame.BackgroundColor3 = Settings.Menu.BackgroundColor
+MainFrame.BackgroundTransparency = Settings.Menu.Transparency
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -109,8 +109,8 @@ MainStroke.Transparency = 0.6
 
 local MainGradient = Instance.new("UIGradient", MainFrame)
 MainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+    ColorSequenceKeypoint.new(0, Settings.Menu.SectionGradient1),
+    ColorSequenceKeypoint.new(1, Settings.Menu.SectionGradient2)
 }
 MainGradient.Rotation = 90
 
@@ -188,7 +188,7 @@ TitleBar.Parent = WindowCanvas
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 210, 1, -10) -- Full height sidebar
 Sidebar.Position = UDim2.new(0, 5, 0, 5)
-Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+Sidebar.BackgroundColor3 = Settings.Menu.SidebarColor
 Sidebar.BackgroundTransparency = 0.2
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = WindowCanvas
@@ -336,13 +336,13 @@ local function SelectTab(tabKey, tabButton)
             Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
         end
         if icon then
-            Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Color3.fromRGB(150, 150, 170), ImageTransparency = 0.3 }):Play()
+            Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Settings.Menu.IconColor, ImageTransparency = 0.3 }):Play()
         end
         if tabText then
-            Services.TweenService:Create(tabText, TweenInfo.new(0.3), { TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
+            Services.TweenService:Create(tabText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextMutedColor }):Play()
         end
         Services.TweenService:Create(btn, TweenInfo.new(0.3), {
-            BackgroundColor3 = Color3.fromRGB(20, 20, 30),
+            BackgroundColor3 = Settings.Menu.ElementColor,
             BackgroundTransparency = 0.5
         }):Play()
     end
@@ -353,16 +353,16 @@ local function SelectTab(tabKey, tabButton)
     end
     local currentIcon = tabButton:FindFirstChild("Icon")
     if currentIcon then
-        Services.TweenService:Create(currentIcon, TweenInfo.new(0.3), { ImageColor3 = Color3.new(1, 1, 1), ImageTransparency = 0 }):Play()
+        Services.TweenService:Create(currentIcon, TweenInfo.new(0.3), { ImageColor3 = Settings.Menu.IconActiveColor, ImageTransparency = 0 }):Play()
     end
     local currentText = tabButton:FindFirstChild("TabText")
     if currentText then
-        Services.TweenService:Create(currentText, TweenInfo.new(0.3), { TextColor3 = Color3.new(1, 1, 1) }):Play()
+        Services.TweenService:Create(currentText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextColor }):Play()
     end
     Services.TweenService:Create(tabButton, TweenInfo.new(0.3), {
         BackgroundColor3 = Settings.Menu.AccentColor,
         BackgroundTransparency = 0.8, -- Subtle highlight
-        TextColor3 = Color3.new(1, 1, 1)
+        TextColor3 = Settings.Menu.TextColor
     }):Play()
 
     -- Hide all other frames
@@ -390,10 +390,10 @@ for _, tabKey in ipairs(TabKeys) do
     local TabButton = Instance.new("TextButton", TabContainer)
     TabButton.Name = tabKey
     TabButton.Size = UDim2.new(1, -10, 0, 40)
-    TabButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    TabButton.BackgroundColor3 = Settings.Menu.ElementColor
     TabButton.BackgroundTransparency = 0.5
     TabButton.Text = tabName
-    TabButton.TextColor3 = Color3.fromRGB(150, 150, 170)
+    TabButton.TextColor3 = Settings.Menu.TextMutedColor
     TabButton.TextSize = 13
     TabButton.Font = Enum.Font.GothamSemibold
     TabButton.Text = "" -- Clear standard text
@@ -407,7 +407,7 @@ for _, tabKey in ipairs(TabKeys) do
     Icon.BackgroundTransparency = 1
     Icon.ScaleType = Enum.ScaleType.Fit
     Icon.Image = Mega.GetImageFromURL(Mega.Icons[tabKey] or "", tabKey .. ".png")
-    Icon.ImageColor3 = Color3.fromRGB(150, 150, 170)
+    Icon.ImageColor3 = Settings.Menu.IconColor
     Icon.ImageTransparency = 0.3
     
     local TabText = Instance.new("TextLabel", TabButton)
@@ -416,7 +416,7 @@ for _, tabKey in ipairs(TabKeys) do
     TabText.Position = UDim2.new(0, 50, 0, 0)
     TabText.BackgroundTransparency = 1
     TabText.Text = GetText(tabKey)
-    TabText.TextColor3 = Color3.fromRGB(150, 150, 170)
+    TabText.TextColor3 = Settings.Menu.TextMutedColor
     TabText.TextSize = 14
     TabText.Font = Enum.Font.GothamBold
     TabText.TextXAlignment = Enum.TextXAlignment.Left
@@ -432,13 +432,13 @@ for _, tabKey in ipairs(TabKeys) do
     TabButton.MouseEnter:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end
         Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.3 }):Play()
-        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Color3.new(1, 1, 1) }):Play()
+        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextColor }):Play()
         Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0 }):Play()
     end)
     TabButton.MouseLeave:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end
         Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.5 }):Play()
-        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
+        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextMutedColor }):Play()
         Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0.3 }):Play()
     end)
     
