@@ -413,6 +413,13 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
         local key = input.KeyCode.Name
         if key == "Unknown" then return end
         listening = false
+        
+        -- Логика: если нажата та же клавиша, сбрасываем в None
+        if key == currentKey then
+            key = "None"
+        end
+        currentKey = key -- Обновляем текущий ключ для следующего сравнения
+
         KeybindButton.Text = key
         
         local path = statePath
@@ -423,7 +430,9 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
         end
 
         if callback then pcall(callback, key) end
-        ShowNotification(GetText("notify_keybind_set", GetText(textKey), key), 3)
+        
+        local notifyText = (key == "None") and Mega.GetText("notify_keybind_removed", GetText(textKey)) or GetText("notify_keybind_set", GetText(textKey), key)
+        ShowNotification(notifyText, 3)
     end)
     return KeybindFrame
 end
