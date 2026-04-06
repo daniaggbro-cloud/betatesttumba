@@ -106,7 +106,7 @@ end
 
 local killauraActive = false
 local lastAttackTime = 0
-local ATTACK_INTERVAL = 1/18 -- Limit to ~18 Hits Per Second (Balanced for No-Lag)
+local ATTACK_INTERVAL = 1/22 -- Повысили до ~22 ударов в секунду для лучшего хит-рега
 
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
