@@ -152,38 +152,30 @@ WindowCanvas.Size = UDim2.new(1, 0, 1, 0)
 WindowCanvas.BackgroundTransparency = 1
 WindowCanvas.BorderSizePixel = 0
 
-local function CreateControlButton(color, iconText, position)
-    local btn = Instance.new("TextButton", MainFrame)
-    btn.Size = UDim2.new(0, 24, 0, 24)
-    btn.Position = position
-    btn.BackgroundColor3 = color
-    btn.Text = iconText
-    btn.TextColor3 = Color3.new(0, 0, 0)
-    btn.TextTransparency = 0.5
-    btn.TextSize = 10
-    btn.Font = Enum.Font.GothamBold
-    btn.AutoButtonColor = false
-    
-    local btnCorner = Instance.new("UICorner", btn)
-    btnCorner.CornerRadius = UDim.new(1, 0)
-    
-    local btnStroke = Instance.new("UIStroke", btn)
-    btnStroke.Color = Color3.new(0, 0, 0)
-    btnStroke.Thickness = 1
-    btnStroke.Transparency = 0.8
-    
-    btn.MouseEnter:Connect(function()
-        Services.TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundTransparency = 0.2, TextTransparency = 0 }):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        Services.TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundTransparency = 0, TextTransparency = 0.5 }):Play()
-    end)
-    
-    return btn
-end
+local MinimizeButton = Instance.new("ImageButton", MainFrame)
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
+MinimizeButton.Position = UDim2.new(1, -42, 0, 12)
+MinimizeButton.BackgroundTransparency = 1
+-- Используем твою систему загрузки для иконки сворачивания
+MinimizeButton.Image = Mega.GetImageFromURL("", "minimize.png")
+MinimizeButton.ImageColor3 = Color3.new(1, 1, 1)
 
-local CloseButton = CreateControlButton(Color3.fromRGB(255, 95, 87), "✕", UDim2.new(1, -35, 0, 15))
-local MinimizeButton = CreateControlButton(Color3.fromRGB(255, 189, 46), "—", UDim2.new(1, -65, 0, 15))
+local btnCorner = Instance.new("UICorner", MinimizeButton)
+btnCorner.CornerRadius = UDim.new(1, 0)
+
+local btnStroke = Instance.new("UIStroke", MinimizeButton)
+btnStroke.Color = Settings.Menu.AccentColor
+btnStroke.Thickness = 1.2
+btnStroke.Transparency = 0.6
+btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+MinimizeButton.MouseEnter:Connect(function()
+    Services.TweenService:Create(btnStroke, TweenInfo.new(0.2), { Transparency = 0, Thickness = 2 }):Play()
+end)
+MinimizeButton.MouseLeave:Connect(function()
+    Services.TweenService:Create(btnStroke, TweenInfo.new(0.2), { Transparency = 0.6, Thickness = 1.2 }):Play()
+end)
 
 MinimizeButton.Parent = TitleBar
 Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 10)
@@ -298,7 +290,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
     
     task.delay(0.5, function()
         if isMinimized then
-            TumbaGUI.Enabled = false
+            ToggleMenu(false)
             -- Reset for next time
             MainFrame.Size = originalSize
             MainFrame.Position = originalPos
@@ -307,10 +299,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         end
     end)
 end)
-
-CloseButton.MouseButton1Click:Connect(function()
-    TumbaGUI.Enabled = false
-end)
+-- CloseButton logic removed as requested
 
 -- Tab System
 local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_bot", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings" }
