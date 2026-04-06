@@ -299,10 +299,6 @@ local function SelectTab(tabKey, tabButton)
     if Mega.Objects.TabFrames[tabKey] then
         local frame = Mega.Objects.TabFrames[tabKey]
         frame.Visible = true
-        -- Add fade-in animation
-        frame.GroupTransparency = 1
-        local group = frame:FindFirstChild("CanvasGroup") or Instance.new("CanvasGroup", frame)
-        -- (Ideally use CanvasGroup for fade, but ScrollingFrame doesn't support it well, so we just set visible)
     end
 
     Title.Text = GetText("title_bar_with_tab", GetText(tabKey))
