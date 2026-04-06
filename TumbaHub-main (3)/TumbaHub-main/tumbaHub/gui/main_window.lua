@@ -392,13 +392,14 @@ for _, tabKey in ipairs(TabKeys) do
     TabButton.TextXAlignment = Enum.TextXAlignment.Left
     TabButton.AutoButtonColor = false
     Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIPadding", TabButton).PaddingLeft = UDim.new(0, 40) -- Increased for icon space
+    Instance.new("UIPadding", TabButton).PaddingLeft = UDim.new(0, 50) -- Increased padding for icon space
     
     local Icon = Instance.new("ImageLabel", TabButton)
     Icon.Name = "Icon"
-    Icon.Size = UDim2.new(0, 18, 0, 18)
-    Icon.Position = UDim2.new(0, 12, 0.5, -9)
+    Icon.Size = UDim2.new(0, 20, 0, 20)
+    Icon.Position = UDim2.new(0, 15, 0.5, -10)
     Icon.BackgroundTransparency = 1
+    Icon.ScaleType = Enum.ScaleType.Fit
     Icon.Image = Mega.GetImageFromURL(Mega.Icons[tabKey] or "", tabKey .. ".png")
     Icon.ImageColor3 = Color3.fromRGB(150, 150, 170)
     Icon.ImageTransparency = 0.3
