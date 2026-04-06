@@ -330,17 +330,19 @@ local function SelectTab(tabKey, tabButton)
     -- De-select all other buttons
     for k, btn in pairs(TabButtons) do
         local otherInd = btn:FindFirstChild("Indicator")
-        local icon = btn:FindFirstChild("Icon")
+        local tabText = btn:FindFirstChild("TabText")
         if otherInd then
             Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
         end
         if icon then
             Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Color3.fromRGB(150, 150, 170), ImageTransparency = 0.3 }):Play()
         end
+        if tabText then
+            Services.TweenService:Create(tabText, TweenInfo.new(0.3), { TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
+        end
         Services.TweenService:Create(btn, TweenInfo.new(0.3), {
             BackgroundColor3 = Color3.fromRGB(20, 20, 30),
-            BackgroundTransparency = 0.5,
-            TextColor3 = Color3.fromRGB(150, 150, 170)
+            BackgroundTransparency = 0.5
         }):Play()
     end
     
@@ -351,6 +353,10 @@ local function SelectTab(tabKey, tabButton)
     local currentIcon = tabButton:FindFirstChild("Icon")
     if currentIcon then
         Services.TweenService:Create(currentIcon, TweenInfo.new(0.3), { ImageColor3 = Color3.new(1, 1, 1), ImageTransparency = 0 }):Play()
+    end
+    local currentText = tabButton:FindFirstChild("TabText")
+    if currentText then
+        Services.TweenService:Create(currentText, TweenInfo.new(0.3), { TextColor3 = Color3.new(1, 1, 1) }):Play()
     end
     Services.TweenService:Create(tabButton, TweenInfo.new(0.3), {
         BackgroundColor3 = Settings.Menu.AccentColor,
@@ -389,10 +395,9 @@ for _, tabKey in ipairs(TabKeys) do
     TabButton.TextColor3 = Color3.fromRGB(150, 150, 170)
     TabButton.TextSize = 13
     TabButton.Font = Enum.Font.GothamSemibold
-    TabButton.TextXAlignment = Enum.TextXAlignment.Left
+    TabButton.Text = "" -- Clear standard text
     TabButton.AutoButtonColor = false
     Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIPadding", TabButton).PaddingLeft = UDim.new(0, 50) -- Increased padding for icon space
     
     local Icon = Instance.new("ImageLabel", TabButton)
     Icon.Name = "Icon"
@@ -404,6 +409,17 @@ for _, tabKey in ipairs(TabKeys) do
     Icon.ImageColor3 = Color3.fromRGB(150, 150, 170)
     Icon.ImageTransparency = 0.3
     
+    local TabText = Instance.new("TextLabel", TabButton)
+    TabText.Name = "TabText"
+    TabText.Size = UDim2.new(1, -50, 1, 0)
+    TabText.Position = UDim2.new(0, 50, 0, 0)
+    TabText.BackgroundTransparency = 1
+    TabText.Text = GetText(tabKey)
+    TabText.TextColor3 = Color3.fromRGB(150, 150, 170)
+    TabText.TextSize = 14
+    TabText.Font = Enum.Font.GothamBold
+    TabText.TextXAlignment = Enum.TextXAlignment.Left
+    
     local Indicator = Instance.new("Frame", TabButton)
     Indicator.Name = "Indicator"
     Indicator.Size = UDim2.new(0, 0, 0.6, 0)
@@ -414,12 +430,14 @@ for _, tabKey in ipairs(TabKeys) do
     
     TabButton.MouseEnter:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end
-        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.3, TextColor3 = Color3.new(1, 1, 1) }):Play()
+        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.3 }):Play()
+        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Color3.new(1, 1, 1) }):Play()
         Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0 }):Play()
     end)
     TabButton.MouseLeave:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end
-        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
+        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.5 }):Play()
+        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
         Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0.3 }):Play()
     end)
     
