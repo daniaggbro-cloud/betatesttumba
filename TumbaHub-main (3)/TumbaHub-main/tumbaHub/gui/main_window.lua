@@ -146,38 +146,59 @@ Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
--- Controls (Close/Minimize)
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 38, 0, 38)
-CloseButton.Position = UDim2.new(1, -48, 0.5, -19)
-CloseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-CloseButton.Text = "✕"
-CloseButton.TextColor3 = Color3.new(1, 1, 1)
-CloseButton.TextSize = 20
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Parent = TitleBar
-Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 10)
-CloseButton.MouseButton1Click:Connect(function() TumbaGUI.Enabled = false end)
+-- Canvas Group for smooth fade/minimize (Linux Style)
+local WindowCanvas = Instance.new("CanvasGroup", MainFrame)
+WindowCanvas.Size = UDim2.new(1, 0, 1, 0)
+WindowCanvas.BackgroundTransparency = 1
+WindowCanvas.BorderSizePixel = 0
 
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 38, 0, 38)
-MinimizeButton.Position = UDim2.new(1, -90, 0.5, -19)
-MinimizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-MinimizeButton.Text = "—"
-MinimizeButton.TextColor3 = Color3.new(1, 1, 1)
-MinimizeButton.TextSize = 20
-MinimizeButton.Font = Enum.Font.GothamBold
+local function CreateControlButton(color, iconText, position)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0, 24, 0, 24)
+    btn.Position = position
+    btn.BackgroundColor3 = color
+    btn.Text = iconText
+    btn.TextColor3 = Color3.new(0, 0, 0)
+    btn.TextTransparency = 0.5
+    btn.TextSize = 10
+    btn.Font = Enum.Font.GothamBold
+    btn.AutoButtonColor = false
+    
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(1, 0)
+    
+    local btnStroke = Instance.new("UIStroke", btn)
+    btnStroke.Color = Color3.new(0, 0, 0)
+    btnStroke.Thickness = 1
+    btnStroke.Transparency = 0.8
+    
+    btn.MouseEnter:Connect(function()
+        Services.TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundTransparency = 0.2, TextTransparency = 0 }):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        Services.TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundTransparency = 0, TextTransparency = 0.5 }):Play()
+    end)
+    
+    return btn
+end
+
+local CloseButton = CreateControlButton(Color3.fromRGB(255, 95, 87), "✕", UDim2.new(1, -35, 0, 15))
+local MinimizeButton = CreateControlButton(Color3.fromRGB(255, 189, 46), "—", UDim2.new(1, -65, 0, 15))
+
 MinimizeButton.Parent = TitleBar
 Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 10)
 
 -- Sidebar & Content
+-- Move elements into Canvas for clean animation
+TitleBar.Parent = WindowCanvas
+
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 210, 1, -10) -- Full height sidebar
 Sidebar.Position = UDim2.new(0, 5, 0, 5)
 Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
 Sidebar.BackgroundTransparency = 0.2
 Sidebar.BorderSizePixel = 0
-Sidebar.Parent = MainFrame
+Sidebar.Parent = WindowCanvas
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
 
 -- User Profile Widget
@@ -236,21 +257,59 @@ local ContentContainer = Instance.new("Frame")
 ContentContainer.Size = UDim2.new(1, -235, 1, -70)
 ContentContainer.Position = UDim2.new(0, 225, 0, 60)
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Parent = MainFrame
+ContentContainer.Parent = WindowCanvas
 Mega.Objects.ContentContainer = ContentContainer
 
--- Minimize Logic
+-- Minimize Logic (Linux Style Genie Animation)
 local isMinimized = false
 local originalSize = MainFrame.Size
-local miniSize = UDim2.new(0, 220, 0, 55)
+local originalPos = MainFrame.Position
+local miniSize = UDim2.new(0, 40, 0, 40)
+
+local function ToggleMenu(state)
+    if state == nil then state = not TumbaGUI.Enabled end
+    TumbaGUI.Enabled = state
+    
+    if state then
+        -- Restore animation
+        MainFrame.Visible = true
+        MainFrame.Size = UDim2.new(0, 10, 0, 10)
+        WindowCanvas.GroupTransparency = 1
+        
+        Services.TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = originalSize,
+            Position = originalPos
+        }):Play()
+        Services.TweenService:Create(WindowCanvas, TweenInfo.new(0.5), { GroupTransparency = 0 }):Play()
+    end
+end
+
 MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    local targetSize = isMinimized and miniSize or originalSize
-    Services.TweenService:Create(MainFrame, TweenInfo.new(0.3), { Size = targetSize }):Play()
-    Sidebar.Visible = not isMinimized
-    ContentContainer.Visible = not isMinimized
-    Shadow.Visible = not isMinimized
-    MinimizeButton.Text = isMinimized and "❐" or "—"
+    isMinimized = true
+    -- Animate to the corner where the icon usually is
+    local targetPos = UDim2.new(1, -50, 0, 50) 
+    
+    Services.TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+        Size = miniSize,
+        Position = targetPos
+    }):Play()
+    
+    Services.TweenService:Create(WindowCanvas, TweenInfo.new(0.4), { GroupTransparency = 1 }):Play()
+    
+    task.delay(0.5, function()
+        if isMinimized then
+            TumbaGUI.Enabled = false
+            -- Reset for next time
+            MainFrame.Size = originalSize
+            MainFrame.Position = originalPos
+            WindowCanvas.GroupTransparency = 0
+            isMinimized = false
+        end
+    end)
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    TumbaGUI.Enabled = false
 end)
 
 -- Tab System
@@ -363,7 +422,7 @@ Mega.Objects.Connections.MainWindowKeybinds = Services.UserInputService.InputBeg
     local key = input.KeyCode.Name
     
     if key == States.Keybinds.Menu and key ~= "None" then
-        TumbaGUI.Enabled = not TumbaGUI.Enabled
+        ToggleMenu()
     end
     
     if key == States.Keybinds.Killaura and key ~= "None" then
@@ -557,7 +616,7 @@ Services.UserInputService.InputEnded:Connect(function(input)
             dragging = false
             if not hasDragged then
                 -- Register as a click if we didn't drag it!
-                TumbaGUI.Enabled = not TumbaGUI.Enabled
+                ToggleMenu()
             end
         end
     end
