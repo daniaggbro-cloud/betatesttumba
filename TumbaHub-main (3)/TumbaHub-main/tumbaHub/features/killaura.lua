@@ -106,7 +106,7 @@ end
 
 local killauraActive = false
 local lastAttackTime = 0
-local ATTACK_INTERVAL = 1/40 -- Максимальная скорость (~40 хитов/сек)
+-- Лимит убран для синхронизации с каждым кадром игры (Heartbeat)
 
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
@@ -178,21 +178,22 @@ function Mega.Features.Killaura.SetEnabled(state)
                     if circle then circle.Adornee = nil end
                 end
 
-                -- 3. Attack Logic (Throttled/Limited to one target)
+                -- 3. Attack Logic (Every Heartbeat for max Speed)
                 if closestTarget and weapon and SwordHitRemote then
                     local currentTime = tick()
                     local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
-                    local effectiveInterval = math.max(ATTACK_INTERVAL, userDelay)
-
-                    if (currentTime - lastAttackTime) >= effectiveInterval then
+                    
+                    -- Если задержка 0, бьем без остановки на каждом кадре
+                    if (currentTime - lastAttackTime) >= userDelay then
                         lastAttackTime = currentTime
                         
                         local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
                         local direction = (tHrp.Position - hrp.Position).Unit
                         local spoofedSelfPos = hrp.Position
                         
+                        -- Агрессивный спуфинг для лучшего рега
                         if closestDist > 14 then
-                            spoofedSelfPos = tHrp.Position - (direction * 14)
+                            spoofedSelfPos = tHrp.Position - (direction * 13.5)
                         end
                         
                         local args = {
