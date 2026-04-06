@@ -9,18 +9,20 @@ local Services = Mega.Services or {
     Workspace = game:GetService("Workspace"),
     RunService = game:GetService("RunService"),
     Players = game:GetService("Players"),
-    CoreGui = game:GetService("CoreGui")
+    CoreGui = game:GetService("CoreGui"),
+    UserInputService = game:GetService("UserInputService")
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90 }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90, OnlyOnClick = false }
 elseif States.Combat.Killaura.TargetESP == nil then
     States.Combat.Killaura.TargetESP = true
     States.Combat.Killaura.UseFOV = false
     States.Combat.Killaura.FOVAngle = 90
+    States.Combat.Killaura.OnlyOnClick = false
 end
 
 if not Mega.Objects.KillauraConnections then Mega.Objects.KillauraConnections = {} end
@@ -210,8 +212,16 @@ function Mega.Features.Killaura.SetEnabled(state)
                     local currentTime = tick()
                     local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
                     
-                    -- Если задержка 0, бьем без остановки на каждом кадре
-                    if (currentTime - lastAttackTime) >= userDelay then
+                    -- Check "Only on Click" condition
+                    local canAttack = true
+                    if States.Combat.Killaura.OnlyOnClick then
+                        local isPressing = Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or 
+                                           Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.Touch)
+                        if not isPressing then canAttack = false end
+                    end
+
+                    -- Если задержка 0 и проверка пройдена, бьем без остановки на каждом кадре
+                    if canAttack and (currentTime - lastAttackTime) >= userDelay then
                         lastAttackTime = currentTime
                         
                         local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
