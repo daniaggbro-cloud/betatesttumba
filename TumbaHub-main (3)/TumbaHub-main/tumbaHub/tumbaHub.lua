@@ -27,23 +27,35 @@ Mega = {
 local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
 
 function Mega.GetImageFromURL(url, fileName)
-    if isfile and writefile and getcustomasset then
-        if not isfile(fileName) then
-            local success, data = pcall(function() return game:HttpGet(url) end)
-            if success and data and #data > 0 then
-                writefile(fileName, data)
-            else
-                warn("TumbaHub: Failed to download image from " .. url)
+    local folderPath = "tumbaHub/icon/"
+    local fullPath = folderPath .. fileName
+    
+    if isfile and writefile and makefolder and getcustomasset then
+        -- Создаем папку, если её нет
+        if not isfolder("tumbaHub") then makefolder("tumbaHub") end
+        if not isfolder(folderPath) then makefolder(folderPath) end
+
+        -- Если файла нет - качаем
+        if not isfile(fullPath) then
+            if url and url ~= "" then
+                local success, data = pcall(function() return game:HttpGet(url) end)
+                if success and data and #data > 0 then
+                    writefile(fullPath, data)
+                else
+                    warn("TumbaHub: Failed to download icon from " .. url)
+                end
             end
         end
-        if isfile(fileName) then
-            local customAsset = getcustomasset(fileName)
-            if customAsset then
-                return customAsset
+
+        -- Если файл теперь есть - возвращаем его как ассет
+        if isfile(fullPath) then
+            local success, asset = pcall(function() return getcustomasset(fullPath) end)
+            if success and asset then
+                return asset
             end
         end
     end
-    -- Ultimate Fallback (Classic Tumba Logo)
+    -- Запасной вариант (стандартный логотип Tumba)
     return "rbxassetid://13388222306"
 end
 
