@@ -6,6 +6,7 @@ local Services = Mega.Services
 local Settings = Mega.Settings
 local States = Mega.States
 local GetText = Mega.GetText
+local iconBaseUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/"
 
 function Mega.ReloadGUI()
     -- 1. Очищаем все старые подключения и объекты перед рестартом
@@ -154,28 +155,28 @@ WindowCanvas.BorderSizePixel = 0
 
 local MinimizeButton = Instance.new("ImageButton", MainFrame)
 MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
-MinimizeButton.Position = UDim2.new(1, -42, 0, 12)
+MinimizeButton.Size = UDim2.new(0, 26, 0, 26) -- Slightly more refined size
+MinimizeButton.Position = UDim2.new(1, -38, 0, 12)
 MinimizeButton.BackgroundTransparency = 1
--- Используем прямую RAW ссылку для корректной загрузки иконки
-local minimizeUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/minimize.png"
-MinimizeButton.Image = Mega.GetImageFromURL(minimizeUrl, "minimize.png")
-MinimizeButton.ImageColor3 = Color3.new(1, 1, 1)
+MinimizeButton.Image = Mega.GetImageFromURL(iconBaseUrl .. "minimize.png", "minimize.png")
+MinimizeButton.ImageColor3 = Settings.Menu.AccentColor
 
 local btnCorner = Instance.new("UICorner", MinimizeButton)
 btnCorner.CornerRadius = UDim.new(1, 0)
 
 local btnStroke = Instance.new("UIStroke", MinimizeButton)
 btnStroke.Color = Settings.Menu.AccentColor
-btnStroke.Thickness = 1.2
+btnStroke.Thickness = 1.5
 btnStroke.Transparency = 0.6
 btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 MinimizeButton.MouseEnter:Connect(function()
-    Services.TweenService:Create(btnStroke, TweenInfo.new(0.2), { Transparency = 0, Thickness = 2 }):Play()
+    Services.TweenService:Create(MinimizeButton, TweenInfo.new(0.3), { ImageTransparency = 0, Rotation = 90 }):Play()
+    Services.TweenService:Create(btnStroke, TweenInfo.new(0.3), { Transparency = 0.2, Thickness = 2 }):Play()
 end)
 MinimizeButton.MouseLeave:Connect(function()
-    Services.TweenService:Create(btnStroke, TweenInfo.new(0.2), { Transparency = 0.6, Thickness = 1.2 }):Play()
+    Services.TweenService:Create(MinimizeButton, TweenInfo.new(0.3), { ImageTransparency = 0.2, Rotation = 0 }):Play()
+    Services.TweenService:Create(btnStroke, TweenInfo.new(0.3), { Transparency = 0.6, Thickness = 1.5 }):Play()
 end)
 
 MinimizeButton.Parent = TitleBar
@@ -303,7 +304,6 @@ end)
 -- CloseButton logic removed as requested
 
 -- Tab Icons Mapping (GitHub Paths)
-local iconBaseUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/"
 Mega.Icons = {
     ["tab_home"] = iconBaseUrl .. "home.png",
     ["tab_updates"] = iconBaseUrl .. "updates.png",
