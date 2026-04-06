@@ -610,22 +610,20 @@ MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
 local ToggleButton = Instance.new("ImageButton", MobileGUI)
 ToggleButton.Name = "TumbaMenuIcon"
-ToggleButton.Size = UDim2.new(0, 38, 0, 38) -- Made smaller (from 44 to 38)
-ToggleButton.AnchorPoint = Vector2.new(1, 0) -- Right aligned
-ToggleButton.Position = UDim2.new(1, -10, 0, 0) -- Absolute top
-ToggleButton.BackgroundTransparency = 1 -- Fully transparent background for a clean icon
--- Вставь сюда RAW-ссылку на свою картинку на GitHub!
-local customLogoUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/%D0%97%D0%BD%D1%96%D0%BC%D0%BE%D0%BA%20%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202026-04-06%20004609.png"
-ToggleButton.Image = Mega.GetImageFromURL(customLogoUrl, "TumbaHub_Logo_vFinal.png")
-ToggleButton.ImageColor3 = Color3.new(1, 1, 1)
+ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- Slightly larger for accessibility
+ToggleButton.AnchorPoint = Vector2.new(1, 0)
+ToggleButton.Position = UDim2.new(1, -15, 0, 15) -- Pushed bit from edges
+ToggleButton.BackgroundTransparency = 1 
+ToggleButton.Image = Mega.GetImageFromURL(iconBaseUrl .. "minimize.png", "minimize.png")
+ToggleButton.ImageColor3 = Settings.Menu.AccentColor
 ToggleButton.Active = true
 
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
 
 local btnStroke = Instance.new("UIStroke", ToggleButton)
 btnStroke.Color = Settings.Menu.AccentColor
-btnStroke.Thickness = 1 -- Very subtle rim
-btnStroke.Transparency = 0.5
+btnStroke.Thickness = 1.5 -- Slightly thicker for premium feel
+btnStroke.Transparency = 0.6
 btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 -- Custom Smooth Drag Logic (Replaces deprecated Draggable)
@@ -671,6 +669,7 @@ end)
 -- Dynamic Updater
 Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
     btnStroke.Color = Settings.Menu.AccentColor
+    ToggleButton.ImageColor3 = Settings.Menu.AccentColor
     
     -- Sync visibility with Settings
     local showBtn = Settings.Menu.ShowMenuIcon
@@ -679,9 +678,11 @@ Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:C
     
     -- Visual feedback based on open state
     if TumbaGUI.Enabled then
-        btnStroke.Transparency = 0.5 -- Very subtle when open
+        btnStroke.Transparency = 0.4 -- Glow bit more when open
+        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 180, ImageTransparency = 0 }):Play()
     else
-        btnStroke.Transparency = 0.8 -- Almost invisible when closed
+        btnStroke.Transparency = 0.7 
+        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 0, ImageTransparency = 0.2 }):Play()
     end
 end)
 
