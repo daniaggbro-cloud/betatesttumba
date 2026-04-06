@@ -2,9 +2,6 @@ import os
 from PIL import Image
 
 def cut_icons():
-    sheet_path = r"C:\Users\aktuv\Downloads\TumbaHub-main (3)\TumbaHub-main\icon_sheet.png"
-    # Ensure we use the correct absolute path from the bot's temporary storage if needed, 
-    # but I'll assume the file is copied or accessible.
     sheet_path = r"C:\Users\aktuv\.gemini\antigravity\brain\64318609-86d4-4376-b3bb-cda2628e9d76\tumbahub_premium_icons_sheet_1775489374602.png"
     
     img = Image.open(sheet_path).convert("RGBA")
@@ -30,27 +27,31 @@ def cut_icons():
                 left = c * icon_w
                 top = r * icon_h
                 right = left + icon_w
-                bottom = top + icon_h
-                
-                # Adjust crop to exclude text at the bottom (approx top 75% of cell)
                 crop_bottom = top + int(icon_h * 0.78) 
                 icon = img.crop((left, top, right, crop_bottom))
                 
-                # Trim transparent/black edges to center the icon
-                # (Optional but makes it look better)
+                # Convert to grayscale to evaluate brightness
+                gray = icon.convert("L")
                 
-                # Make black background transparent
-                datas = icon.getdata()
-                new_data = []
-                for item in datas:
-                    if item[0] < 5 and item[1] < 5 and item[2] < 5:
-                        new_data.append((0, 0, 0, 0))
-                    else:
-                        new_data.append(item)
-                icon.putdata(new_data)
+                # Map background (dark) to 0 alpha, and bright shapes to 255
+                def contrast_mask(p):
+                    if p < 50: return 0
+                    elif p > 150: return 255
+                    else: return int(((p - 50) / 100.0) * 255)
+                    
+                alpha = gray.point(contrast_mask)
                 
-                icon.save(os.path.join(output_dir, f"{names[idx]}.png"))
-                print(f"Saved {names[idx]}.png")
+                # Create a solid white image and apply our intelligent alpha mask
+                new_icon = Image.new("RGBA", icon.size, (255, 255, 255, 255))
+                new_icon.putalpha(alpha)
+                
+                # Trim empty transparent space around the icon so it aligns perfectly in UI
+                bbox = new_icon.getbbox()
+                if bbox:
+                    new_icon = new_icon.crop(bbox)
+                
+                new_icon.save(os.path.join(output_dir, f"{names[idx]}.png"))
+                print(f"Saved perfectly transparent {names[idx]}.png")
                 idx += 1
 
 if __name__ == "__main__":
