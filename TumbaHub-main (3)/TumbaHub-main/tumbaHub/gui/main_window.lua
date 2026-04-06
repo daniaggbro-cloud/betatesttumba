@@ -91,21 +91,28 @@ end
 
 UpdateScale()
 Mega.Objects.Connections.MenuScaleUpdate = Services.Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-MainFrame.BackgroundColor3 = Settings.Menu.BackgroundColor
-MainFrame.BackgroundTransparency = Settings.Menu.Transparency
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.ClipsDescendants = false
 MainFrame.Parent = TumbaGUI
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, Settings.Menu.CornerRadius)
 
--- UI Stroke (Border Glow)
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Thickness = 1.5
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 15)
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
 MainStroke.Color = Settings.Menu.AccentColor
-MainStroke.Transparency = 0.2
-MainStroke.Parent = MainFrame
+MainStroke.Thickness = 1.5
+MainStroke.Transparency = 0.6
+
+local MainGradient = Instance.new("UIGradient", MainFrame)
+MainGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+}
+MainGradient.Rotation = 90
 
 -- Shadow
 local Shadow = Instance.new("ImageLabel")
@@ -120,34 +127,22 @@ Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
 Shadow.ZIndex = 0
 Shadow.Parent = MainFrame
 
--- Background Gradient
-local MainGradient = Instance.new("UIGradient")
-MainGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Settings.Menu.BackgroundColor), ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 45)) }
-MainGradient.Rotation = 135
-MainGradient.Parent = MainFrame
-
 -- Title Bar
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 55)
-TitleBar.BackgroundColor3 = Settings.Menu.TitleBarColor
+TitleBar.Size = UDim2.new(1, -220, 0, 50) -- Adjusted for new sidebar
+TitleBar.Position = UDim2.new(0, 220, 0, 5)
+TitleBar.BackgroundTransparency = 1
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
-Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, Settings.Menu.CornerRadius)
-
-local TitleGradient = Instance.new("UIGradient")
-TitleGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Settings.Menu.AccentColor), ColorSequenceKeypoint.new(1, Settings.Menu.SecondaryColor) }
-TitleGradient.Rotation = 90
-TitleGradient.Parent = TitleBar
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -100, 1, 0)
-Title.Position = UDim2.new(0, 20, 0, 0)
+Title.Size = UDim2.new(1, -120, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = GetText("title_bar", Mega.VERSION)
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.TextSize = 20
-Title.Font = Enum.Font.GothamBold
-Title.TextStrokeTransparency = 0.7
+Title.Text = GetText("title_bar", Settings.System.Version)
+Title.TextColor3 = Settings.Menu.TextColor
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
@@ -177,26 +172,69 @@ Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 10)
 
 -- Sidebar & Content
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 200, 1, -65)
-Sidebar.Position = UDim2.new(0, 10, 0, 60)
-Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Sidebar.BackgroundTransparency = 0.3
+Sidebar.Size = UDim2.new(0, 210, 1, -10) -- Full height sidebar
+Sidebar.Position = UDim2.new(0, 5, 0, 5)
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+Sidebar.BackgroundTransparency = 0.2
+Sidebar.BorderSizePixel = 0
 Sidebar.Parent = MainFrame
-Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
+
+-- User Profile Widget
+local UserProfile = Instance.new("Frame", Sidebar)
+UserProfile.Name = "UserProfile"
+UserProfile.Size = UDim2.new(1, -20, 0, 60)
+UserProfile.Position = UDim2.new(0, 10, 0, 10)
+UserProfile.BackgroundTransparency = 1
+
+local AvatarImage = Instance.new("ImageLabel", UserProfile)
+AvatarImage.Size = UDim2.new(0, 44, 0, 44)
+AvatarImage.Position = UDim2.new(0, 5, 0.5, -22)
+AvatarImage.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+AvatarImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. Services.Players.LocalPlayer.UserId .. "&w=150&h=150"
+Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", AvatarImage).Color = Settings.Menu.AccentColor
+
+local UserName = Instance.new("TextLabel", UserProfile)
+UserName.Size = UDim2.new(1, -60, 0, 20)
+UserName.Position = UDim2.new(0, 55, 0.5, -12)
+UserName.BackgroundTransparency = 1
+UserName.Text = Services.Players.LocalPlayer.Name
+UserName.TextColor3 = Color3.new(1, 1, 1)
+UserName.TextSize = 14
+UserName.Font = Enum.Font.GothamBold
+UserName.TextXAlignment = Enum.TextXAlignment.Left
+
+local UserStatus = Instance.new("TextLabel", UserProfile)
+UserStatus.Size = UDim2.new(1, -60, 0, 15)
+UserStatus.Position = UDim2.new(0, 55, 0.5, 5)
+UserStatus.BackgroundTransparency = 1
+UserStatus.Text = "💎 Premium User"
+UserStatus.TextColor3 = Settings.Menu.AccentColor
+UserStatus.TextSize = 10
+UserStatus.Font = Enum.Font.GothamSemibold
+UserStatus.TextXAlignment = Enum.TextXAlignment.Left
+
+local Separator = Instance.new("Frame", Sidebar)
+Separator.Size = UDim2.new(1, -30, 0, 1)
+Separator.Position = UDim2.new(0, 15, 0, 75)
+Separator.BackgroundColor3 = Color3.new(1, 1, 1)
+Separator.BackgroundTransparency = 0.8
+Separator.BorderSizePixel = 0
 
 local TabContainer = Instance.new("ScrollingFrame")
-TabContainer.Size = UDim2.new(1, -10, 1, -10)
-TabContainer.Position = UDim2.new(0, 5, 0, 5)
+TabContainer.Size = UDim2.new(1, -10, 1, -90)
+TabContainer.Position = UDim2.new(0, 5, 0, 85)
 TabContainer.BackgroundTransparency = 1
 TabContainer.BorderSizePixel = 0
 TabContainer.ScrollBarThickness = 0
 TabContainer.Parent = Sidebar
 local TabListLayout = Instance.new("UIListLayout", TabContainer)
-TabListLayout.Padding = UDim.new(0, 3)
+TabListLayout.Padding = UDim.new(0, 5)
 
 local ContentContainer = Instance.new("Frame")
-ContentContainer.Size = UDim2.new(1, -230, 1, -70)
-ContentContainer.Position = UDim2.new(0, 220, 0, 60)
+ContentContainer.Size = UDim2.new(1, -235, 1, -70)
+ContentContainer.Position = UDim2.new(0, 225, 0, 60)
 ContentContainer.BackgroundTransparency = 1
 ContentContainer.Parent = MainFrame
 Mega.Objects.ContentContainer = ContentContainer
@@ -221,18 +259,28 @@ local TabButtons = {}
 Mega.Objects.TabFrames = {}
 
 local function SelectTab(tabKey, tabButton)
+    local indicator = tabButton:FindFirstChild("Indicator")
+    
     -- De-select all other buttons
     for k, btn in pairs(TabButtons) do
+        local otherInd = btn:FindFirstChild("Indicator")
+        if otherInd then
+            Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
+        end
         Services.TweenService:Create(btn, TweenInfo.new(0.3), {
-            BackgroundColor3 = Color3.fromRGB(25, 30, 40),
-            BackgroundTransparency = 0.3,
-            TextColor3 = Color3.fromRGB(180, 180, 200)
+            BackgroundColor3 = Color3.fromRGB(20, 20, 30),
+            BackgroundTransparency = 0.5,
+            TextColor3 = Color3.fromRGB(150, 150, 170)
         }):Play()
     end
+    
     -- Select the current button
+    if indicator then
+        Services.TweenService:Create(indicator, TweenInfo.new(0.3), { Size = UDim2.new(0, 4, 0.6, 0), BackgroundTransparency = 0 }):Play()
+    end
     Services.TweenService:Create(tabButton, TweenInfo.new(0.3), {
         BackgroundColor3 = Settings.Menu.AccentColor,
-        BackgroundTransparency = 0,
+        BackgroundTransparency = 0.8, -- Subtle highlight
         TextColor3 = Color3.new(1, 1, 1)
     }):Play()
 
@@ -240,7 +288,7 @@ local function SelectTab(tabKey, tabButton)
     for k, frame in pairs(Mega.Objects.TabFrames) do
         frame.Visible = false
     end
-
+    
     -- Load module if it's the first time
     local modulePath = "gui/tabs/" .. tabKey:gsub("^tab_", "") .. ".lua"
     if not Mega.LoadedModules[modulePath] then
@@ -249,7 +297,12 @@ local function SelectTab(tabKey, tabButton)
     
     -- Show the frame for this tab
     if Mega.Objects.TabFrames[tabKey] then
-        Mega.Objects.TabFrames[tabKey].Visible = true
+        local frame = Mega.Objects.TabFrames[tabKey]
+        frame.Visible = true
+        -- Add fade-in animation
+        frame.GroupTransparency = 1
+        local group = frame:FindFirstChild("CanvasGroup") or Instance.new("CanvasGroup", frame)
+        -- (Ideally use CanvasGroup for fade, but ScrollingFrame doesn't support it well, so we just set visible)
     end
 
     Title.Text = GetText("title_bar_with_tab", GetText(tabKey))
@@ -259,16 +312,34 @@ for _, tabKey in ipairs(TabKeys) do
     local tabName = GetText(tabKey)
     local TabButton = Instance.new("TextButton", TabContainer)
     TabButton.Name = tabKey
-    TabButton.Size = UDim2.new(1, -10, 0, 42)
-    TabButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    TabButton.BackgroundTransparency = 0.3
+    TabButton.Size = UDim2.new(1, -10, 0, 40)
+    TabButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    TabButton.BackgroundTransparency = 0.5
     TabButton.Text = tabName
-    TabButton.TextColor3 = Color3.fromRGB(180, 180, 200)
-    TabButton.TextSize = 14
-    TabButton.Font = Enum.Font.GothamBold
+    TabButton.TextColor3 = Color3.fromRGB(150, 150, 170)
+    TabButton.TextSize = 13
+    TabButton.Font = Enum.Font.GothamSemibold
     TabButton.TextXAlignment = Enum.TextXAlignment.Left
-    Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
+    TabButton.AutoButtonColor = false
+    Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 8)
     Instance.new("UIPadding", TabButton).PaddingLeft = UDim.new(0, 15)
+    
+    local Indicator = Instance.new("Frame", TabButton)
+    Indicator.Name = "Indicator"
+    Indicator.Size = UDim2.new(0, 0, 0.6, 0)
+    Indicator.Position = UDim2.new(0, -15, 0.2, 0)
+    Indicator.BackgroundColor3 = Settings.Menu.AccentColor
+    Indicator.BackgroundTransparency = 1
+    Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+    
+    TabButton.MouseEnter:Connect(function()
+        if Title.Text:find(GetText(tabKey)) then return end
+        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.3, TextColor3 = Color3.new(1, 1, 1) }):Play()
+    end)
+    TabButton.MouseLeave:Connect(function()
+        if Title.Text:find(GetText(tabKey)) then return end
+        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.5, TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
+    end)
     
     TabButton.MouseButton1Click:Connect(function() SelectTab(tabKey, TabButton) end)
     TabButtons[tabKey] = TabButton

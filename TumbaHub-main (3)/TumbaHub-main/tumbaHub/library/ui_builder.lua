@@ -13,17 +13,22 @@ function Mega.UI.CreateSection(parent, titleKey)
     Section.Name = titleKey .. "Section"
     Section.Size = UDim2.new(0.95, 0, 0, 45)
     Section.BackgroundColor3 = Color3.fromRGB(25, 30, 42)
-    Section.BorderSizePixel = 1
-    Section.BorderColor3 = Mega.Settings.Menu.SecondaryColor
+    Section.BackgroundTransparency = 0.5 -- Sleeker glass look
+    Section.BorderSizePixel = 0
 
     local SectionCorner = Instance.new("UICorner")
     SectionCorner.CornerRadius = UDim.new(0, 10)
     SectionCorner.Parent = Section
     
+    local SectionStroke = Instance.new("UIStroke", Section)
+    SectionStroke.Color = Mega.Settings.Menu.AccentColor
+    SectionStroke.Thickness = 1.2
+    SectionStroke.Transparency = 0.7
+    
     local SectionGradient = Instance.new("UIGradient")
     SectionGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 30, 42)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 35, 50))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 35, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 45, 65))
     }
     SectionGradient.Rotation = 45
     SectionGradient.Parent = Section
@@ -33,11 +38,10 @@ function Mega.UI.CreateSection(parent, titleKey)
     SectionTitle.Size = UDim2.new(1, -20, 1, 0)
     SectionTitle.Position = UDim2.new(0, 15, 0, 0)
     SectionTitle.BackgroundTransparency = 1
-    SectionTitle.Text = "💠 " .. GetText(titleKey)
-    SectionTitle.TextColor3 = Mega.Settings.Menu.SecondaryColor
-    SectionTitle.TextSize = 15
+    SectionTitle.Text = GetText(titleKey)
+    SectionTitle.TextColor3 = Mega.Settings.Menu.TextColor
+    SectionTitle.TextSize = 14
     SectionTitle.Font = Enum.Font.GothamBold
-    SectionTitle.TextStrokeTransparency = 0.8
     SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
     SectionTitle.Parent = Section
     
@@ -139,7 +143,7 @@ function Mega.UI.CreateButton(parent, textKey, callback)
     local Button = Instance.new("TextButton")
     Button.Name = textKey .. "Button"
     Button.Size = UDim2.new(0.9, 0, 0, 40)
-    Button.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     Button.BorderSizePixel = 0
     Button.Text = GetText(textKey)
     Button.TextColor3 = Mega.Settings.Menu.TextColor
@@ -152,9 +156,34 @@ function Mega.UI.CreateButton(parent, textKey, callback)
     ButtonCorner.CornerRadius = UDim.new(0, 8)
     ButtonCorner.Parent = Button
 
-    Button.MouseEnter:Connect(function() TweenService:Create(Button, TweenInfo.new(0.2), { BackgroundColor3 = Mega.Settings.Menu.AccentColor }):Play() end)
-    Button.MouseLeave:Connect(function() TweenService:Create(Button, TweenInfo.new(0.2), { BackgroundColor3 = Color3.fromRGB(40, 40, 55) }):Play() end)
-    Button.MouseButton1Click:Connect(function() if callback then pcall(callback) end end)
+    local ButtonStroke = Instance.new("UIStroke", Button)
+    ButtonStroke.Color = Mega.Settings.Menu.AccentColor
+    ButtonStroke.Thickness = 1
+    ButtonStroke.Transparency = 0.8
+
+    Button.MouseEnter:Connect(function() 
+        TweenService:Create(Button, TweenInfo.new(0.3), { 
+            BackgroundColor3 = Mega.Settings.Menu.AccentColor,
+            BackgroundTransparency = 0.2
+        }):Play() 
+        TweenService:Create(ButtonStroke, TweenInfo.new(0.3), { Transparency = 0.4 }):Play()
+    end)
+    Button.MouseLeave:Connect(function() 
+        TweenService:Create(Button, TweenInfo.new(0.3), { 
+            BackgroundColor3 = Color3.fromRGB(35, 35, 45),
+            BackgroundTransparency = 0
+        }):Play() 
+        TweenService:Create(ButtonStroke, TweenInfo.new(0.3), { Transparency = 0.8 }):Play()
+    end)
+    Button.MouseButton1Click:Connect(function() 
+        pcall(function()
+            local originalSize = Button.Size
+            Button:TweenSize(UDim2.new(originalSize.X.Scale * 0.95, originalSize.X.Offset, originalSize.Y.Scale * 0.95, originalSize.Y.Offset), "Out", "Quad", 0.05, true)
+            task.wait(0.05)
+            Button:TweenSize(originalSize, "Out", "Quad", 0.05, true)
+        end)
+        if callback then pcall(callback) end 
+    end)
 
     return Button
 end
