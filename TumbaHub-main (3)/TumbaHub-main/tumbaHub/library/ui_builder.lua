@@ -291,9 +291,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     local function getState()
         local path = statePath
         local value = Mega.States
-        for part in path:gmatch("[^%.]+") do
-            value = value and value[part]
-        end
+        for part in path:gmatch("[^%.]+") do value = value and value[part] end
         return value
     end
     
@@ -303,8 +301,8 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownFrame.Name = textKey .. "Dropdown"
     DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
     DropdownFrame.BackgroundTransparency = 1
+    DropdownFrame.ZIndex = 5 -- Higher zindex for the container
     DropdownFrame.Parent = parent
-    DropdownFrame.ZIndex = 2
 
     local DropdownLabel = Instance.new("TextLabel")
     DropdownLabel.Size = UDim2.new(0.5, 0, 1, 0)
@@ -319,7 +317,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     local DropdownButton = Instance.new("TextButton")
     DropdownButton.Size = UDim2.new(0.4, 0, 1, 0)
     DropdownButton.Position = UDim2.new(0.6, 0, 0, 0)
-    DropdownButton.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    DropdownButton.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
     DropdownButton.BorderSizePixel = 0
     DropdownButton.Text = optionsAreKeys and GetText(initialValue) or initialValue
     DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -328,37 +326,54 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.AutoButtonColor = false
     DropdownButton.Parent = DropdownFrame
     local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 6)
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
     ButtonCorner.Parent = DropdownButton
+    local ButtonStroke = Instance.new("UIStroke", DropdownButton)
+    ButtonStroke.Color = Mega.Settings.Menu.AccentColor
+    ButtonStroke.Transparency = 0.8
 
     local DropdownList = Instance.new("ScrollingFrame")
-    DropdownList.Size = UDim2.new(0.4, 0, 0, 1)
+    DropdownList.Size = UDim2.new(0.4, 0, 0, 0) -- Initial height 0
     DropdownList.Position = UDim2.new(0.6, 0, 1, 5)
-    DropdownList.BackgroundColor3 = Color3.fromRGB(30, 35, 45)
+    DropdownList.BackgroundColor3 = Color3.fromRGB(25, 28, 42)
     DropdownList.BorderSizePixel = 0
-    DropdownList.ScrollBarThickness = 4
+    DropdownList.ScrollBarThickness = 2
     DropdownList.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
     DropdownList.Visible = false
-    DropdownList.ZIndex = 3
+    DropdownList.ClipsDescendants = true
+    DropdownList.ZIndex = 10 -- Ensure it's on top
     DropdownList.Parent = DropdownFrame
+    
+    local ListCorner = Instance.new("UICorner", DropdownList)
+    ListCorner.CornerRadius = UDim.new(0, 8)
+    local ListStroke = Instance.new("UIStroke", DropdownList)
+    ListStroke.Color = Mega.Settings.Menu.AccentColor
+    ListStroke.Transparency = 0.6
 
     local ListLayout = Instance.new("UIListLayout")
-    ListLayout.Parent = DropdownList
     ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ListLayout.Padding = UDim.new(0, 1)
+    ListLayout.Parent = DropdownList
 
     local listHeight = 0
     for i, optionKey in ipairs(options) do
         local translatedOption = optionsAreKeys and GetText(optionKey) or optionKey
         local ListItem = Instance.new("TextButton")
-        ListItem.Size = UDim2.new(1, -8, 0, 32)
-        ListItem.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-        ListItem.Text = translatedOption or "???"
-        ListItem.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ListItem.TextSize = 14
-        ListItem.Font = Enum.Font.GothamBold
+        ListItem.Size = UDim2.new(1, 0, 0, 30)
+        ListItem.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
+        ListItem.BackgroundTransparency = 0.2
+        ListItem.BorderSizePixel = 0
+        ListItem.Text = tostring(translatedOption)
+        ListItem.TextColor3 = Color3.fromRGB(230, 230, 230)
+        ListItem.TextSize = 12
+        ListItem.Font = Enum.Font.GothamSemibold
+        ListItem.AutoButtonColor = true
+        ListItem.LayoutOrder = i
+        ListItem.ZIndex = 11
         ListItem.Parent = DropdownList
-        listHeight = listHeight + 33
+        
+        listHeight = listHeight + 31
 
         ListItem.MouseButton1Click:Connect(function()
             DropdownButton.Text = translatedOption
@@ -372,7 +387,6 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
                 if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
             end
             tbl[key] = optionKey
-            
             if callback then pcall(callback, optionKey) end
         end)
     end
@@ -381,14 +395,15 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.MouseButton1Click:Connect(function()
         DropdownList.Visible = not DropdownList.Visible
         if DropdownList.Visible then
-            local height = math.min(listHeight, 132)
-            TweenService:Create(DropdownList, TweenInfo.new(0.2), { Size = UDim2.new(0.4, 0, 0, height) }):Play()
+            local targetHeight = math.min(listHeight + 5, 150)
+            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0.4, 0, 0, targetHeight) }):Play()
         else
-            TweenService:Create(DropdownList, TweenInfo.new(0.2), { Size = UDim2.new(0.4, 0, 0, 1) }):Play()
+            DropdownList.Size = UDim2.new(0.4, 0, 0, 0)
         end
     end)
     return DropdownFrame
 end
+
 
 function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
     local function getState()
