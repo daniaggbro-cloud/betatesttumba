@@ -58,6 +58,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enable
     end
 end, {
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
+    UI.CreateToggle(nil, "toggle_killaura_lookat", "Combat.Killaura.LookAt"),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura"),

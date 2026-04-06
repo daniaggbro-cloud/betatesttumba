@@ -16,9 +16,10 @@ local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, LookAt = true }
 elseif States.Combat.Killaura.TargetESP == nil then
     States.Combat.Killaura.TargetESP = true
+    States.Combat.Killaura.LookAt = true
 end
 
 if not Mega.Objects.KillauraConnections then Mega.Objects.KillauraConnections = {} end
@@ -147,17 +148,27 @@ function Mega.Features.Killaura.SetEnabled(state)
                         end
                     end
                     
-                    -- Handle NPCS/Dummies if no players found
+                    -- Handle NPCS/Dummies if no players found (With Teammate Protection)
                     if not closestTarget then
                         for _, obj in pairs(Services.Workspace:GetChildren()) do
                             if obj.Name:lower():find("dummy") or obj:FindFirstChild("Humanoid") then
                                 local tHrp = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
                                 local hum = obj:FindFirstChild("Humanoid")
-                                if tHrp and (not hum or hum.Health > 0) and obj ~= char then
-                                    local dist = (hrp.Position - tHrp.Position).Magnitude
-                                    if dist < closestDist and dist > 0 then
-                                        closestDist = dist
-                                        closestTarget = obj
+                                
+                                if tHrp and hum and hum.Health > 0 and obj ~= char then
+                                    -- Проверка, не является ли это игроком из нашей команды
+                                    local p = Services.Players:GetPlayerFromCharacter(obj)
+                                    local isEnemy = true
+                                    if p and (p == LocalPlayer or (p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team)) then
+                                        isEnemy = false
+                                    end
+
+                                    if isEnemy then
+                                        local dist = (hrp.Position - tHrp.Position).Magnitude
+                                        if dist < closestDist and dist > 0 then
+                                            closestDist = dist
+                                            closestTarget = obj
+                                        end
                                     end
                                 end
                             end
@@ -165,10 +176,16 @@ function Mega.Features.Killaura.SetEnabled(state)
                     end
                 end
 
-                -- 2. Visual Update (Every Heartbeat for smoothness)
+                -- 2. Visual & Legit Update (Every Heartbeat for smoothness)
                 local arrow, circle = GetTargetVisuals()
                 if closestTarget and States.Combat.Killaura.TargetESP then
                     local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
+                    
+                    -- Legit LookAt Logic
+                    if States.Combat.Killaura.LookAt and hrp then
+                        hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(tHrp.Position.X, hrp.Position.Y, tHrp.Position.Z))
+                    end
+
                     arrow.Adornee = tHrp
                     circle.Adornee = tHrp
                     arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
