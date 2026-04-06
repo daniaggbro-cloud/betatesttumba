@@ -16,10 +16,9 @@ local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, LookAt = true, UseFOV = false, FOVAngle = 90 }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90 }
 elseif States.Combat.Killaura.TargetESP == nil then
     States.Combat.Killaura.TargetESP = true
-    States.Combat.Killaura.LookAt = true
     States.Combat.Killaura.UseFOV = false
     States.Combat.Killaura.FOVAngle = 90
 end
@@ -197,11 +196,6 @@ function Mega.Features.Killaura.SetEnabled(state)
                 if closestTarget and States.Combat.Killaura.TargetESP then
                     local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
                     
-                    -- Legit LookAt Logic
-                    if States.Combat.Killaura.LookAt and hrp then
-                        hrp.CFrame = CFrame.new(hrp.Position, Vector3.new(tHrp.Position.X, hrp.Position.Y, tHrp.Position.Z))
-                    end
-
                     arrow.Adornee = tHrp
                     circle.Adornee = tHrp
                     arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
