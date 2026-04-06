@@ -91,8 +91,8 @@ end
 
 UpdateScale()
 Mega.Objects.Connections.MenuScaleUpdate = Services.Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
-MainFrame.BackgroundTransparency = 0.1
+MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+MainFrame.BackgroundTransparency = 0.25 -- Glassmorphism effect
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -146,6 +146,38 @@ Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
+-- Search Bar
+local SearchBarFrame = Instance.new("Frame", TitleBar)
+SearchBarFrame.Name = "SearchBar"
+SearchBarFrame.Size = UDim2.new(0, 220, 0, 32)
+SearchBarFrame.Position = UDim2.new(1, -270, 0.5, -16)
+SearchBarFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+SearchBarFrame.BackgroundTransparency = 0.5
+SearchBarFrame.BorderSizePixel = 0
+Instance.new("UICorner", SearchBarFrame).CornerRadius = UDim.new(0, 8)
+
+local SearchIcon = Instance.new("TextLabel", SearchBarFrame)
+SearchIcon.Size = UDim2.new(0, 30, 1, 0)
+SearchIcon.BackgroundTransparency = 1
+SearchIcon.Text = "🔍"
+SearchIcon.TextColor3 = Color3.fromRGB(150, 150, 170)
+SearchIcon.Font = Enum.Font.Gotham
+SearchIcon.TextSize = 14
+
+local SearchInput = Instance.new("TextBox", SearchBarFrame)
+SearchInput.Name = "Input"
+SearchInput.Size = UDim2.new(1, -35, 1, 0)
+SearchInput.Position = UDim2.new(0, 30, 0, 0)
+SearchInput.BackgroundTransparency = 1
+SearchInput.Text = ""
+SearchInput.PlaceholderText = "Search features..."
+SearchInput.TextColor3 = Color3.new(1, 1, 1)
+SearchInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 170)
+SearchInput.Font = Enum.Font.Gotham
+SearchInput.TextSize = 13
+SearchInput.TextXAlignment = Enum.TextXAlignment.Left
+SearchInput.ClearTextOnFocus = false
+
 -- Canvas Group for smooth fade/minimize (Linux Style)
 local WindowCanvas = Instance.new("CanvasGroup", MainFrame)
 WindowCanvas.Size = UDim2.new(1, 0, 1, 0)
@@ -188,8 +220,8 @@ TitleBar.Parent = WindowCanvas
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 210, 1, -10) -- Full height sidebar
 Sidebar.Position = UDim2.new(0, 5, 0, 5)
-Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
-Sidebar.BackgroundTransparency = 0.2
+Sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+Sidebar.BackgroundTransparency = 0.3 -- Sleek glass sidebar
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = WindowCanvas
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
@@ -252,6 +284,49 @@ ContentContainer.Position = UDim2.new(0, 225, 0, 60)
 ContentContainer.BackgroundTransparency = 1
 ContentContainer.Parent = WindowCanvas
 Mega.Objects.ContentContainer = ContentContainer
+
+-- Shared Animated Indicator
+local SharedIndicator = Instance.new("Frame", Sidebar)
+SharedIndicator.Name = "SharedIndicator"
+SharedIndicator.Size = UDim2.new(0, 4, 0, 0)
+SharedIndicator.Position = UDim2.new(0, 2, 0, 85) -- Initial position
+SharedIndicator.BackgroundColor3 = Settings.Menu.AccentColor
+SharedIndicator.BorderSizePixel = 0
+Instance.new("UICorner", SharedIndicator).CornerRadius = UDim.new(1, 0)
+
+-- Search Logic Core
+local function ApplySearchFilter()
+    local query = SearchInput.Text:lower()
+    for _, tabFrame in pairs(Mega.Objects.TabFrames) do
+        -- Hide individual elements directly via logic
+        for _, elem in ipairs(tabFrame:GetDescendants()) do
+            if elem:IsA("TextLabel") and elem.Name == "Label" then
+                local container = elem.Parent
+                if container and container.Name:match("Toggle$") or container.Name:match("Slider$") or container.Name:match("Dropdown$") or container.Name:match("Component$") then
+                    container.Visible = (query == "" or elem.Text:lower():find(query) ~= nil)
+                end
+            elseif elem:IsA("TextButton") and elem.Name:match("Button$") and elem.Parent.Name:match("Section$") then
+                elem.Visible = (query == "" or elem.Text:lower():find(query) ~= nil)
+            end
+        end
+        -- Auto-collapse empty sections
+        for _, section in ipairs(tabFrame:GetChildren()) do
+            if section:IsA("Frame") and section.Name:match("Section$") then
+                local hasVisible = false
+                for _, child in ipairs(section:GetChildren()) do
+                    -- Assume GUI objects except UI decorators indicate content
+                    if child:IsA("GuiObject") and child.Name ~= "SectionTitle" and not child:IsA("UIStroke") and not child:IsA("UIGradient") and not child:IsA("UICorner") and child.Visible then
+                        hasVisible = true
+                        break
+                    end
+                end
+                section.Visible = hasVisible
+            end
+        end
+    end
+end
+SearchInput:GetPropertyChangedSignal("Text"):Connect(ApplySearchFilter)
+Mega.Objects.Connections.ApplySearchFilter = ApplySearchFilter
 
 -- Minimize Logic (Linux Style Genie Animation)
 local isMinimized = false
@@ -325,31 +400,34 @@ local TabButtons = {}
 Mega.Objects.TabFrames = {}
 
 local function SelectTab(tabKey, tabButton)
-    local indicator = tabButton:FindFirstChild("Indicator")
-    
     -- De-select all other buttons
     for k, btn in pairs(TabButtons) do
-        local otherInd = btn:FindFirstChild("Indicator")
         local tabText = btn:FindFirstChild("TabText")
-        if otherInd then
-            Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
-        end
+        local icon = btn:FindFirstChild("Icon")
         if icon then
-            Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Color3.fromRGB(150, 150, 170), ImageTransparency = 0.3 }):Play()
+            Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Color3.fromRGB(150, 150, 170), ImageTransparency = 0.4 }):Play()
         end
         if tabText then
             Services.TweenService:Create(tabText, TweenInfo.new(0.3), { TextColor3 = Color3.fromRGB(150, 150, 170) }):Play()
         end
         Services.TweenService:Create(btn, TweenInfo.new(0.3), {
             BackgroundColor3 = Color3.fromRGB(20, 20, 30),
-            BackgroundTransparency = 0.5
+            BackgroundTransparency = 1 -- Transparent background for inactive tabs
         }):Play()
     end
     
-    -- Select the current button
-    if indicator then
-        Services.TweenService:Create(indicator, TweenInfo.new(0.3), { Size = UDim2.new(0, 4, 0.6, 0), BackgroundTransparency = 0 }):Play()
-    end
+    -- Flowing Shared Indicator Animation
+    -- Calculate precise Y position using the Layout's influence if AbsolutePosition isn't immediately reliable
+    task.spawn(function()
+        task.wait() -- yield to ensure UI updates before calculating absolutes
+        local targetY = math.max(85, tabButton.AbsolutePosition.Y - Sidebar.AbsolutePosition.Y)
+        local targetSize = tabButton.Size.Y.Offset * 0.6
+        Services.TweenService:Create(SharedIndicator, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 2, 0, targetY + (tabButton.Size.Y.Offset / 2) - (targetSize / 2)),
+            Size = UDim2.new(0, 4, 0, targetSize)
+        }):Play()
+    end)
+
     local currentIcon = tabButton:FindFirstChild("Icon")
     if currentIcon then
         Services.TweenService:Create(currentIcon, TweenInfo.new(0.3), { ImageColor3 = Color3.new(1, 1, 1), ImageTransparency = 0 }):Play()
@@ -416,17 +494,11 @@ for _, tabKey in ipairs(TabKeys) do
     TabText.BackgroundTransparency = 1
     TabText.Text = GetText(tabKey)
     TabText.TextColor3 = Color3.fromRGB(150, 150, 170)
-    TabText.TextSize = 14
+    TabText.TextSize = 13 -- Slightly smaller for elegance
     TabText.Font = Enum.Font.GothamBold
     TabText.TextXAlignment = Enum.TextXAlignment.Left
     
-    local Indicator = Instance.new("Frame", TabButton)
-    Indicator.Name = "Indicator"
-    Indicator.Size = UDim2.new(0, 0, 0.6, 0)
-    Indicator.Position = UDim2.new(0, -15, 0.2, 0)
-    Indicator.BackgroundColor3 = Settings.Menu.AccentColor
-    Indicator.BackgroundTransparency = 1
-    Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+    -- Indicator removed because we now use SharedIndicator
     
     TabButton.MouseEnter:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end

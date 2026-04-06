@@ -54,9 +54,15 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = textKey .. "Toggle"
-    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 35)
-    ToggleFrame.BackgroundTransparency = 1
+    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 40)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 33, 46)
+    ToggleFrame.BackgroundTransparency = 0.4
+    ToggleFrame.BorderSizePixel = 0
     ToggleFrame.Parent = parent
+    
+    local ToggleFrameCorner = Instance.new("UICorner")
+    ToggleFrameCorner.CornerRadius = UDim.new(0, 8)
+    ToggleFrameCorner.Parent = ToggleFrame
 
     local ToggleLabel = Instance.new("TextLabel")
     ToggleLabel.Name = "Label"
@@ -205,8 +211,14 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
     local SliderFrame = Instance.new("Frame")
     SliderFrame.Name = textKey .. "Slider"
     SliderFrame.Size = UDim2.new(0.9, 0, 0, 60)
-    SliderFrame.BackgroundTransparency = 1
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(30, 33, 46)
+    SliderFrame.BackgroundTransparency = 0.4
+    SliderFrame.BorderSizePixel = 0
     SliderFrame.Parent = parent
+    
+    local SliderFrameCorner = Instance.new("UICorner")
+    SliderFrameCorner.CornerRadius = UDim.new(0, 8)
+    SliderFrameCorner.Parent = SliderFrame
 
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Name = "Label"
@@ -299,10 +311,16 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
 
     local DropdownFrame = Instance.new("Frame")
     DropdownFrame.Name = textKey .. "Dropdown"
-    DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
-    DropdownFrame.BackgroundTransparency = 1
+    DropdownFrame.Size = UDim2.new(0.9, 0, 0, 40)
+    DropdownFrame.BackgroundColor3 = Color3.fromRGB(30, 33, 46)
+    DropdownFrame.BackgroundTransparency = 0.4
+    DropdownFrame.BorderSizePixel = 0
     DropdownFrame.ZIndex = 5 -- Higher zindex for the container
     DropdownFrame.Parent = parent
+
+    local DropdownFrameCorner = Instance.new("UICorner")
+    DropdownFrameCorner.CornerRadius = UDim.new(0, 8)
+    DropdownFrameCorner.Parent = DropdownFrame
 
     local DropdownLabel = Instance.new("TextLabel")
     DropdownLabel.Size = UDim2.new(0.5, 0, 1, 0)
@@ -416,9 +434,15 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
     local currentKey = getState()
 
     local KeybindFrame = Instance.new("Frame")
-    KeybindFrame.Size = UDim2.new(0.9, 0, 0, 35)
-    KeybindFrame.BackgroundTransparency = 1
+    KeybindFrame.Size = UDim2.new(0.9, 0, 0, 40)
+    KeybindFrame.BackgroundColor3 = Color3.fromRGB(30, 33, 46)
+    KeybindFrame.BackgroundTransparency = 0.4
+    KeybindFrame.BorderSizePixel = 0
     KeybindFrame.Parent = parent
+
+    local KeybindFrameCorner = Instance.new("UICorner")
+    KeybindFrameCorner.CornerRadius = UDim.new(0, 8)
+    KeybindFrameCorner.Parent = KeybindFrame
 
     local KeybindLabel = Instance.new("TextLabel")
     KeybindLabel.Size = UDim2.new(0.6, 0, 1, 0)
