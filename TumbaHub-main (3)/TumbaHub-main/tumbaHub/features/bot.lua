@@ -19,7 +19,8 @@ if not States.Bot then
         Enabled = false, TargetBeds = true, TargetPlayers = true,
         Pathfinding = true, AutoKillaura = true, AutoScaffold = true, 
         AutoBedNuke = true, AutoAntiVoid = true, AutoSpider = true,
-        AutoPlay = { Enabled = false, Mode = "queue_16v16" }
+        AutoPlay = { Enabled = false, Mode = "queue_16v16" },
+        AutoShop = { Enabled = false, TargetIron = 24, MinBlocks = 16 }
     }
 end
 
@@ -38,6 +39,41 @@ local function getBotTarget()
     local bestTarget = nil
     local bestDist = math.huge
     local myTeam = LocalPlayer:GetAttribute("Team")
+
+    -- 0. Приоритет сбору ресурсов (если включена авто-закупка и блоков мало)
+    if States.Bot.AutoShop and States.Bot.AutoShop.Enabled then
+        local shop = Mega.Features.ShopManager
+        if shop and shop.NeedsBlocks() then
+            -- Ищем ближайший генератор железа
+            local bestGen = nil
+            local bestGenDist = math.huge
+            
+            -- Сначала ищем по тегам
+            local generators = Services.CollectionService:GetTagged("generator")
+            for _, gen in ipairs(generators) do
+                local dist = (hrp.Position - gen.Position).Magnitude
+                if dist < bestGenDist then
+                    bestGenDist = dist
+                    bestGen = gen
+                end
+            end
+            
+            -- Если тегов нет, ищем по имени в Workspace (резервный метод)
+            if not bestGen then
+                for _, obj in ipairs(Services.Workspace:GetDescendants()) do
+                    if obj.Name:lower():find("generator") and obj.Name:lower():find("iron") and obj:IsA("BasePart") then
+                        local dist = (hrp.Position - obj.Position).Magnitude
+                        if dist < bestGenDist then
+                            bestGenDist = dist
+                            bestGen = obj
+                        end
+                    end
+                end
+            end
+            
+            if bestGen then return bestGen end
+        end
+    end
 
     -- 1. Приоритет кроватям
     if States.Bot.TargetBeds then
