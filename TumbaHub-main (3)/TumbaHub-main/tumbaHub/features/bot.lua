@@ -12,6 +12,9 @@ local Services = Mega.Services or {
     Workspace = game:GetService("Workspace")
 }
 local LocalPlayer = Services.Players.LocalPlayer
+if not Mega.States then Mega.States = {} end
+local States = Mega.States
+
 if not States.Bot then
     States.Bot = {
         Enabled = false, TargetBeds = true, TargetPlayers = true,
