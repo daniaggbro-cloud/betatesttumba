@@ -26,7 +26,6 @@ local function getItemCount(itemName)
         if not container then return end
         for _, item in ipairs(container:GetChildren()) do
             if item.Name == itemName then
-                -- В Bedwars количество обычно в атрибуте или Amount
                 local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
                 count = count + (tonumber(amount) or 0)
             end
@@ -68,29 +67,12 @@ local function purchaseBlocks()
     end
 end
 
-local shopConnection
 function Mega.Features.ShopManager.SetEnabled(state)
     States.Bot.AutoShop.Enabled = state
-    
-    if state then
-        if shopConnection then shopConnection:Disconnect() end
-        shopConnection = Services.RunService.Heartbeat:Connect(function()
-            if not States.Bot.AutoShop.Enabled then return end
-            
-            local ironCount = getItemCount(ITEM_IRON)
-            
-            -- Логика: если железа >= лимита (напр. 24) - покупаем
-            if ironCount >= (States.Bot.AutoShop.TargetIron or 24) then
-                purchaseBlocks()
-                task.wait(1) -- Задержка после закупки
-            end
-        end)
-    else
-        if shopConnection then
-            shopConnection:Disconnect()
-            shopConnection = nil
-        end
-    end
+end
+
+function Mega.Features.ShopManager.PurchaseNow()
+    purchaseBlocks()
 end
 
 -- Внешние геттеры для основного бота
@@ -101,8 +83,4 @@ end
 
 function Mega.Features.ShopManager.GetIronCount()
     return getItemCount(ITEM_IRON)
-end
-
-if States.Bot.AutoShop.Enabled then
-    Mega.Features.ShopManager.SetEnabled(true)
 end

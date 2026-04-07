@@ -7,13 +7,11 @@ Mega.Features.Bot = {}
 local Services = Mega.Services or {
     Players = game:GetService("Players"),
     RunService = game:GetService("RunService"),
-    PathfindingService = game:GetService("PathfindingService"),
+    PathfindingService = game:GetService("PathfindingService") or game:FindService("PathfindingService"),
     CollectionService = game:GetService("CollectionService"),
     Workspace = game:GetService("Workspace")
 }
 local LocalPlayer = Services.Players.LocalPlayer
-local States = Mega.States
-
 if not States.Bot then
     States.Bot = {
         Enabled = false, TargetBeds = true, TargetPlayers = true,
@@ -32,6 +30,44 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
+-- Поиск магазина
+local function getStoreNPC()
+    local best = nil
+    local bestDist = math.huge
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    -- Поиск по тегам или по имени
+    local shops = Services.CollectionService:GetTagged("item_shop")
+    if #shops == 0 then
+        -- Резервный поиск в Workspace
+        for _, obj in ipairs(Services.Workspace:GetDescendants()) do
+            if obj.Name == "Item Shop" or obj.Name == "Store" or obj.Name == "shop" then
+                local bPart = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart")
+                if bPart then
+                    local dist = (hrp.Position - bPart.Position).Magnitude
+                    if dist < bestDist then
+                        bestDist = dist
+                        best = bPart
+                    end
+                end
+            end
+        end
+    else
+        for _, shop in ipairs(shops) do
+            local bPart = shop:IsA("BasePart") and shop or shop:FindFirstChildWhichIsA("BasePart")
+            if bPart then
+                local dist = (hrp.Position - bPart.Position).Magnitude
+                if dist < bestDist then
+                    bestDist = dist
+                    best = bPart
+                end
+            end
+        end
+    end
+    return best
+end
+
 local function getBotTarget()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
@@ -40,38 +76,29 @@ local function getBotTarget()
     local bestDist = math.huge
     local myTeam = LocalPlayer:GetAttribute("Team")
 
-    -- 0. Приоритет сбору ресурсов (если включена авто-закупка и блоков мало)
+    -- 0. Приоритет сбору ресурсов и магазину
     if States.Bot.AutoShop and States.Bot.AutoShop.Enabled then
-        local shop = Mega.Features.ShopManager
-        if shop and shop.NeedsBlocks() then
-            -- Ищем ближайший генератор железа
-            local bestGen = nil
-            local bestGenDist = math.huge
+        local shopMod = Mega.Features.ShopManager
+        if shopMod and shopMod.NeedsBlocks() then
+            local ironCount = shopMod.GetIronCount()
+            local targetIron = States.Bot.AutoShop.TargetIron or 24
             
-            -- Сначала ищем по тегам
-            local generators = Services.CollectionService:GetTagged("generator")
-            for _, gen in ipairs(generators) do
-                local dist = (hrp.Position - gen.Position).Magnitude
-                if dist < bestGenDist then
-                    bestGenDist = dist
-                    bestGen = gen
-                end
-            end
-            
-            -- Если тегов нет, ищем по имени в Workspace (резервный метод)
-            if not bestGen then
-                for _, obj in ipairs(Services.Workspace:GetDescendants()) do
-                    if obj.Name:lower():find("generator") and obj.Name:lower():find("iron") and obj:IsA("BasePart") then
-                        local dist = (hrp.Position - obj.Position).Magnitude
-                        if dist < bestGenDist then
-                            bestGenDist = dist
-                            bestGen = obj
-                        end
+            if ironCount < targetIron then
+                -- ЕЩЕ КОПИМ: Ищем генератор
+                local generators = Services.CollectionService:GetTagged("generator")
+                for _, gen in ipairs(generators) do
+                    local dist = (hrp.Position - gen.Position).Magnitude
+                    if dist < bestDist then
+                        bestDist = dist
+                        bestTarget = gen
                     end
                 end
+                if bestTarget then return bestTarget end
+            else
+                -- УЖЕ НАКОПИЛИ: Идем в магазин
+                local store = getStoreNPC()
+                if store then return store end
             end
-            
-            if bestGen then return bestGen end
         end
     end
 
@@ -183,7 +210,7 @@ function Mega.Features.Bot.SetEnabled(state)
         if States.Bot.AutoBedNuke and Mega.Features.BedNuke and not prevModuleStates.BedNuke then Mega.Features.BedNuke.SetEnabled(true) end
         if States.Bot.AutoAntiVoid and Mega.Features.AntiVoid and not prevModuleStates.AntiVoid then Mega.Features.AntiVoid.SetEnabled(true) end
         if States.Bot.AutoSpider and Mega.Features.Spider and not prevModuleStates.Spider then Mega.Features.Spider.SetEnabled(true) end
-
+        
         connections.BotLoop = Services.RunService.Heartbeat:Connect(function(dt)
             if not States.Bot.Enabled then return end
             
@@ -201,7 +228,19 @@ function Mega.Features.Bot.SetEnabled(state)
             end
 
             local isPlayerTarget = target.Parent:FindFirstChild("Humanoid") ~= nil
+            local isShopTarget = target.Name == "Item Shop" or target.Name == "Store" or target.Name == "shop" or target.Parent.Name:lower():find("shop") or Services.CollectionService:HasTag(target, "item_shop") or Services.CollectionService:HasTag(target.Parent, "item_shop")
             local distToTargetXZ = (hrp.Position * Vector3.new(1,0,1) - target.Position * Vector3.new(1,0,1)).Magnitude
+
+            -- Логика закупки в магазине (когда мы подошли вплотную)
+            if isShopTarget and distToTargetXZ <= 10 then
+                local shopMod = Mega.Features.ShopManager
+                if shopMod and shopMod.GetIronCount() >= (States.Bot.AutoShop.TargetIron or 24) then
+                    shopMod.PurchaseNow()
+                    task.wait(1) 
+                end
+                hum:MoveTo(hrp.Position) -- Останавливаемся у "кассы"
+                return
+            end
             
             --#region Combat Strafe Logic
             if isPlayerTarget and distToTargetXZ <= 15 then
