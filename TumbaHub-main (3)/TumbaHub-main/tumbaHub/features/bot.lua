@@ -40,48 +40,53 @@ table.clear(connections)
 -- Находит ближайший железный генератор команды игрока
 -- В Bedwars генераторы - это модели с именем вида "blue_generator", "red_generator"
 -- или объекты с тегом "generator", или содержащие "Generator" в имени
+-- Вспомогательная функция: получить позицию из любого объекта
+local function getObjPosition(obj)
+    if obj:IsA("BasePart") then
+        return obj.Position
+    elseif obj:IsA("CFrameValue") then
+        -- В Bedwars генераторы - это CFrameValue! Позиция берётся через .Value
+        return obj.Value.Position
+    elseif obj:IsA("Model") then
+        if obj.PrimaryPart then return obj.PrimaryPart.Position end
+        local part = obj:FindFirstChildWhichIsA("BasePart", true)
+        if part then return part.Position end
+    end
+    return nil
+end
+
 local function findIronGenerator()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
 
-    local myTeam = LocalPlayer:GetAttribute("Team") or LocalPlayer:GetAttribute("TeamId") or ""
-    local myTeamLower = tostring(myTeam):lower()
-
     local best, bestDist = nil, math.huge
 
-    -- Проходим по детям Workspace (не GetDescendants, чтобы не тормозило)
+    -- В Bedwars генераторы называются "cframe-N_generator" и являются CFrameValue
     for _, obj in ipairs(Workspace:GetChildren()) do
         local n = obj.Name:lower()
-        -- Ищем объекты содержащие "generator" в имени
         if n:find("generator") then
-            -- Предпочитаем генератор своей команды
-            local isMyTeam = (myTeamLower ~= "" and n:find(myTeamLower)) or true
-            if isMyTeam then
-                local part = obj:IsA("BasePart") and obj or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
-                if part then
-                    local dist = (hrp.Position - part.Position).Magnitude
-                    if dist < bestDist then
-                        bestDist = dist
-                        best = part
-                    end
+            local pos = getObjPosition(obj)
+            if pos then
+                local dist = (hrp.Position - pos).Magnitude
+                if dist < bestDist then
+                    bestDist = dist
+                    best = obj
                 end
             end
         end
     end
 
-    -- Резервно ищем глубже если не нашли
+    -- Дополнительный поиск по GetDescendants если не нашли
     if not best then
         for _, obj in ipairs(Workspace:GetDescendants()) do
-            if obj:IsA("BasePart") or obj:IsA("Model") then
-                local n = obj.Name:lower()
-                if n:find("generator") or n == "iron_generator" or n == "iron generator" then
-                    local part = obj:IsA("BasePart") and obj or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
-                    if part then
-                        local dist = (hrp.Position - part.Position).Magnitude
-                        if dist < bestDist then
-                            bestDist = dist
-                            best = part
-                        end
+            local n = obj.Name:lower()
+            if n:find("generator") then
+                local pos = getObjPosition(obj)
+                if pos then
+                    local dist = (hrp.Position - pos).Magnitude
+                    if dist < bestDist then
+                        bestDist = dist
+                        best = obj
                     end
                 end
             end
@@ -385,7 +390,11 @@ function Mega.Features.Bot.SetEnabled(state)
                 return
             end
 
-            local distXZ = (hrp.Position * Vector3.new(1,0,1) - target.Position * Vector3.new(1,0,1)).Magnitude
+            -- Безопасно получаем позицию (учитываем CFrameValue генераторы)
+            local targetPos = getObjPosition(target) or (target:IsA("Instance") and target:FindFirstChildWhichIsA("BasePart") and target:FindFirstChildWhichIsA("BasePart").Position)
+            if not targetPos then return end
+
+            local distXZ = (hrp.Position * Vector3.new(1,0,1) - targetPos * Vector3.new(1,0,1)).Magnitude
 
             -- == Обработка по фазе ==
 
@@ -437,7 +446,7 @@ function Mega.Features.Bot.SetEnabled(state)
                         local path = PathSvc:CreatePath({
                             AgentRadius = 2.5, AgentHeight = 5, AgentCanJump = true
                         })
-                        path:ComputeAsync(hrp.Position, target.Position)
+                        path:ComputeAsync(hrp.Position, targetPos)
                         if path.Status == Enum.PathStatus.Success then
                             currentPath = path:GetWaypoints()
                             waypointIndex = 2
@@ -458,10 +467,10 @@ function Mega.Features.Bot.SetEnabled(state)
                         waypointIndex = waypointIndex + 1
                     end
                 else
-                    hum:MoveTo(target.Position)
+                    hum:MoveTo(targetPos)
                 end
             else
-                hum:MoveTo(target.Position)
+                hum:MoveTo(targetPos)
                 if checkHurdle(hrp) then hum.Jump = true end
             end
 
@@ -476,7 +485,7 @@ function Mega.Features.Bot.SetEnabled(state)
                     if look.Magnitude < 0.1 then look = Vector3.new(1, 0, 0) end
                     local tp = hrp.Position + look * 3 + side * 2 + Vector3.new(0, 5, 0)
                     if isPointSafe(tp) then
-                        hrp.CFrame = CFrame.new(tp, target.Position)
+                        hrp.CFrame = CFrame.new(tp, targetPos)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 10, 0)
                     end
                     stuckTimer = 0
