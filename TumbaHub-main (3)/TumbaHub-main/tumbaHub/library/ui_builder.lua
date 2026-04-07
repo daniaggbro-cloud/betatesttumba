@@ -353,8 +353,9 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
 
     local ListLayout = Instance.new("UIListLayout")
     ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    ListLayout.Padding = UDim.new(0, 1)
+    ListLayout.Padding = UDim.new(0, 2)
     ListLayout.Parent = DropdownList
 
     local listHeight = 0
@@ -371,7 +372,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         ListItem.Font = Enum.Font.GothamSemibold
         ListItem.AutoButtonColor = false
         ListItem.LayoutOrder = i
-        ListItem.ZIndex = 101 -- Very high to stay on top
+        ListItem.ZIndex = 110 -- Increment ZIndex significantly
         ListItem.Parent = DropdownList
 
         -- Hover effect
@@ -404,11 +405,10 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.MouseButton1Click:Connect(function()
         DropdownList.Visible = not DropdownList.Visible
         if DropdownList.Visible then
-            local targetHeight = math.min(listHeight + 5, 140)
+            local itemsCount = #options
+            local targetHeight = math.min((itemsCount * 32) + 5, 140) -- Calculation based on item size + padding
             DropdownList.ZIndex = 100
             TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetHeight) }):Play()
-            
-            -- Expand frame to let parent ScrollingFrame update CanvasSize
             DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetHeight + 5)
         else
             DropdownList.ZIndex = 10
