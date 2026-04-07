@@ -96,28 +96,39 @@ local function findIronGenerator()
     return best
 end
 
--- Находит NPC магазина по точному пути: workspace["2_item_shop_1"]
+-- Находит NPC магазина: workspace["2_item_shop_1"]
 local function findShopNPC()
     -- МЕТОД 1: Точный путь из GameDump
-    local shopModel = Workspace:FindFirstChild("2_item_shop_1")
-    if shopModel then
-        print("[TumbaHub] Found shop: 2_item_shop_1")
-        -- Ищем любую BasePart внутри для навигации
-        local part = shopModel.PrimaryPart
-            or shopModel:FindFirstChildWhichIsA("BasePart", true)
+    local shopObj = Workspace:FindFirstChild("2_item_shop_1")
+    if shopObj then
+        print("[TumbaHub] Found shop: 2_item_shop_1 (" .. shopObj.ClassName .. ")")
+        -- Если это уже BasePart — возвращаем напрямую
+        if shopObj:IsA("BasePart") then
+            return shopObj
+        end
+        -- Если Model — берём PrimaryPart или первую BasePart
+        if shopObj:IsA("Model") then
+            local part = shopObj.PrimaryPart or shopObj:FindFirstChildWhichIsA("BasePart", true)
+            if part then return part end
+        end
+        -- Любой другой случай — ищем BasePart внутри
+        local part = shopObj:FindFirstChildWhichIsA("BasePart", true)
         if part then return part end
     end
 
-    -- МЕТОД 2: Поиск любого объекта с "shop" в имени
+    -- МЕТОД 2: Поиск по имени (любой объект с "shop" или "item_shop")
     for _, obj in ipairs(Workspace:GetChildren()) do
         local n = obj.Name:lower()
-        if n:find("shop") or n:find("item_shop") then
-            local part = obj.PrimaryPart
-                or obj:FindFirstChildWhichIsA("BasePart", true)
-                or (obj:IsA("BasePart") and obj)
-            if part then
-                print("[TumbaHub] Found shop by scan: " .. obj.Name)
-                return part
+        if n:find("item_shop") or n:find("shop") then
+            if obj:IsA("BasePart") then
+                print("[TumbaHub] Found shop (Part): " .. obj.Name)
+                return obj
+            elseif obj:IsA("Model") then
+                local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
+                if part then
+                    print("[TumbaHub] Found shop (Model): " .. obj.Name)
+                    return part
+                end
             end
         end
     end
