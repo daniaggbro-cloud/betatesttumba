@@ -407,13 +407,32 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         if isExpanding then
             DropdownList.Visible = true
             local targetListHeight = math.min(#options * 32 + 10, 150)
+            
+            -- Smart Direction: Проверяем, сколько места осталось внизу
+            local parentTab = parent:FindFirstAncestorOfClass("ScrollingFrame") or parent
+            local screenHeight = parentTab.AbsoluteSize.Y
+            local buttonPosInTab = DropdownButton.AbsolutePosition.Y - parentTab.AbsolutePosition.Y
+            local spaceBelow = screenHeight - buttonPosInTab - 35
+            
+            local openUpwards = spaceBelow < (targetListHeight + 20)
+            
+            -- Устанавливаем позицию в зависимости от направления
+            if openUpwards then
+                DropdownList.Position = UDim2.new(1, -200, 0, -targetListHeight - 5)
+                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35) -- Не расширяем вниз, если открываемся вверх
+            else
+                DropdownList.Position = UDim2.new(1, -200, 1, 5)
+                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetListHeight + 5)
+            end
+            
+            DropdownList.ZIndex = 500
             TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetListHeight) }):Play()
-            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetListHeight + 5)
         else
             local t = TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, 0) })
             t:Play()
             t.Completed:Connect(function() 
-                if not isExpanding then DropdownList.Visible = false end 
+                if not DropdownList.Visible then return end -- Avoid double-toggle issues
+                DropdownList.Visible = false 
             end)
             DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
         end
