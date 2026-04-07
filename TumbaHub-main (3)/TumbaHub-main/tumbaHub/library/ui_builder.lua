@@ -315,9 +315,9 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownLabel.Parent = DropdownFrame
 
     local DropdownButton = Instance.new("TextButton")
-    DropdownButton.Size = UDim2.new(0.4, 0, 1, 0)
-    DropdownButton.Position = UDim2.new(0.6, 0, 0, 0)
-    DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor:Lerp(Color3.new(1, 1, 1), 0.1) -- Lighter for visibility
+    DropdownButton.Size = UDim2.new(0, 200, 1, 0)
+    DropdownButton.Position = UDim2.new(1, -200, 0, 0)
+    DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor:Lerp(Color3.new(1, 1, 1), 0.05)
     DropdownButton.BorderSizePixel = 0
     local displayText = (optionsAreKeys and GetText(initialValue)) or initialValue
     DropdownButton.Text = tostring(displayText or "")
@@ -334,8 +334,8 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     ButtonStroke.Transparency = 0.8
 
     local DropdownList = Instance.new("ScrollingFrame")
-    DropdownList.Size = UDim2.new(0.4, 0, 0, 0) -- Initial height 0
-    DropdownList.Position = UDim2.new(0.6, 0, 1, 5)
+    DropdownList.Size = UDim2.new(0, 200, 0, 0) -- Initial height 0
+    DropdownList.Position = UDim2.new(1, -200, 1, 5)
     DropdownList.BackgroundColor3 = Mega.Settings.Menu.SidebarColor
     DropdownList.BorderSizePixel = 0
     DropdownList.ScrollBarThickness = 2
@@ -366,13 +366,21 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         ListItem.BackgroundTransparency = 0.2
         ListItem.BorderSizePixel = 0
         ListItem.Text = tostring(translatedOption)
-        ListItem.TextColor3 = Color3.new(1, 1, 1) -- Pure white for options
-        ListItem.TextSize = 12
+        ListItem.TextColor3 = Color3.new(1, 1, 1)
+        ListItem.TextSize = 11
         ListItem.Font = Enum.Font.GothamSemibold
-        ListItem.AutoButtonColor = true
+        ListItem.AutoButtonColor = false
         ListItem.LayoutOrder = i
-        ListItem.ZIndex = 11
+        ListItem.ZIndex = 101 -- Very high to stay on top
         ListItem.Parent = DropdownList
+
+        -- Hover effect
+        ListItem.MouseEnter:Connect(function()
+            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.AccentColor, BackgroundTransparency = 0.5}):Play()
+        end)
+        ListItem.MouseLeave:Connect(function()
+            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.ElementColor, BackgroundTransparency = 0.2}):Play()
+        end)
         
         listHeight = listHeight + 31
 
@@ -396,14 +404,12 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.MouseButton1Click:Connect(function()
         DropdownList.Visible = not DropdownList.Visible
         if DropdownList.Visible then
-            local targetHeight = math.min(listHeight + 5, 150)
-            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0.4, 0, 0, targetHeight) }):Play()
-            
-            -- Fix scrolling/clipping: Expand the frame so the parent ScrollingFrame sees the new size
-            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetHeight + 5)
+            local targetHeight = math.min(listHeight + 5, 140)
+            DropdownList.ZIndex = 100
+            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetHeight) }):Play()
         else
-            DropdownList.Size = UDim2.new(0.4, 0, 0, 0)
-            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
+            DropdownList.ZIndex = 10
+            DropdownList.Size = UDim2.new(0, 200, 0, 0)
         end
     end)
     return DropdownFrame
