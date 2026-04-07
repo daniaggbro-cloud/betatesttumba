@@ -96,85 +96,103 @@ local function findIronGenerator()
     return best
 end
 
--- Находит NPC магазина по точному пути из GameDump:
--- workspace["1_item_shop"].desertMerchant
+-- Находит NPC магазина по точному пути: workspace["1_item_shop"].desertMerchant
 local function findShopNPC()
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return nil end
-
-    -- ТОЧНЫЙ путь из GameDump
+    -- МЕТОД 1: Точный путь из GameDump
     local shopModel = Workspace:FindFirstChild("1_item_shop")
     if shopModel then
+        print("[TumbaHub] Found shop model: 1_item_shop")
         local merchant = shopModel:FindFirstChild("desertMerchant")
         if merchant then
-            local part = merchant.PrimaryPart or merchant:FindFirstChildWhichIsA("BasePart", true)
+            print("[TumbaHub] Found desertMerchant!")
+            -- Берём любую BasePart из merchant для навигации
+            local part = merchant:FindFirstChild("HumanoidRootPart")
+                or merchant.PrimaryPart
+                or merchant:FindFirstChildWhichIsA("BasePart", true)
             if part then return part end
         end
-        -- Резерв: любая BasePart внутри shopModel
+        -- Если desertMerchant не нашли — берём любую часть самого шопа
         local part = shopModel.PrimaryPart or shopModel:FindFirstChildWhichIsA("BasePart", true)
-        if part then return part end
-    end
-
-    -- Резервный поиск по имени если точный путь не сработал
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and (obj.Name:lower():find("shop") or obj.Name == "1_item_shop") then
-            local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
-            if part then return part end
+        if part then
+            print("[TumbaHub] Using shop model base part as target")
+            return part
         end
+    else
+        -- МЕТОД 2: Поиск по похожим именам
+        for _, obj in ipairs(Workspace:GetChildren()) do
+            local n = obj.Name:lower()
+            if n:find("shop") or n:find("store") or n:find("merchant") then
+                local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
+                    or (obj:IsA("BasePart") and obj)
+                if part then
+                    print("[TumbaHub] Found shop by name: " .. obj.Name)
+                    return part
+                end
+            end
+        end
+        print("[TumbaHub] WARNING: Cannot find shop NPC in workspace!")
     end
 
     return nil
 end
 
--- Счетчик железа в инвентаре
+-- Счетчик железа в инвентаре (Bedwars хранит ресурсы по-разному)
 local function getIronCount()
     local count = 0
-    local char = LocalPlayer.Character
-    local bp = LocalPlayer:FindFirstChild("Backpack")
 
-    local function countIn(container)
+    -- Метод 1: Атрибут на самом игроке
+    local attr = LocalPlayer:GetAttribute("iron") or LocalPlayer:GetAttribute("Iron") or LocalPlayer:GetAttribute("IRON")
+    if attr and tonumber(attr) then return tonumber(attr) end
+
+    -- Метод 2: IntValue/NumberValue в папках игрока (leaderstats или resources)
+    local function scanContainer(container)
+        if not container then return end
+        for _, v in ipairs(container:GetDescendants()) do
+            if (v:IsA("IntValue") or v:IsA("NumberValue")) then
+                local n = v.Name:lower()
+                if n == "iron" then
+                    count = count + (tonumber(v.Value) or 0)
+                end
+            end
+        end
+    end
+    scanContainer(LocalPlayer:FindFirstChild("leaderstats"))
+    scanContainer(LocalPlayer:FindFirstChild("resources"))
+    scanContainer(LocalPlayer:FindFirstChild("PlayerData"))
+    scanContainer(LocalPlayer:FindFirstChild("Stats"))
+
+    -- Метод 3: Tool/Part в Backpack или Character по имени
+    local bp = LocalPlayer:FindFirstChild("Backpack")
+    local char = LocalPlayer.Character
+    local function countTools(container)
         if not container then return end
         for _, item in ipairs(container:GetChildren()) do
-            if item.Name == "iron" or item.Name == "Iron" then
-                local amt = item:GetAttribute("Amount") or item:GetAttribute("amount") or 1
+            local n = item.Name:lower()
+            if n == "iron" then
+                local amt = item:GetAttribute("Amount") or item:GetAttribute("amount") or item:GetAttribute("count") or 1
                 count = count + (tonumber(amt) or 1)
             end
         end
     end
+    countTools(bp)
+    if char then countTools(char) end
 
-    countIn(bp)
-    if char then countIn(char) end
     return count
 end
 
--- Нужно ли покупать блоки?
+-- Нужно ли идти за ресурсами?
+-- Проверяем только флаг AutoShop, само условие = есть ли 24 железа
 local function needsBlocks()
     if not States.Bot.AutoShop or not States.Bot.AutoShop.Enabled then return false end
-    -- Считаем шерсть в инвентаре
-    local count = 0
-    local char = LocalPlayer.Character
-    local bp = LocalPlayer:FindFirstChild("Backpack")
-    local minBlocks = States.Bot.AutoShop.MinBlocks or 16
-    local function countIn(container)
-        if not container then return end
-        for _, item in ipairs(container:GetChildren()) do
-            if item.Name:lower():find("wool") then
-                local amt = item:GetAttribute("Amount") or item:GetAttribute("amount") or 1
-                count = count + (tonumber(amt) or 1)
-            end
-        end
-    end
-    countIn(bp)
-    if char then countIn(char) end
-    return count < minBlocks
+    -- Всегда нужны блоки пока включена авто-закупка
+    -- (купит один раз, потом нормальная логика повторит цикл)
+    return true
 end
 
 -- ============================================================
 --  ЛОГИКА ЦЕЛИ
 -- ============================================================
 
--- Состояние машины
--- "idle" -> "farm_iron" -> "go_shop" -> "buy" -> "combat"
 local botPhase = "idle"
 
 local function getBotTarget()
@@ -185,21 +203,29 @@ local function getBotTarget()
 
     -- Фаза ресурсов
     if States.Bot.AutoShop and States.Bot.AutoShop.Enabled then
-        if needsBlocks() then
-            local iron = getIronCount()
-            local targetIron = States.Bot.AutoShop.TargetIron or 24
+        local iron = getIronCount()
+        local targetIron = States.Bot.AutoShop.TargetIron or 24
 
-            if iron < targetIron then
-                -- ФАЗА 1: Накапливаем железо у генератора
-                local gen = findIronGenerator()
-                if gen then
-                    return gen, "farm_iron"
-                end
+        print(string.format("[TumbaHub] Iron: %d / %d", iron, targetIron))
+
+        if iron < targetIron then
+            -- ФАЗА 1: Накапливаем железо у генератора
+            local gen = findIronGenerator()
+            if gen then
+                return gen, "farm_iron"
+            end
+        else
+            -- ФАЗА 2: Идем в магазин покупать
+            local shop = findShopNPC()
+            if shop then
+                return shop, "go_shop"
             else
-                -- ФАЗА 2: Идем в магазин покупать
-                local shop = findShopNPC()
-                if shop then
-                    return shop, "go_shop"
+                print("[TumbaHub] Shop NPC not found! Checking workspace...")
+                -- Дебаг: выводим что есть в workspace с "shop" в имени
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if obj.Name:lower():find("shop") or obj.Name:lower():find("merchant") then
+                        print("[TumbaHub] Found object: " .. obj.Name .. " (" .. obj.ClassName .. ") at " .. tostring(obj.Parent and obj.Parent.Name))
+                    end
                 end
             end
         end
