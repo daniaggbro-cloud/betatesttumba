@@ -317,7 +317,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     local DropdownButton = Instance.new("TextButton")
     DropdownButton.Size = UDim2.new(0.4, 0, 1, 0)
     DropdownButton.Position = UDim2.new(0.6, 0, 0, 0)
-    DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+    DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor:Lerp(Color3.new(1, 1, 1), 0.1) -- Lighter for visibility
     DropdownButton.BorderSizePixel = 0
     local displayText = (optionsAreKeys and GetText(initialValue)) or initialValue
     DropdownButton.Text = tostring(displayText or "")
@@ -366,7 +366,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         ListItem.BackgroundTransparency = 0.2
         ListItem.BorderSizePixel = 0
         ListItem.Text = tostring(translatedOption)
-        ListItem.TextColor3 = Mega.Settings.Menu.TextColor
+        ListItem.TextColor3 = Color3.new(1, 1, 1) -- Pure white for options
         ListItem.TextSize = 12
         ListItem.Font = Enum.Font.GothamSemibold
         ListItem.AutoButtonColor = true
@@ -398,8 +398,12 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         if DropdownList.Visible then
             local targetHeight = math.min(listHeight + 5, 150)
             TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0.4, 0, 0, targetHeight) }):Play()
+            
+            -- Fix scrolling/clipping: Expand the frame so the parent ScrollingFrame sees the new size
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetHeight + 5)
         else
             DropdownList.Size = UDim2.new(0.4, 0, 0, 0)
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
         end
     end)
     return DropdownFrame
