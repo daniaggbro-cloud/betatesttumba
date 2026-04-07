@@ -19,7 +19,7 @@ if not States.Bot then
         Enabled = false, TargetBeds = true, TargetPlayers = true,
         Pathfinding = true, AutoKillaura = true, AutoScaffold = true, 
         AutoBedNuke = true, AutoAntiVoid = true, AutoSpider = true,
-        AutoPlay = { Enabled = false, Mode = "bedwars_16v16" }
+        AutoPlay = { Enabled = false, Mode = "queue_16v16" }
     }
 end
 

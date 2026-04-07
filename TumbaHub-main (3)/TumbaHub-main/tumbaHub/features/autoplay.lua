@@ -49,9 +49,18 @@ function Mega.Features.AutoPlay.SetEnabled(state)
             
             if isLobby() and joinQueueRemote then
                 lastJoinAttempt = tick()
+                local modeMap = {
+                    ["queue_16v16"] = "bedwars_16v16",
+                    ["queue_to4"] = "bedwars_to4",
+                    ["queue_to2"] = "bedwars_2v2",
+                    ["queue_to1"] = "bedwars_1v1",
+                    ["queue_5v5"] = "bedwars_5v5",
+                    ["queue_skywars"] = "skywars"
+                }
+                
                 local args = {
                     {
-                        queueType = States.Bot.AutoPlay.Mode or "bedwars_16v16"
+                        queueType = modeMap[States.Bot.AutoPlay.Mode] or "bedwars_16v16"
                     }
                 }
                 pcall(function()

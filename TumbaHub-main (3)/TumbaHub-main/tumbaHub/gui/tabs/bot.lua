@@ -98,9 +98,7 @@ UI.CreateToggle(TabFrame, "toggle_bot_autoplay", "Bot.AutoPlay.Enabled", functio
     end
 end)
 
-UI.CreateDropdown(TabFrame, "dropdown_bot_autoplay_mode", "Bot.AutoPlay.Mode", queueNames, function(label)
-    Mega.States.Bot.AutoPlay.Mode = queueModes[label]
-end)
+UI.CreateDropdown(TabFrame, "dropdown_bot_autoplay_mode", "Bot.AutoPlay.Mode", queueNames, nil, true)
 
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/autoplay.lua") end)
