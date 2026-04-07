@@ -15,7 +15,7 @@ local States = Mega.States
 if not States.Bot.AutoPlay then
     States.Bot.AutoPlay = {
         Enabled = false,
-        Mode = "bedwars_16v16"
+        Mode = "queue_16v16"
     }
 end
 
@@ -52,15 +52,15 @@ function Mega.Features.AutoPlay.SetEnabled(state)
                 local modeMap = {
                     ["queue_16v16"] = "bedwars_16v16",
                     ["queue_to4"] = "bedwars_to4",
-                    ["queue_to2"] = "bedwars_2v2",
-                    ["queue_to1"] = "bedwars_1v1",
-                    ["queue_5v5"] = "bedwars_5v5",
-                    ["queue_skywars"] = "skywars"
+                    ["queue_to2"] = "bedwars_duels",   -- Из дампа
+                    ["queue_to1"] = "winstreak_1v1",   -- Из дампа
+                    ["queue_5v5"] = "bedwars_5v5",     -- Из дампа
+                    ["queue_skywars"] = "skywars_to2"   -- Из дампа
                 }
                 
                 local args = {
                     {
-                        queueType = modeMap[States.Bot.AutoPlay.Mode] or "bedwars_16v16"
+                        queueType = modeMap[States.Bot.AutoPlay.Mode] or "winstreak_1v1"
                     }
                 }
                 pcall(function()

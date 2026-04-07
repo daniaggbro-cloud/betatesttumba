@@ -131,7 +131,7 @@ Mega.Localization = {
         ["queue_16v16"] = { ru = "16 на 16", en = "16 vs 16", es = "16 vs 16", pt = "16 vs 16", ko = "16 대 16", ja = "16 対 16", uk = "16 на 16" },
         ["queue_to4"] = { ru = "Сквады (4 на 4)", en = "Squads (4 vs 4)", es = "Escuadrones (4 vs 4)", pt = "Esquadrões (4 vs 4)", ko = "스쿼드 (4 대 4)", ja = "スクワッド (4 対 4)", uk = "Сквади (4 на 4)" },
         ["queue_to2"] = { ru = "Дуэли (2 на 2)", en = "Doubles (2 vs 2)", es = "Dúos (2 vs 2)", pt = "Duplas (2 vs 2)", ko = "듀오 (2 대 2)", ja = "デュオ (2 対 2)", uk = "Дуелі (2 на 2)" },
-        ["queue_to1"] = { ru = "Соло (Винстрик)", en = "Solo (Winstreak)", es = "Solo (Winstreak)", pt = "Solo (Winstreak)", ko = "솔로 (연승)", ja = "ソロ (連勝)", uk = "Соло (Вінстрік)" },
+        ["queue_to1"] = { ru = "Винстрик (1 на 1)", en = "Solo (Winstreak)", es = "Solo (Winstreak)", pt = "Solo (Winstreak)", ko = "솔로 (연승)", ja = "ソロ (連勝)", uk = "Соло (Вінстрік)" },
         ["queue_5v5"] = { ru = "5 на 5", en = "5 vs 5", es = "5 vs 5", pt = "5 vs 5", ko = "5 대 5", ja = "5 対 5", uk = "5 на 5" },
         ["queue_skywars"] = { ru = "Скайварс (Skywars)", en = "Skywars", es = "Skywars", pt = "Skywars", ko = "스카이워즈", ja = "スカイウォーズ", uk = "Скайварс" },
         ["title_bar"] = { ru = "💎 TUMBA MEGA SYSTEM v%s 💎", en = "💎 TUMBA MEGA SYSTEM v%s 💎", es = "💎 SISTEMA MEGA TUMBA v%s 💎", pt = "💎 SISTEMA MEGA TUMBA v%s 💎", ko = "💎 TUMBA 메가 시스템 v%s 💎", ja = "💎 TUMBA メガシステム v%s 💎", uk = "💎 TUMBA MEGA SYSTEM v%s 💎" },
