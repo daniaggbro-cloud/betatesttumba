@@ -4,13 +4,12 @@
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Bot = {}
 
--- Получаем сервисы НАПРЯМУЮ, не через Mega.Services (чтобы избежать nil)
-local Players       = game:GetService("Players")
-local RunService    = game:GetService("RunService")
-local PathSvc       = game:GetService("PathfindingService")
-local CollSvc       = game:GetService("CollectionService")
+-- Сервисы напрямую (НЕ через Mega.Services, чтобы избежать nil)
+local Players           = game:GetService("Players")
+local RunService        = game:GetService("RunService")
+local PathSvc           = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace     = workspace
+local Workspace         = workspace
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -35,48 +34,30 @@ end
 table.clear(connections)
 
 -- ============================================================
---  ПОИСК ОБЪЕКТОВ В МИРЕ
+--  ПОИСК ОБЪЕКТОВ (точные пути из GameDump)
 -- ============================================================
 
--- Поиск ближайшего генератора железа
+-- Находит ближайший железный генератор команды игрока
+-- В Bedwars генераторы - это модели с именем вида "blue_generator", "red_generator"
+-- или объекты с тегом "generator", или содержащие "Generator" в имени
 local function findIronGenerator()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
 
-    local best, bestDist = nil, math.huge
-
-    -- Ищем по имени среди всех объектов в Workspace
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") then
-            local n = obj.Name:lower()
-            -- В Bedwars генераторы называются "Iron" или "IronGenerator" или похожее
-            if n:find("iron") or n:find("generator") then
-                local dist = (hrp.Position - obj.Position).Magnitude
-                if dist < bestDist then
-                    bestDist = dist
-                    best = obj
-                end
-            end
-        end
-    end
-
-    -- Если не нашли — ищем по цвету (генераторы железа обычно серые)
-    return best
-end
-
--- Поиск NPC магазина
-local function findShopNPC()
-    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return nil end
+    local myTeam = LocalPlayer:GetAttribute("Team") or LocalPlayer:GetAttribute("TeamId") or ""
+    local myTeamLower = tostring(myTeam):lower()
 
     local best, bestDist = nil, math.huge
 
-    -- В Bedwars магазин называется "Upgrade_Shop" или "1_item_shop" или похожее
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") or obj:IsA("BasePart") then
-            local n = obj.Name:lower()
-            if n:find("shop") or n:find("store") or n:find("upgrade") or n:find("merchant") or n:find("trader") then
-                local part = obj:IsA("BasePart") and obj or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+    -- Проходим по детям Workspace (не GetDescendants, чтобы не тормозило)
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        local n = obj.Name:lower()
+        -- Ищем объекты содержащие "generator" в имени
+        if n:find("generator") then
+            -- Предпочитаем генератор своей команды
+            local isMyTeam = (myTeamLower ~= "" and n:find(myTeamLower)) or true
+            if isMyTeam then
+                local part = obj:IsA("BasePart") and obj or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
                 if part then
                     local dist = (hrp.Position - part.Position).Magnitude
                     if dist < bestDist then
@@ -87,47 +68,144 @@ local function findShopNPC()
             end
         end
     end
+
+    -- Резервно ищем глубже если не нашли
+    if not best then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") or obj:IsA("Model") then
+                local n = obj.Name:lower()
+                if n:find("generator") or n == "iron_generator" or n == "iron generator" then
+                    local part = obj:IsA("BasePart") and obj or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                    if part then
+                        local dist = (hrp.Position - part.Position).Magnitude
+                        if dist < bestDist then
+                            bestDist = dist
+                            best = part
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     return best
+end
+
+-- Находит NPC магазина по точному пути из GameDump:
+-- workspace["1_item_shop"].desertMerchant
+local function findShopNPC()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    -- ТОЧНЫЙ путь из GameDump
+    local shopModel = Workspace:FindFirstChild("1_item_shop")
+    if shopModel then
+        local merchant = shopModel:FindFirstChild("desertMerchant")
+        if merchant then
+            local part = merchant.PrimaryPart or merchant:FindFirstChildWhichIsA("BasePart", true)
+            if part then return part end
+        end
+        -- Резерв: любая BasePart внутри shopModel
+        local part = shopModel.PrimaryPart or shopModel:FindFirstChildWhichIsA("BasePart", true)
+        if part then return part end
+    end
+
+    -- Резервный поиск по имени если точный путь не сработал
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and (obj.Name:lower():find("shop") or obj.Name == "1_item_shop") then
+            local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            if part then return part end
+        end
+    end
+
+    return nil
+end
+
+-- Счетчик железа в инвентаре
+local function getIronCount()
+    local count = 0
+    local char = LocalPlayer.Character
+    local bp = LocalPlayer:FindFirstChild("Backpack")
+
+    local function countIn(container)
+        if not container then return end
+        for _, item in ipairs(container:GetChildren()) do
+            if item.Name == "iron" or item.Name == "Iron" then
+                local amt = item:GetAttribute("Amount") or item:GetAttribute("amount") or 1
+                count = count + (tonumber(amt) or 1)
+            end
+        end
+    end
+
+    countIn(bp)
+    if char then countIn(char) end
+    return count
+end
+
+-- Нужно ли покупать блоки?
+local function needsBlocks()
+    if not States.Bot.AutoShop or not States.Bot.AutoShop.Enabled then return false end
+    -- Считаем шерсть в инвентаре
+    local count = 0
+    local char = LocalPlayer.Character
+    local bp = LocalPlayer:FindFirstChild("Backpack")
+    local minBlocks = States.Bot.AutoShop.MinBlocks or 16
+    local function countIn(container)
+        if not container then return end
+        for _, item in ipairs(container:GetChildren()) do
+            if item.Name:lower():find("wool") then
+                local amt = item:GetAttribute("Amount") or item:GetAttribute("amount") or 1
+                count = count + (tonumber(amt) or 1)
+            end
+        end
+    end
+    countIn(bp)
+    if char then countIn(char) end
+    return count < minBlocks
 end
 
 -- ============================================================
 --  ЛОГИКА ЦЕЛИ
 -- ============================================================
 
+-- Состояние машины
+-- "idle" -> "farm_iron" -> "go_shop" -> "buy" -> "combat"
+local botPhase = "idle"
+
 local function getBotTarget()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return nil end
+    if not hrp then return nil, "idle" end
 
-    local bestTarget, bestDist = nil, math.huge
     local myTeam = LocalPlayer:GetAttribute("Team")
 
-    -- 0. Приоритет: Ресурсы (Генератор -> Магазин)
+    -- Фаза ресурсов
     if States.Bot.AutoShop and States.Bot.AutoShop.Enabled then
-        local shopMod = Mega.Features.ShopManager
-        if shopMod and shopMod.NeedsBlocks() then
-            local ironCount = shopMod.GetIronCount()
+        if needsBlocks() then
+            local iron = getIronCount()
             local targetIron = States.Bot.AutoShop.TargetIron or 24
 
-            if ironCount < targetIron then
-                -- Нужно больше железа -> идем к генератору
+            if iron < targetIron then
+                -- ФАЗА 1: Накапливаем железо у генератора
                 local gen = findIronGenerator()
                 if gen then
-                    print("[TumbaHub] ResourceBot: Going to iron generator, iron=" .. ironCount)
-                    return gen
+                    return gen, "farm_iron"
                 end
             else
-                -- Железо собрано -> идем в магазин
+                -- ФАЗА 2: Идем в магазин покупать
                 local shop = findShopNPC()
                 if shop then
-                    print("[TumbaHub] ResourceBot: Going to shop, iron=" .. ironCount)
-                    return shop
+                    return shop, "go_shop"
                 end
             end
         end
     end
 
-    -- 1. Приоритет: Кровати
+    -- ФАЗА 3: Боевая логика
+    local bestTarget, bestDist = nil, math.huge
+
+    -- Кровати
     if States.Bot.TargetBeds then
+        local CollSvc = game:GetService("CollectionService")
         for _, bed in ipairs(CollSvc:GetTagged("bed")) do
             local bedTeam = bed:GetAttribute("TeamId") or bed:GetAttribute("Team")
             local health = bed:GetAttribute("Health")
@@ -141,7 +219,7 @@ local function getBotTarget()
         end
     end
 
-    -- 2. Приоритет: Игроки
+    -- Игроки
     if States.Bot.TargetPlayers then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character then
@@ -155,7 +233,51 @@ local function getBotTarget()
         end
     end
 
-    return bestTarget
+    return bestTarget, "combat"
+end
+
+-- ============================================================
+--  ПОКУПКА
+-- ============================================================
+
+local purchaseRemote
+local lastPurchaseTime = 0
+
+local function tryBuy()
+    if tick() - lastPurchaseTime < 3 then return end
+    lastPurchaseTime = tick()
+
+    if not purchaseRemote then
+        pcall(function()
+            purchaseRemote = ReplicatedStorage
+                :WaitForChild("rbxts_include", 5)
+                :WaitForChild("node_modules", 5)
+                :WaitForChild("@rbxts", 5)
+                :WaitForChild("net", 5)
+                :WaitForChild("out", 5)
+                :WaitForChild("_NetManaged", 5)
+                :WaitForChild("BedwarsPurchaseItem", 5)
+        end)
+    end
+
+    if purchaseRemote then
+        pcall(function()
+            print("[TumbaHub] Buying wool_white for 8 iron...")
+            purchaseRemote:InvokeServer({
+                shopItem = {
+                    currency = "iron",
+                    itemType = "wool_white",
+                    amount = 16,
+                    price = 8,
+                    disabledInQueue = { "mine_wars" },
+                    category = "Blocks"
+                },
+                shopId = "1_item_shop"
+            })
+        end)
+    else
+        warn("[TumbaHub] BedwarsPurchaseItem remote not found!")
+    end
 end
 
 -- ============================================================
@@ -169,10 +291,11 @@ local function isPointSafe(pos)
 end
 
 local function checkHurdle(hrp)
-    local ray = Ray.new(hrp.Position - Vector3.new(0, 1.5, 0), hrp.CFrame.LookVector * 3)
+    local dir = hrp.CFrame.LookVector * Vector3.new(1, 0, 1)
+    local ray = Ray.new(hrp.Position - Vector3.new(0, 1.5, 0), dir * 3)
     local hit = Workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character})
     if hit and hit.CanCollide then
-        local ray2 = Ray.new(hrp.Position + Vector3.new(0, 0.5, 0), hrp.CFrame.LookVector * 3)
+        local ray2 = Ray.new(hrp.Position + Vector3.new(0, 0.5, 0), dir * 3)
         local hit2 = Workspace:FindPartOnRayWithIgnoreList(ray2, {LocalPlayer.Character})
         return not hit2
     end
@@ -186,20 +309,16 @@ local lastPathCalc = 0
 
 local function drawPath(waypoints)
     if not espPathFolder then
-        espPathFolder = Workspace:FindFirstChild("BotPathESP")
-        if not espPathFolder then
-            espPathFolder = Instance.new("Folder")
-            espPathFolder.Name = "BotPathESP"
-            espPathFolder.Parent = Workspace
-        end
+        espPathFolder = Workspace:FindFirstChild("BotPathESP") or Instance.new("Folder")
+        espPathFolder.Name = "BotPathESP"
+        espPathFolder.Parent = Workspace
     end
     espPathFolder:ClearAllChildren()
     for _, wp in ipairs(waypoints) do
         local p = Instance.new("Part")
         p.Size = Vector3.new(0.8, 0.8, 0.8)
         p.Position = wp.Position
-        p.Anchored = true
-        p.CanCollide = false
+        p.Anchored = true; p.CanCollide = false
         p.Material = Enum.Material.Neon
         p.Color = Color3.fromRGB(0, 255, 150)
         p.Transparency = 0.5
@@ -208,50 +327,7 @@ local function drawPath(waypoints)
 end
 
 -- ============================================================
---  ЗАКУПКА (при приближении к магазину)
--- ============================================================
-
-local purchaseRemote
-local lastPurchaseTime = 0
-
-local function tryFindPurchaseRemote()
-    if purchaseRemote then return end
-    pcall(function()
-        purchaseRemote = ReplicatedStorage
-            :WaitForChild("rbxts_include", 5)
-            :WaitForChild("node_modules", 5)
-            :WaitForChild("@rbxts", 5)
-            :WaitForChild("net", 5)
-            :WaitForChild("out", 5)
-            :WaitForChild("_NetManaged", 5)
-            :WaitForChild("BedwarsPurchaseItem", 5)
-    end)
-end
-
-local function purchaseAtShop()
-    if tick() - lastPurchaseTime < 3 then return end -- Не спамим
-    lastPurchaseTime = tick()
-    tryFindPurchaseRemote()
-    if purchaseRemote then
-        pcall(function()
-            print("[TumbaHub] Purchasing wool at shop!")
-            purchaseRemote:InvokeServer({
-                shopItem = {
-                    currency = "iron",
-                    itemType = "wool_white",
-                    amount = 16,
-                    price = 8,
-                    disabledInQueue = { "mine_wars" },
-                    category = "Blocks"
-                },
-                shopId = "1_item_shop"
-            })
-        end)
-    end
-end
-
--- ============================================================
---  ОСНОВНАЯ ФУНКЦИЯ
+--  ОСНОВНОЙ ЦИКЛ
 -- ============================================================
 
 local prevModuleStates = {}
@@ -262,10 +338,9 @@ function Mega.Features.Bot.SetEnabled(state)
     States.Bot.Enabled = state
 
     if state then
-        stuckTimer = 0
-        strafeAngle = 0
+        stuckTimer = 0; strafeAngle = 0
+        currentPath = nil; waypointIndex = 1
 
-        -- Сохраняем предыдущие состояния модулей
         prevModuleStates.Killaura = States.Combat and States.Combat.Killaura and States.Combat.Killaura.Enabled
         prevModuleStates.Scaffold = States.Player and States.Player.Scaffold and States.Player.Scaffold.Enabled
         prevModuleStates.BedNuke  = States.Combat and States.Combat.BedNuke and States.Combat.BedNuke.Enabled
@@ -278,8 +353,20 @@ function Mega.Features.Bot.SetEnabled(state)
         if States.Bot.AutoAntiVoid and Mega.Features.AntiVoid and not prevModuleStates.AntiVoid then Mega.Features.AntiVoid.SetEnabled(true) end
         if States.Bot.AutoSpider   and Mega.Features.Spider   and not prevModuleStates.Spider   then Mega.Features.Spider.SetEnabled(true) end
 
-        -- Загружаем Remote заранее в фоне
-        task.spawn(tryFindPurchaseRemote)
+        -- Инициализация remote заранее
+        task.spawn(function()
+            pcall(function()
+                purchaseRemote = ReplicatedStorage
+                    :WaitForChild("rbxts_include", 10)
+                    :WaitForChild("node_modules", 10)
+                    :WaitForChild("@rbxts", 10)
+                    :WaitForChild("net", 10)
+                    :WaitForChild("out", 10)
+                    :WaitForChild("_NetManaged", 10)
+                    :WaitForChild("BedwarsPurchaseItem", 10)
+                print("[TumbaHub] BedwarsPurchaseItem remote loaded!")
+            end)
+        end)
 
         connections.BotLoop = RunService.Heartbeat:Connect(function(dt)
             if not States.Bot.Enabled then return end
@@ -289,7 +376,8 @@ function Mega.Features.Bot.SetEnabled(state)
             local hrp  = char and char:FindFirstChild("HumanoidRootPart")
             if not hum or not hrp then return end
 
-            local target = getBotTarget()
+            local target, phase = getBotTarget()
+
             if not target then
                 hum:MoveTo(hrp.Position)
                 if espPathFolder then espPathFolder:ClearAllChildren() end
@@ -297,55 +385,58 @@ function Mega.Features.Bot.SetEnabled(state)
                 return
             end
 
-            local distToTarget = (hrp.Position - target.Position).Magnitude
-            local distToTargetXZ = (hrp.Position * Vector3.new(1,0,1) - target.Position * Vector3.new(1,0,1)).Magnitude
-            local isPlayerTarget = target.Parent and target.Parent:FindFirstChild("Humanoid") ~= nil
+            local distXZ = (hrp.Position * Vector3.new(1,0,1) - target.Position * Vector3.new(1,0,1)).Magnitude
 
-            -- Определяем: это магазин?
-            local targetName = target.Name:lower()
-            local isShopTarget = targetName:find("shop") or targetName:find("store") or targetName:find("upgrade") or targetName:find("merchant")
+            -- == Обработка по фазе ==
 
-            -- Определяем: это генератор?
-            local isGenerator = targetName:find("iron") or targetName:find("generator")
+            if phase == "farm_iron" then
+                -- Стоим у генератора пока не наберем железа
+                if distXZ <= 3 then
+                    hum:MoveTo(hrp.Position) -- стоим на месте
+                    stuckTimer = 0
+                    return
+                end
+                -- Идем к генератору (ниже навигация)
 
-            -- ---- Стоим у генератора (пока копим железо) ----
-            if isGenerator and distToTargetXZ <= 4 then
-                hum:MoveTo(hrp.Position) -- Стоим на месте
-                stuckTimer = 0
-                return
+            elseif phase == "go_shop" then
+                -- Подошли к магазину - покупаем!
+                if distXZ <= 5 then
+                    hum:MoveTo(hrp.Position)
+                    tryBuy()
+                    stuckTimer = 0
+                    return
+                end
+                -- Идем к магазину (ниже навигация)
+
+            elseif phase == "combat" then
+                local isPlayerTarget = target.Parent and target.Parent:FindFirstChild("Humanoid") ~= nil
+
+                -- Страфинг вокруг игрока
+                if isPlayerTarget and distXZ <= 15 then
+                    strafeAngle = strafeAngle + dt * 2
+                    local offset = Vector3.new(math.cos(strafeAngle) * 10, 0, math.sin(strafeAngle) * 10)
+                    local strafePos = target.Position + offset
+                    hum:MoveTo(isPointSafe(strafePos) and strafePos or target.Position)
+                    stuckTimer = 0
+                    return
+                end
+
+                -- Стоим у кровати
+                if not isPlayerTarget and distXZ <= 5 then
+                    hum:MoveTo(hrp.Position)
+                    stuckTimer = 0
+                    return
+                end
             end
 
-            -- ---- Купить -> когда у магазина ----
-            if isShopTarget and distToTargetXZ <= 8 then
-                hum:MoveTo(hrp.Position)
-                purchaseAtShop()
-                stuckTimer = 0
-                return
-            end
-
-            -- ---- Остановиться у кровати ----
-            if not isPlayerTarget and not isShopTarget and not isGenerator and distToTargetXZ <= 5 then
-                hum:MoveTo(hrp.Position)
-                stuckTimer = 0
-                return
-            end
-
-            -- ---- Страфинг вокруг игрока ----
-            if isPlayerTarget and distToTargetXZ <= 15 then
-                strafeAngle = strafeAngle + dt * 2
-                local offset = Vector3.new(math.cos(strafeAngle) * 10, 0, math.sin(strafeAngle) * 10)
-                local strafePos = target.Position + offset
-                hum:MoveTo(isPointSafe(strafePos) and strafePos or target.Position)
-                stuckTimer = 0
-                return
-            end
-
-            -- ---- Навигация (Pathfinding) ----
-            if States.Bot.Pathfinding and PathSvc then
+            -- == Общая навигация (Pathfinding) ==
+            if PathSvc and States.Bot.Pathfinding then
                 if tick() - lastPathCalc > 0.5 then
                     lastPathCalc = tick()
                     pcall(function()
-                        local path = PathSvc:CreatePath({ AgentRadius = 2.5, AgentHeight = 5, AgentCanJump = true })
+                        local path = PathSvc:CreatePath({
+                            AgentRadius = 2.5, AgentHeight = 5, AgentCanJump = true
+                        })
                         path:ComputeAsync(hrp.Position, target.Position)
                         if path.Status == Enum.PathStatus.Success then
                             currentPath = path:GetWaypoints()
@@ -360,30 +451,32 @@ function Mega.Features.Bot.SetEnabled(state)
                 if currentPath and waypointIndex <= #currentPath then
                     local wp = currentPath[waypointIndex]
                     hum:MoveTo(wp.Position)
-                    if wp.Action == Enum.PathWaypointAction.Jump or checkHurdle(hrp) then hum.Jump = true end
+                    if wp.Action == Enum.PathWaypointAction.Jump or checkHurdle(hrp) then
+                        hum.Jump = true
+                    end
                     if (hrp.Position * Vector3.new(1,0,1) - wp.Position * Vector3.new(1,0,1)).Magnitude < 3 then
                         waypointIndex = waypointIndex + 1
                     end
                 else
-                    hum:MoveTo(target.Position) -- Прямое движение
+                    hum:MoveTo(target.Position)
                 end
             else
                 hum:MoveTo(target.Position)
                 if checkHurdle(hrp) then hum.Jump = true end
             end
 
-            -- ---- Анти-застревание ----
+            -- == Анти-застрявание ==
             local velXZ = hrp.AssemblyLinearVelocity * Vector3.new(1, 0, 1)
             if velXZ.Magnitude < 2.5 then
                 stuckTimer = stuckTimer + dt
-                if stuckTimer > 0.1 then hum.Jump = true end
+                if stuckTimer > 0.3 then hum.Jump = true end
                 if stuckTimer > 1.5 then
-                    local lookDir = hrp.CFrame.LookVector * Vector3.new(1, 0, 1)
-                    local sideDir = hrp.CFrame.RightVector * Vector3.new(1, 0, 1)
-                    if lookDir.Magnitude < 0.1 then lookDir = Vector3.new(1, 0, 0) end
-                    local tpTarget = hrp.Position + (lookDir * 3) + (sideDir * 3) + Vector3.new(0, 5, 0)
-                    if isPointSafe(tpTarget) then
-                        hrp.CFrame = CFrame.new(tpTarget, target.Position)
+                    local look = hrp.CFrame.LookVector * Vector3.new(1, 0, 1)
+                    local side = hrp.CFrame.RightVector * Vector3.new(1, 0, 1)
+                    if look.Magnitude < 0.1 then look = Vector3.new(1, 0, 0) end
+                    local tp = hrp.Position + look * 3 + side * 2 + Vector3.new(0, 5, 0)
+                    if isPointSafe(tp) then
+                        hrp.CFrame = CFrame.new(tp, target.Position)
                         hrp.AssemblyLinearVelocity = Vector3.new(0, 10, 0)
                     end
                     stuckTimer = 0
@@ -394,16 +487,12 @@ function Mega.Features.Bot.SetEnabled(state)
         end)
 
     else
-        -- Отключение бота
         if connections.BotLoop then connections.BotLoop:Disconnect() end
         if espPathFolder then espPathFolder:ClearAllChildren() end
-
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("Humanoid") then
             char.Humanoid:MoveTo(char.HumanoidRootPart.Position)
         end
-
-        -- Возвращаем модули в исходное состояние
         local modules = {
             { key = "AutoKillaura", feat = "Killaura" },
             { key = "AutoScaffold", feat = "Scaffold" },
