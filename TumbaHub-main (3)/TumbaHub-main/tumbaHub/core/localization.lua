@@ -151,6 +151,15 @@ Mega.Localization = {
         ["keybind_none"] = { ru = "Нет привязки", en = "None", es = "Ninguno", pt = "Nenhum", ko = "없음", ja = "なし", uk = "Немає прив'язки" },
         ["keybind_current"] = { ru = "%s: %s", en = "%s: %s", es = "%s: %s", pt = "%s: %s", ko = "%s: %s", ja = "%s: %s", uk = "%s: %s" },
         ["slider_label"] = { ru = "%s: %s", en = "%s: %s", es = "%s: %s", pt = "%s: %s", ko = "%s: %s", ja = "%s: %s", uk = "%s: %s" },
+        ["label_bot_autolobby"] = { 
+            ru = "Авто-лобби (После игры)", 
+            en = "Auto-Lobby (After Match)", 
+            es = "Auto-Lobby (Después del Juego)", 
+            pt = "Auto-Lobby (Após Jogo)", 
+            ko = "자동 로비 (게임 종료 후)", 
+            ja = "自動ロビー (試合後)", 
+            uk = "Авто-лобі (Після гри)" 
+        },
         ["dropdown_label"] = { ru = " %s:", en = " %s:", es = " %s:", pt = " %s:", ko = " %s:", ja = " %s:", uk = " %s:" },
         ["section_updates_list"] = { ru = "✨ ЧТО НОВОГО В ЭТОЙ ВЕРСИИ?", en = "✨ WHAT'S NEW IN THIS VERSION?", es = "✨ ¿QUÉ HAY DE NUEVO EN ESTA VERSIÓN?", pt = "✨ O QUE HÁ DE NOVO NESTA VERSÃO?", ko = "✨ 이번 버전의 새로운 기능", ja = "✨ このバージョンの新機能", uk = "✨ ЩО НОВОГО В ЦІЙ ВЕРСІЇ?" },
         ["update_text_v5_1"] = { ru = "• [Игрок] Добавлена функция 'Анти-урон от падения BETA'.\n• [Кит] Добавлен 'Авто-кит BETA' для сбора ресурсов (металл, дерево). В будущем список будет расширен.", en = "• [Player] Added 'No Fall Damage BETA' feature.\n• [Kit] Added 'Auto-Kit BETA' for resource gathering (metal, wood). The list will be expanded in the future.", es = "• [Jugador] Añadida la función 'Sin Daño por Caída BETA'.\n• [Kit] Añadido 'Auto-Kit BETA' para recolección de recursos (metal, madera). La lista se ampliará en el futuro.", pt = "• [Jogador] Adicionada a função 'Sem Dano de Queda BETA'.\n• [Kit] Adicionado 'Auto-Kit BETA' para coleta de recursos (metal, madeira). A lista será expandida no futuro.", ko = "• [플레이어] '낙하 피해 없음 BETA' 기능 추가.\n• [키트] 자원 수집을 위한 '자동 키트 BETA' 추가 (금속, 나무). 목록은 추후 확장될 예정입니다.", ja = "• [プレイヤー]「落下ダメージなし BETA」機能を追加。\n• [キット] リソース収集用の「自動キット BETA」を追加（金属、木材）。リストは将来的に拡張されます。", uk = "• [Гравець] Додано функцію 'Анти-шкода від падіння BETA'.\n• [Кіт] Додано 'Авто-кіт BETA' для збору ресурсів (метал, дерево). У майбутньому список буде розширено." },
