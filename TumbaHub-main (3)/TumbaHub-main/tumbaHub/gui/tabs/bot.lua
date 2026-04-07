@@ -75,3 +75,34 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_bot_spider", "Bot.AutoSpider", nil
     UI.CreateDropdown(nil, "dropdown_spider_mode", "Player.SpiderMode", {"Velocity", "CFrame"}),
     UI.CreateSlider(nil, "slider_spider_speed", "Player.SpiderSpeed", 1, 100)
 })
+
+--#region -- Auto Play (Lobby)
+UI.CreateSection(TabFrame, "section_bot_autoplay")
+
+local queueNames = {
+    "queue_16v16", "queue_to4", "queue_to2", "queue_to1", "queue_5v5", "queue_skywars"
+}
+local queueModes = {
+    ["queue_16v16"] = "bedwars_16v16",
+    ["queue_to4"] = "bedwars_to4",
+    ["queue_to2"] = "bedwars_2v2",
+    ["queue_to1"] = "bedwars_1v1",
+    ["queue_5v5"] = "bedwars_5v5",
+    ["queue_skywars"] = "skywars"
+}
+
+UI.CreateToggle(TabFrame, "toggle_bot_autoplay", "Bot.AutoPlay.Enabled", function(state)
+    Mega.States.Bot.AutoPlay.Enabled = state
+    if Mega.Features.AutoPlay and Mega.Features.AutoPlay.SetEnabled then
+        Mega.Features.AutoPlay.SetEnabled(state)
+    end
+end)
+
+UI.CreateDropdown(TabFrame, "dropdown_bot_autoplay_mode", "Bot.AutoPlay.Mode", queueNames, function(label)
+    Mega.States.Bot.AutoPlay.Mode = queueModes[label]
+end)
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/autoplay.lua") end)
+end)
+--#endregion

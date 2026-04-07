@@ -18,7 +18,8 @@ if not States.Bot then
     States.Bot = {
         Enabled = false, TargetBeds = true, TargetPlayers = true,
         Pathfinding = true, AutoKillaura = true, AutoScaffold = true, 
-        AutoBedNuke = true, AutoAntiVoid = true, AutoSpider = true
+        AutoBedNuke = true, AutoAntiVoid = true, AutoSpider = true,
+        AutoPlay = { Enabled = false, Mode = "bedwars_16v16" }
     }
 end
 
@@ -77,6 +78,26 @@ local function getBotTarget()
     return bestTarget
 end
 
+--#region Navigation Helpers
+local function isPointSafe(pos)
+    local ray = Ray.new(pos + Vector3.new(0, 2, 0), Vector3.new(0, -15, 0))
+    local hit, _ = Services.Workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, Services.Workspace:FindFirstChild("BotPathESP")})
+    return hit ~= nil
+end
+
+local function checkHurdle(hrp)
+    local ray = Ray.new(hrp.Position - Vector3.new(0, 1.5, 0), hrp.CFrame.LookVector * 3)
+    local hit, _ = Services.Workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character})
+    if hit and hit.CanCollide then
+        -- Проверяем высоту препятствия (луч чуть выше)
+        local ray2 = Ray.new(hrp.Position + Vector3.new(0, 0.5, 0), hrp.CFrame.LookVector * 3)
+        local hit2, _ = Services.Workspace:FindPartOnRayWithIgnoreList(ray2, {LocalPlayer.Character})
+        return not hit2 -- Если выше чисто, значит препятствие в 1 блок
+    end
+    return false
+end
+--#endregion
+
 local waypointIndex = 1
 local currentPath = nil
 local lastPathCalc = 0
@@ -105,12 +126,14 @@ end
 
 local prevModuleStates = {}
 local stuckTimer = 0
+local strafeAngle = 0
 
 function Mega.Features.Bot.SetEnabled(state)
     States.Bot.Enabled = state
     
     if state then
         stuckTimer = 0
+        strafeAngle = 0
         -- Сохраняем предыдущие состояния, чтобы вернуть их при выключении бота
         prevModuleStates.Killaura = States.Combat.Killaura and States.Combat.Killaura.Enabled
         prevModuleStates.Scaffold = States.Player.Scaffold and States.Player.Scaffold.Enabled
@@ -118,7 +141,7 @@ function Mega.Features.Bot.SetEnabled(state)
         prevModuleStates.AntiVoid = States.Player.AntiVoid and (type(States.Player.AntiVoid) == "table" and States.Player.AntiVoid.Enabled or States.Player.AntiVoid)
         prevModuleStates.Spider = States.Player.Spider
 
-        -- Включаем нужные модули (если разрешено и если не были включены до этого)
+        -- Включаем нужные модули
         if States.Bot.AutoKillaura and Mega.Features.Killaura and not prevModuleStates.Killaura then Mega.Features.Killaura.SetEnabled(true) end
         if States.Bot.AutoScaffold and Mega.Features.Scaffold and not prevModuleStates.Scaffold then Mega.Features.Scaffold.SetEnabled(true) end
         if States.Bot.AutoBedNuke and Mega.Features.BedNuke and not prevModuleStates.BedNuke then Mega.Features.BedNuke.SetEnabled(true) end
@@ -135,38 +158,52 @@ function Mega.Features.Bot.SetEnabled(state)
 
             local target = getBotTarget()
             if not target then
-                hum:MoveTo(hrp.Position) -- Останавливаемся если нет целей
+                hum:MoveTo(hrp.Position)
                 if espPathFolder then espPathFolder:ClearAllChildren() end
                 stuckTimer = 0
                 return 
             end
 
+            local isPlayerTarget = target.Parent:FindFirstChild("Humanoid") ~= nil
             local distToTargetXZ = (hrp.Position * Vector3.new(1,0,1) - target.Position * Vector3.new(1,0,1)).Magnitude
             
-            -- Если мы вошли в радиус работы модулей (12 стадов), останавливаемся, чтобы не биться головой в цель
-            if distToTargetXZ <= 12 then
+            --#region Combat Strafe Logic
+            if isPlayerTarget and distToTargetXZ <= 15 then
+                strafeAngle = strafeAngle + dt * 2 -- Скорость кружения
+                local offset = Vector3.new(math.cos(strafeAngle) * 10, 0, math.sin(strafeAngle) * 10)
+                local strafePos = target.Position + offset
+                
+                if isPointSafe(strafePos) then
+                    hum:MoveTo(strafePos)
+                else
+                    hum:MoveTo(target.Position) -- Если кружить опасно, идем прямо
+                end
+                
+                stuckTimer = 0
+                return
+            end
+            --#endregion
+
+            -- Если мы у кровати (5 стадов), просто стоим и ломаем
+            if not isPlayerTarget and distToTargetXZ <= 5 then
                 hum:MoveTo(hrp.Position)
                 stuckTimer = 0
                 return
             end
 
+            --#region Navigation Logic
             if States.Bot.Pathfinding then
-                -- Перерасчет пути каждые 0.5 секунд
                 if tick() - lastPathCalc > 0.5 then
                     lastPathCalc = tick()
-                    local path = Services.PathfindingService:CreatePath({
-                        AgentRadius = 2,
-                        AgentHeight = 5,
-                        AgentCanJump = true
-                    })
+                    local path = Services.PathfindingService:CreatePath({ AgentRadius = 2.5, AgentHeight = 5, AgentCanJump = true })
                     pcall(function()
                         path:ComputeAsync(hrp.Position, target.Position)
                         if path.Status == Enum.PathStatus.Success then
                             currentPath = path:GetWaypoints()
-                            waypointIndex = 2 -- Пропускаем начальную точку
+                            waypointIndex = 2
                             drawPath(currentPath)
                         else
-                            currentPath = nil
+                            currentPath = nil -- Fallback to direct
                         end
                     end)
                 end
@@ -174,44 +211,41 @@ function Mega.Features.Bot.SetEnabled(state)
                 if currentPath and waypointIndex <= #currentPath then
                     local wp = currentPath[waypointIndex]
                     hum:MoveTo(wp.Position)
-                    
-                    if wp.Action == Enum.PathWaypointAction.Jump then
-                        hum.Jump = true
-                    end
-
-                    local distToWp = (hrp.Position * Vector3.new(1,0,1) - wp.Position * Vector3.new(1,0,1)).Magnitude
-                    if distToWp < 3 then
+                    if wp.Action == Enum.PathWaypointAction.Jump or checkHurdle(hrp) then hum.Jump = true end
+                    if (hrp.Position * Vector3.new(1,0,1) - wp.Position * Vector3.new(1,0,1)).Magnitude < 3 then
                         waypointIndex = waypointIndex + 1
                     end
                 else
-                    -- Фоллбек если маршрут не найден (Scaffold проложит мост)
-                    hum:MoveTo(target.Position)
+                    hum:MoveTo(target.Position) -- Direct Fallback
                 end
             else
-                -- Режим без Pathfinding (идем напрямик, строитель все делает сам)
                 hum:MoveTo(target.Position)
-                if espPathFolder then espPathFolder:ClearAllChildren() end
+                if checkHurdle(hrp) then hum.Jump = true end
             end
+            --#endregion
             
-            -- Умная логика анти-застревания (срабатывает, если мы должны идти к цели, но стоим на месте)
+            --#region Stuck Recovery
             local velXZ = hrp.AssemblyLinearVelocity * Vector3.new(1, 0, 1)
             if velXZ.Magnitude < 2.5 then
                 stuckTimer = stuckTimer + dt
-                if stuckTimer > 0.1 then
-                    hum.Jump = true -- Пытаемся перепрыгнуть
-                end
-                if stuckTimer > 1.0 then
-                    -- Принудительный обход блока (направление берем от поворота тела, так как MoveDirection может быть 0)
+                if stuckTimer > 0.1 then hum.Jump = true end
+                if stuckTimer > 1.2 then
+                    -- Попытка "Орбитального ТП" для обхода затора
                     local lookDir = hrp.CFrame.LookVector * Vector3.new(1, 0, 1)
-                    if lookDir.Magnitude > 0.1 then lookDir = lookDir.Unit else lookDir = Vector3.new(1, 0, 0) end
+                    local sideDir = hrp.CFrame.RightVector * Vector3.new(1, 0, 1)
+                    if lookDir.Magnitude < 0.1 then lookDir = Vector3.new(1, 0, 0) end
                     
-                    hrp.CFrame = hrp.CFrame + Vector3.new(0, 6.5, 0) + (lookDir * 2)
-                    hrp.AssemblyLinearVelocity = Vector3.new(0, 10, 0)
+                    local tpTarget = hrp.Position + (lookDir * 3) + (sideDir * 3) + Vector3.new(0, 5, 0)
+                    if isPointSafe(tpTarget) then
+                        hrp.CFrame = CFrame.new(tpTarget, target.Position)
+                        hrp.AssemblyLinearVelocity = Vector3.new(0, 10, 0)
+                    end
                     stuckTimer = 0
                 end
             else
                 stuckTimer = 0
             end
+            --#endregion
         end)
     else
         if connections.BotLoop then connections.BotLoop:Disconnect() end
@@ -222,26 +256,20 @@ function Mega.Features.Bot.SetEnabled(state)
             char.Humanoid:MoveTo(char.HumanoidRootPart.Position)
         end
 
-        -- Восстанавливаем оригинальные состояния модулей (выключаем то, что бот включил за нас)
-        if States.Bot.AutoKillaura and Mega.Features.Killaura and not prevModuleStates.Killaura then 
-            Mega.Features.Killaura.SetEnabled(false) 
-            if Mega.Objects.Toggles["toggle_killaura"] then Mega.Objects.Toggles["toggle_killaura"](false) end
-        end
-        if States.Bot.AutoScaffold and Mega.Features.Scaffold and not prevModuleStates.Scaffold then 
-            Mega.Features.Scaffold.SetEnabled(false) 
-            if Mega.Objects.Toggles["toggle_scaffold"] then Mega.Objects.Toggles["toggle_scaffold"](false) end
-        end
-        if States.Bot.AutoBedNuke and Mega.Features.BedNuke and not prevModuleStates.BedNuke then 
-            Mega.Features.BedNuke.SetEnabled(false) 
-            if Mega.Objects.Toggles["toggle_bednuke"] then Mega.Objects.Toggles["toggle_bednuke"](false) end
-        end
-        if States.Bot.AutoAntiVoid and Mega.Features.AntiVoid and not prevModuleStates.AntiVoid then 
-            Mega.Features.AntiVoid.SetEnabled(false) 
-            if Mega.Objects.Toggles["toggle_antivoid"] then Mega.Objects.Toggles["toggle_antivoid"](false) end
-        end
-        if States.Bot.AutoSpider and Mega.Features.Spider and not prevModuleStates.Spider then 
-            Mega.Features.Spider.SetEnabled(false) 
-            if Mega.Objects.Toggles["toggle_spider"] then Mega.Objects.Toggles["toggle_spider"](false) end
+        -- Восстановление состояний
+        local modules = {
+            {key = "AutoKillaura", feat = "Killaura", toggle = "toggle_killaura"},
+            {key = "AutoScaffold", feat = "Scaffold", toggle = "toggle_scaffold"},
+            {key = "AutoBedNuke", feat = "BedNuke", toggle = "toggle_bednuke"},
+            {key = "AutoAntiVoid", feat = "AntiVoid", toggle = "toggle_antivoid"},
+            {key = "AutoSpider", feat = "Spider", toggle = "toggle_spider"}
+        }
+
+        for _, m in ipairs(modules) do
+            if States.Bot[m.key] and Mega.Features[m.feat] and not prevModuleStates[m.feat] then
+                Mega.Features[m.feat].SetEnabled(false)
+                if Mega.Objects.Toggles[m.toggle] then Mega.Objects.Toggles[m.toggle](false) end
+            end
         end
     end
 end
