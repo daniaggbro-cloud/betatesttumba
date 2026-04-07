@@ -407,9 +407,13 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
             local targetHeight = math.min(listHeight + 5, 140)
             DropdownList.ZIndex = 100
             TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetHeight) }):Play()
+            
+            -- Expand frame to let parent ScrollingFrame update CanvasSize
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetHeight + 5)
         else
             DropdownList.ZIndex = 10
             DropdownList.Size = UDim2.new(0, 200, 0, 0)
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
         end
     end)
     return DropdownFrame
