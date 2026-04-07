@@ -319,7 +319,8 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.Position = UDim2.new(0.6, 0, 0, 0)
     DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor
     DropdownButton.BorderSizePixel = 0
-    DropdownButton.Text = optionsAreKeys and GetText(initialValue) or initialValue
+    local displayText = (optionsAreKeys and GetText(initialValue)) or initialValue
+    DropdownButton.Text = tostring(displayText or "")
     DropdownButton.TextColor3 = Mega.Settings.Menu.TextColor
     DropdownButton.TextSize = 11
     DropdownButton.Font = Enum.Font.GothamBold

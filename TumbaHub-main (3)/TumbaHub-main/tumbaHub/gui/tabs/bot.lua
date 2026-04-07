@@ -4,6 +4,12 @@
 local tabKey = "tab_bot"
 local UI = Mega.UI
 
+-- Предварительная настройка состояний для предотвращения ошибки "got nil"
+if not Mega.States.Bot then Mega.States.Bot = {} end
+if not Mega.States.Bot.AutoPlay then
+    Mega.States.Bot.AutoPlay = { Enabled = false, Mode = "queue_16v16" }
+end
+
 local TabFrame = Instance.new("ScrollingFrame")
 TabFrame.Name = tabKey
 TabFrame.Size = UDim2.new(1, 0, 1, 0)
