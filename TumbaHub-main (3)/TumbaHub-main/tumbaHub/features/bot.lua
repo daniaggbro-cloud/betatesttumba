@@ -61,10 +61,19 @@ local function findIronGenerator()
 
     local best, bestDist = nil, math.huge
 
+    -- Исключаем НЕ-железные генераторы
+    local blacklist = { "emerald", "diamond", "gold", "obsidian", "sponge" }
+    local function isBlacklisted(name)
+        for _, word in ipairs(blacklist) do
+            if name:find(word) then return true end
+        end
+        return false
+    end
+
     -- В Bedwars генераторы называются "cframe-N_generator" и являются CFrameValue
     for _, obj in ipairs(Workspace:GetChildren()) do
         local n = obj.Name:lower()
-        if n:find("generator") then
+        if n:find("generator") and not isBlacklisted(n) then
             local pos = getObjPosition(obj)
             if pos then
                 local dist = (hrp.Position - pos).Magnitude
@@ -76,11 +85,11 @@ local function findIronGenerator()
         end
     end
 
-    -- Дополнительный поиск по GetDescendants если не нашли
+    -- Резервный глубокий поиск
     if not best then
         for _, obj in ipairs(Workspace:GetDescendants()) do
             local n = obj.Name:lower()
-            if n:find("generator") then
+            if n:find("generator") and not isBlacklisted(n) then
                 local pos = getObjPosition(obj)
                 if pos then
                     local dist = (hrp.Position - pos).Magnitude
@@ -212,7 +221,8 @@ local function getBotTarget()
     local myTeam = LocalPlayer:GetAttribute("Team")
 
     -- Фаза ресурсов (таймерный метод)
-    if States.Bot.AutoShop and States.Bot.AutoShop.Enabled then
+    -- shopDone = true после первой закупки — больше не фармим
+    if States.Bot.AutoShop and States.Bot.AutoShop.Enabled and not shopDone then
 
         if not hasEnoughIron() then
             -- ФАЗА 1: Стоим на генераторе пока не накопим железо (по таймеру)
@@ -287,6 +297,8 @@ end
 local purchaseRemote
 local lastPurchaseTime = 0
 
+local shopDone = false -- После первой закупки бот больше не фармит железо
+
 local function tryBuy()
     if tick() - lastPurchaseTime < 3 then return end
     lastPurchaseTime = tick()
@@ -305,19 +317,27 @@ local function tryBuy()
     end
 
     if purchaseRemote then
-        pcall(function()
-            print("[TumbaHub] Buying wool_white at 2_item_shop_1...")
-            purchaseRemote:InvokeServer({
-                shopItem = {
-                    currency = "iron",
-                    itemType = "wool_white",
-                    amount = 16,
-                    price = 8,
-                    disabledInQueue = { "mine_wars" },
-                    category = "Blocks"
-                },
-                shopId = "2_item_shop_1"
-            })
+        -- Покупаем 3 раза подряд (48 блоков = на всю игру)
+        task.spawn(function()
+            for i = 1, 3 do
+                pcall(function()
+                    print(string.format("[TumbaHub] Purchase %d/3: wool_white x16...", i))
+                    purchaseRemote:InvokeServer({
+                        shopItem = {
+                            currency = "iron",
+                            itemType = "wool_white",
+                            amount = 16,
+                            price = 8,
+                            disabledInQueue = { "mine_wars" },
+                            category = "Blocks"
+                        },
+                        shopId = "2_item_shop_1"
+                    })
+                end)
+                if i < 3 then task.wait(0.5) end
+            end
+            shopDone = true -- Больше не фармим железо!
+            print("[TumbaHub] Shop done! Switching to full combat mode.")
         end)
     else
         warn("[TumbaHub] BedwarsPurchaseItem remote not found!")
