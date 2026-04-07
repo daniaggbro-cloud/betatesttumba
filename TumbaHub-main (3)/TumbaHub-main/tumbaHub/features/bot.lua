@@ -136,57 +136,66 @@ local function findShopNPC()
     return nil
 end
 
--- Счетчик железа в инвентаре (Bedwars хранит ресурсы по-разному)
-local function getIronCount()
-    local count = 0
+-- ============================================================
+--  ПОДСЧЁТ ЖЕЛЕЗА: Дебаг + Таймерный метод
+-- ============================================================
 
-    -- Метод 1: Атрибут на самом игроке
-    local attr = LocalPlayer:GetAttribute("iron") or LocalPlayer:GetAttribute("Iron") or LocalPlayer:GetAttribute("IRON")
-    if attr and tonumber(attr) then return tonumber(attr) end
-
-    -- Метод 2: IntValue/NumberValue в папках игрока (leaderstats или resources)
-    local function scanContainer(container)
-        if not container then return end
-        for _, v in ipairs(container:GetDescendants()) do
-            if (v:IsA("IntValue") or v:IsA("NumberValue")) then
-                local n = v.Name:lower()
-                if n == "iron" then
-                    count = count + (tonumber(v.Value) or 0)
-                end
-            end
-        end
+-- Полный дебаг-сканер: выводит в F9 консоль ВСЕ места где может быть железо
+function Mega.Features.Bot.DebugScanIron()
+    print("=== [TumbaHub] IRON DEBUG SCAN ===")
+    print("--- LocalPlayer Attributes ---")
+    for k, v in pairs(LocalPlayer:GetAttributes()) do
+        print("  LP." .. tostring(k) .. " = " .. tostring(v))
     end
-    scanContainer(LocalPlayer:FindFirstChild("leaderstats"))
-    scanContainer(LocalPlayer:FindFirstChild("resources"))
-    scanContainer(LocalPlayer:FindFirstChild("PlayerData"))
-    scanContainer(LocalPlayer:FindFirstChild("Stats"))
-
-    -- Метод 3: Tool/Part в Backpack или Character по имени
-    local bp = LocalPlayer:FindFirstChild("Backpack")
     local char = LocalPlayer.Character
-    local function countTools(container)
-        if not container then return end
-        for _, item in ipairs(container:GetChildren()) do
-            local n = item.Name:lower()
-            if n == "iron" then
-                local amt = item:GetAttribute("Amount") or item:GetAttribute("amount") or item:GetAttribute("count") or 1
-                count = count + (tonumber(amt) or 1)
+    if char then
+        print("--- Character Attributes ---")
+        for k, v in pairs(char:GetAttributes()) do
+            print("  Char." .. tostring(k) .. " = " .. tostring(v))
+        end
+        print("--- Character Children (IntValue/NumberValue) ---")
+        for _, v in ipairs(char:GetDescendants()) do
+            if v:IsA("IntValue") or v:IsA("NumberValue") or v:IsA("StringValue") then
+                print("  " .. v:GetFullName() .. " = " .. tostring(v.Value))
             end
         end
     end
-    countTools(bp)
-    if char then countTools(char) end
-
-    return count
+    print("--- LocalPlayer Children ---")
+    for _, v in ipairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("IntValue") or v:IsA("NumberValue") then
+            print("  " .. v:GetFullName() .. " = " .. tostring(v.Value))
+        end
+    end
+    print("--- Workspace items named 'iron' ---")
+    for _, v in ipairs(Workspace:GetDescendants()) do
+        if v.Name:lower() == "iron" and v:IsA("BasePart") then
+            print("  Workspace iron part at " .. tostring(v.Position))
+        end
+    end
+    print("=== END DEBUG SCAN ===")
 end
 
--- Нужно ли идти за ресурсами?
--- Проверяем только флаг AutoShop, само условие = есть ли 24 железа
-local function needsBlocks()
-    if not States.Bot.AutoShop or not States.Bot.AutoShop.Enabled then return false end
-    -- Всегда нужны блоки пока включена авто-закупка
-    -- (купит один раз, потом нормальная логика повторит цикл)
-    return true
+-- Таймерный метод: бот стоит на генераторе N секунд
+-- Tier 0 генератор спавнит железо каждые ~0.8 сек
+-- За 30 секунд = ~37 железа (с запасом для 24)
+local ironFarmTimer = 0
+local ironFarmRequired = 30 -- секунд (настраивается через States.Bot.AutoShop.FarmTime)
+local isFarmingIron = false
+
+local function resetIronTimer()
+    ironFarmTimer = 0
+    isFarmingIron = false
+end
+
+local function updateIronTimer(dt)
+    if isFarmingIron then
+        ironFarmTimer = ironFarmTimer + dt
+    end
+end
+
+local function hasEnoughIron()
+    local required = States.Bot.AutoShop and States.Bot.AutoShop.FarmTime or ironFarmRequired
+    return ironFarmTimer >= required
 end
 
 -- ============================================================
@@ -201,32 +210,35 @@ local function getBotTarget()
 
     local myTeam = LocalPlayer:GetAttribute("Team")
 
-    -- Фаза ресурсов
+    -- Фаза ресурсов (таймерный метод)
     if States.Bot.AutoShop and States.Bot.AutoShop.Enabled then
-        local iron = getIronCount()
-        local targetIron = States.Bot.AutoShop.TargetIron or 24
 
-        print(string.format("[TumbaHub] Iron: %d / %d", iron, targetIron))
-
-        if iron < targetIron then
-            -- ФАЗА 1: Накапливаем железо у генератора
+        if not hasEnoughIron() then
+            -- ФАЗА 1: Стоим на генераторе пока не накопим железо (по таймеру)
             local gen = findIronGenerator()
             if gen then
+                if not isFarmingIron then
+                    isFarmingIron = true
+                    print(string.format("[TumbaHub] Farming iron at generator (need %ds)...", ironFarmRequired))
+                end
                 return gen, "farm_iron"
             end
         else
-            -- ФАЗА 2: Идем в магазин покупать
+            -- ФАЗА 2: Железа достаточно — идём в магазин
             local shop = findShopNPC()
             if shop then
+                isFarmingIron = false
                 return shop, "go_shop"
             else
-                print("[TumbaHub] Shop NPC not found! Checking workspace...")
-                -- Дебаг: выводим что есть в workspace с "shop" в имени
-                for _, obj in ipairs(Workspace:GetDescendants()) do
+                -- Магазин не найден — дебаг
+                print("[TumbaHub] WARNING: Shop not found! Check workspace:")
+                for _, obj in ipairs(Workspace:GetChildren()) do
                     if obj.Name:lower():find("shop") or obj.Name:lower():find("merchant") then
-                        print("[TumbaHub] Found object: " .. obj.Name .. " (" .. obj.ClassName .. ") at " .. tostring(obj.Parent and obj.Parent.Name))
+                        print("  Found: " .. obj.Name .. " (" .. obj.ClassName .. ")")
                     end
                 end
+                -- Сбрасываем таймер чтобы не зависнуть
+                resetIronTimer()
             end
         end
     end
@@ -407,6 +419,9 @@ function Mega.Features.Bot.SetEnabled(state)
             local hrp  = char and char:FindFirstChild("HumanoidRootPart")
             if not hum or not hrp then return end
 
+            -- Обновляем таймер накопления железа
+            updateIronTimer(dt)
+
             local target, phase = getBotTarget()
 
             if not target then
@@ -438,6 +453,7 @@ function Mega.Features.Bot.SetEnabled(state)
                 if distXZ <= 5 then
                     hum:MoveTo(hrp.Position)
                     tryBuy()
+                    resetIronTimer() -- Сбрасываем таймер для следующего цикла
                     stuckTimer = 0
                     return
                 end
