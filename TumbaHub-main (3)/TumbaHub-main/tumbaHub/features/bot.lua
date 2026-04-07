@@ -96,43 +96,33 @@ local function findIronGenerator()
     return best
 end
 
--- Находит NPC магазина по точному пути: workspace["1_item_shop"].desertMerchant
+-- Находит NPC магазина по точному пути: workspace["2_item_shop_1"]
 local function findShopNPC()
     -- МЕТОД 1: Точный путь из GameDump
-    local shopModel = Workspace:FindFirstChild("1_item_shop")
+    local shopModel = Workspace:FindFirstChild("2_item_shop_1")
     if shopModel then
-        print("[TumbaHub] Found shop model: 1_item_shop")
-        local merchant = shopModel:FindFirstChild("desertMerchant")
-        if merchant then
-            print("[TumbaHub] Found desertMerchant!")
-            -- Берём любую BasePart из merchant для навигации
-            local part = merchant:FindFirstChild("HumanoidRootPart")
-                or merchant.PrimaryPart
-                or merchant:FindFirstChildWhichIsA("BasePart", true)
-            if part then return part end
-        end
-        -- Если desertMerchant не нашли — берём любую часть самого шопа
-        local part = shopModel.PrimaryPart or shopModel:FindFirstChildWhichIsA("BasePart", true)
-        if part then
-            print("[TumbaHub] Using shop model base part as target")
-            return part
-        end
-    else
-        -- МЕТОД 2: Поиск по похожим именам
-        for _, obj in ipairs(Workspace:GetChildren()) do
-            local n = obj.Name:lower()
-            if n:find("shop") or n:find("store") or n:find("merchant") then
-                local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
-                    or (obj:IsA("BasePart") and obj)
-                if part then
-                    print("[TumbaHub] Found shop by name: " .. obj.Name)
-                    return part
-                end
-            end
-        end
-        print("[TumbaHub] WARNING: Cannot find shop NPC in workspace!")
+        print("[TumbaHub] Found shop: 2_item_shop_1")
+        -- Ищем любую BasePart внутри для навигации
+        local part = shopModel.PrimaryPart
+            or shopModel:FindFirstChildWhichIsA("BasePart", true)
+        if part then return part end
     end
 
+    -- МЕТОД 2: Поиск любого объекта с "shop" в имени
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        local n = obj.Name:lower()
+        if n:find("shop") or n:find("item_shop") then
+            local part = obj.PrimaryPart
+                or obj:FindFirstChildWhichIsA("BasePart", true)
+                or (obj:IsA("BasePart") and obj)
+            if part then
+                print("[TumbaHub] Found shop by scan: " .. obj.Name)
+                return part
+            end
+        end
+    end
+
+    print("[TumbaHub] WARNING: Shop not found in workspace!")
     return nil
 end
 
@@ -305,7 +295,7 @@ local function tryBuy()
 
     if purchaseRemote then
         pcall(function()
-            print("[TumbaHub] Buying wool_white for 8 iron...")
+            print("[TumbaHub] Buying wool_white at 2_item_shop_1...")
             purchaseRemote:InvokeServer({
                 shopItem = {
                     currency = "iron",
@@ -315,7 +305,7 @@ local function tryBuy()
                     disabledInQueue = { "mine_wars" },
                     category = "Blocks"
                 },
-                shopId = "1_item_shop"
+                shopId = "2_item_shop_1"
             })
         end)
     else
