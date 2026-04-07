@@ -301,7 +301,7 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownFrame.Name = textKey .. "Dropdown"
     DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
     DropdownFrame.BackgroundTransparency = 1
-    DropdownFrame.ZIndex = 5 -- Higher zindex for the container
+    DropdownFrame.ZIndex = 5
     DropdownFrame.Parent = parent
 
     local DropdownLabel = Instance.new("TextLabel")
@@ -315,8 +315,8 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownLabel.Parent = DropdownFrame
 
     local DropdownButton = Instance.new("TextButton")
-    DropdownButton.Size = UDim2.new(0, 200, 1, 0)
-    DropdownButton.Position = UDim2.new(1, -200, 0, 0)
+    DropdownButton.Size = UDim2.new(0, 200, 0, 30)
+    DropdownButton.Position = UDim2.new(1, -200, 0.5, -15)
     DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor:Lerp(Color3.new(1, 1, 1), 0.05)
     DropdownButton.BorderSizePixel = 0
     local displayText = (optionsAreKeys and GetText(initialValue)) or initialValue
@@ -326,15 +326,14 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.Font = Enum.Font.GothamBold
     DropdownButton.AutoButtonColor = false
     DropdownButton.Parent = DropdownFrame
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 8)
-    ButtonCorner.Parent = DropdownButton
+    
+    Instance.new("UICorner", DropdownButton).CornerRadius = UDim.new(0, 8)
     local ButtonStroke = Instance.new("UIStroke", DropdownButton)
     ButtonStroke.Color = Mega.Settings.Menu.AccentColor
     ButtonStroke.Transparency = 0.8
 
     local DropdownList = Instance.new("ScrollingFrame")
-    DropdownList.Size = UDim2.new(0, 200, 0, 0) -- Initial height 0
+    DropdownList.Size = UDim2.new(0, 200, 0, 0)
     DropdownList.Position = UDim2.new(1, -200, 1, 5)
     DropdownList.BackgroundColor3 = Mega.Settings.Menu.SidebarColor
     DropdownList.BorderSizePixel = 0
@@ -342,11 +341,12 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownList.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
     DropdownList.Visible = false
     DropdownList.ClipsDescendants = true
-    DropdownList.ZIndex = 10 -- Ensure it's on top
+    DropdownList.ZIndex = 500 -- Ensure it's on top
+    DropdownList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
     DropdownList.Parent = DropdownFrame
     
-    local ListCorner = Instance.new("UICorner", DropdownList)
-    ListCorner.CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", DropdownList).CornerRadius = UDim.new(0, 8)
     local ListStroke = Instance.new("UIStroke", DropdownList)
     ListStroke.Color = Mega.Settings.Menu.AccentColor
     ListStroke.Transparency = 0.6
@@ -358,36 +358,36 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     ListLayout.Padding = UDim.new(0, 2)
     ListLayout.Parent = DropdownList
 
-    local listHeight = 0
     for i, optionKey in ipairs(options) do
-        local translatedOption = optionsAreKeys and GetText(optionKey) or optionKey
+        local translatedOption = (optionsAreKeys and GetText(optionKey)) or optionKey
         local ListItem = Instance.new("TextButton")
-        ListItem.Size = UDim2.new(1, 0, 0, 30)
+        ListItem.Size = UDim2.new(1, -10, 0, 30)
         ListItem.BackgroundColor3 = Mega.Settings.Menu.ElementColor
         ListItem.BackgroundTransparency = 0.2
         ListItem.BorderSizePixel = 0
         ListItem.Text = tostring(translatedOption)
         ListItem.TextColor3 = Color3.new(1, 1, 1)
-        ListItem.TextSize = 11
+        ListItem.TextSize = 12
         ListItem.Font = Enum.Font.GothamSemibold
         ListItem.AutoButtonColor = false
         ListItem.LayoutOrder = i
-        ListItem.ZIndex = 110 -- Increment ZIndex significantly
+        ListItem.ZIndex = 510
         ListItem.Parent = DropdownList
+        
+        Instance.new("UICorner", ListItem).CornerRadius = UDim.new(0, 6)
 
-        -- Hover effect
         ListItem.MouseEnter:Connect(function()
             TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.AccentColor, BackgroundTransparency = 0.5}):Play()
         end)
         ListItem.MouseLeave:Connect(function()
             TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.ElementColor, BackgroundTransparency = 0.2}):Play()
         end)
-        
-        listHeight = listHeight + 31
 
         ListItem.MouseButton1Click:Connect(function()
             DropdownButton.Text = translatedOption
             DropdownList.Visible = false
+            DropdownList.Size = UDim2.new(0, 200, 0, 0)
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
             
             local path = statePath
             local tbl = Mega.States
@@ -400,22 +400,25 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
             if callback then pcall(callback, optionKey) end
         end)
     end
-    DropdownList.CanvasSize = UDim2.new(0, 0, 0, listHeight)
 
     DropdownButton.MouseButton1Click:Connect(function()
-        DropdownList.Visible = not DropdownList.Visible
-        if DropdownList.Visible then
-            local itemsCount = #options
-            local targetHeight = math.min((itemsCount * 32) + 5, 140) -- Calculation based on item size + padding
-            DropdownList.ZIndex = 100
-            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetHeight) }):Play()
-            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetHeight + 5)
+        local isExpanding = not DropdownList.Visible
+        
+        if isExpanding then
+            DropdownList.Visible = true
+            local targetListHeight = math.min(#options * 32 + 10, 150)
+            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetListHeight) }):Play()
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetListHeight + 5)
         else
-            DropdownList.ZIndex = 10
-            DropdownList.Size = UDim2.new(0, 200, 0, 0)
+            local t = TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, 0) })
+            t:Play()
+            t.Completed:Connect(function() 
+                if not isExpanding then DropdownList.Visible = false end 
+            end)
             DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
         end
     end)
+
     return DropdownFrame
 end
 
