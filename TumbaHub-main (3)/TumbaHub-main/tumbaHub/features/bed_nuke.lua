@@ -30,21 +30,16 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
-local DamageBlockRemote
+local DamageBlockRemote = Mega.GetRemote("MinerDig")
+-- Periodically re-check the remote
 task.spawn(function()
-    pcall(function()
-        DamageBlockRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10)
-            :WaitForChild("node_modules")
-            :WaitForChild("@easy-games")
-            :WaitForChild("block-engine")
-            :WaitForChild("node_modules")
-            :WaitForChild("@rbxts")
-            :WaitForChild("net")
-            :WaitForChild("out")
-            :WaitForChild("_NetManaged")
-            :WaitForChild("DamageBlock")
-    end)
+    while task.wait(5) do
+        if not DamageBlockRemote then
+            DamageBlockRemote = Mega.GetRemote("MinerDig")
+        end
+    end
 end)
+
 
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 local lastCheck = 0

@@ -20,12 +20,16 @@ table.clear(connections)
 local espConnections = {}
 
 -- Remote
-local CropHarvestRemote
+local CropHarvestRemote = Mega.GetRemote("HarvestCrop")
+-- Periodically re-check the remote
 task.spawn(function()
-    pcall(function()
-        CropHarvestRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("CropHarvest")
-    end)
+    while task.wait(5) do
+        if not CropHarvestRemote then
+            CropHarvestRemote = Mega.GetRemote("HarvestCrop")
+        end
+    end
 end)
+
 
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
 

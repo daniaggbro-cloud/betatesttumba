@@ -33,12 +33,16 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
-local SwordHitRemote
+local SwordHitRemote = Mega.GetRemote("AttackEntity")
+-- Periodically re-check the remote in case of game updates or late loading
 task.spawn(function()
-    pcall(function()
-        SwordHitRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("SwordHit")
-    end)
+    while task.wait(5) do
+        if not SwordHitRemote then
+            SwordHitRemote = Mega.GetRemote("AttackEntity")
+        end
+    end
 end)
+
 
 local function getWeapon()
     local char = LocalPlayer.Character

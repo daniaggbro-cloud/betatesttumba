@@ -15,12 +15,16 @@ local beeCache = Mega.Objects.BeeCache
 local connections = Mega.Objects.Connections
 
 -- Remote
-local PickUpBeeRemote
+local PickUpBeeRemote = Mega.GetRemote("BeePickup")
+-- Periodically re-check the remote
 task.spawn(function()
-    pcall(function()
-        PickUpBeeRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("PickUpBee")
-    end)
+    while task.wait(5) do
+        if not PickUpBeeRemote then
+            PickUpBeeRemote = Mega.GetRemote("BeePickup")
+        end
+    end
 end)
+
 
 local function IsTargetBee(obj)
     if not obj then return false end
