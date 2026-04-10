@@ -29,14 +29,14 @@ local function findDeep(parent, name)
     local visited = 0
     while #queue > 0 do
         visited = visited + 1
-        if visited > 500 then break end -- Safety limit
+        if visited > 1000 then break end
         
         local current = table.remove(queue, 1)
         local found = current:FindFirstChild(name)
         if found then return found end
         
         for _, child in pairs(current:GetChildren()) do
-            if child:IsA("Folder") or child:IsA("ModuleScript") then
+            if #queue < 100 and (child:IsA("Folder") or child:IsA("ModuleScript")) then
                 table.insert(queue, child)
             end
         end
@@ -44,34 +44,51 @@ local function findDeep(parent, name)
     return nil
 end
 
--- Utility: Get inventory resource count
-local function getResourceCount(name)
-    local count = 0
+-- Cached references to avoid lag
+local cachedStore = nil
+local cachedRemote = nil
+
+local function getStore()
+    if cachedStore then return cachedStore end
     
-    -- 1. Try ClientStore (Most Reliable)
-    local clientStore = nil
+    -- 1. Try getgc (Modern Executor way, ignores require errors)
+    if getgc then
+        for _, v in pairs(getgc(true)) do
+            if type(v) == "table" and rawget(v, "getState") and rawget(v, "subscribe") then
+                local state = v:getState()
+                if state and state.Inventory then
+                    cachedStore = v
+                    return v
+                end
+            end
+        end
+    end
+    
+    -- 2. Try require fallback (Safe-ish)
     pcall(function()
         local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
         if rbxts then
             local appController = findDeep(rbxts, "app-controller")
             if appController then
-                clientStore = require(appController).AppController:getStore()
-            end
-            if not clientStore then
-                local storeMod = findDeep(rbxts, "client-store")
-                if storeMod then
-                    clientStore = require(storeMod).ClientStore
-                end
+                cachedStore = require(appController).AppController:getStore()
             end
         end
     end)
     
-    if clientStore then
-        local success, state = pcall(function() return clientStore:getState() end)
+    return cachedStore
+end
+
+-- Utility: Get inventory resource count
+local function getResourceCount(name)
+    local store = getStore()
+    if store then
+        local success, state = pcall(function() return store:getState() end)
         if success and state and state.Inventory and state.Inventory.inventory then
-            local items = state.Inventory.inventory.items or state.Inventory.inventory.itemsList
+            local inv = state.Inventory.inventory
+            local items = inv.items or inv.itemsList
             if items then
-                for _, item in pairs(items) do -- pairs instead of ipairs in case of dict
+                local count = 0
+                for _, item in pairs(items) do
                     if item.itemType == name then
                         count = count + (item.amount or 1)
                     end
@@ -80,47 +97,41 @@ local function getResourceCount(name)
             end
         end
     end
-    
-    -- 2. Try InventoryUtil Fallback
-    pcall(function()
-        local ts = ReplicatedStorage:FindFirstChild("TS")
-        if ts then
-            local inv = ts:FindFirstChild("inventory")
-            if inv then
-                local invUtil = inv:FindFirstChild("inventory-util")
-                if invUtil then
-                    local util = require(invUtil).InventoryUtil
-                    if util and util.getAmount then
-                        count = util.getAmount(lplr, name)
-                    end
-                end
-            end
-        end
-    end)
-    
-    return count
+    return 0
 end
 
 -- Utility: Check if item is in inventory
 local function hasItem(name)
-    return getResourceCount(name) > 0
+    local store = getStore()
+    if store then
+        local success, state = pcall(function() return store:getState() end)
+        if success and state and state.Inventory and state.Inventory.inventory then
+            local inv = state.Inventory.inventory
+            local items = inv.items or inv.itemsList
+            if items then
+                for _, item in pairs(items) do
+                    if item.itemType == name then return true end
+                end
+            end
+        end
+    end
+    return false
 end
 
 -- Utility: Buy item via remote
 local function buyItem(itemType)
-    local remote = Mega.GetRemote("BedwarsShop_PurchaseItem")
-    
-    -- Robust Manual Fallback
-    if not remote then
-        local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
-        if rbxts then
+    if not cachedRemote then
+        cachedRemote = Mega.GetRemote("BedwarsShop_PurchaseItem")
+        
+        if not cachedRemote then
+            local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
             local nm = findDeep(rbxts, "_NetManaged")
             if nm then
                 for _, child in pairs(nm:GetChildren()) do
                     local n = child.Name:lower()
                     if (n:find("shop") or n:find("purchase")) and n:find("item") then
-                        remote = child
-                        print("🛠 AutoBuy: Found Remote manually -> " .. child.Name)
+                        cachedRemote = child
+                        print("🛠 AutoBuy: Cached Remote -> " .. child.Name)
                         break
                     end
                 end
@@ -128,28 +139,20 @@ local function buyItem(itemType)
         end
     end
 
-    if remote then
+    if cachedRemote then
         warn("🛒 AutoBuy: Attempting to buy " .. itemType)
-        local args = {
-            shopItem = {
-                itemType = itemType
-            }
-        }
+        local args = {shopItem = {itemType = itemType}}
         
         local success, err = pcall(function()
-            if remote:IsA("RemoteEvent") then
-                remote:FireServer(args)
+            if cachedRemote:IsA("RemoteEvent") then
+                cachedRemote:FireServer(args)
             else
-                remote:InvokeServer(args)
+                cachedRemote:InvokeServer(args)
             end
         end)
         
-        if not success then
-            warn("❌ AutoBuy Purchase Error: " .. tostring(err))
-        end
+        if not success then warn("❌ AutoBuy Purchase Error: " .. tostring(err)) end
         return success
-    else
-        warn("❌ AutoBuy Error: Shop Remote NOT FOUND!")
     end
     return false
 end
