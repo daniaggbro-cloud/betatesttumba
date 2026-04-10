@@ -121,10 +121,12 @@ if Mega.Loader then
 end
 
 local function InitPhase(id, list)
-    if loaderUI then loaderUI.SetStage(id) end
+    if loaderUI and loaderUI.SetStage then 
+        loaderUI.SetStage(id) 
+    end
     local count = #list
     for i, path in ipairs(list) do
-        if loaderUI then
+        if loaderUI and loaderUI.Update then
             local overallPercent = (i / count) * 100
             loaderUI.Update(overallPercent, "Syncing: " .. path)
         end
