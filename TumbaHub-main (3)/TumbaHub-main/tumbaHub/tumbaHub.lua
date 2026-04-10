@@ -108,36 +108,58 @@ end
 
 -- Load core components in order
 Mega.LoadModule("core/services.lua")
-Mega.LoadModule("core/metadata.lua")
-Mega.LoadModule("core/dumper.lua")
-Mega.LoadModule("core/settings.lua")
-Mega.LoadModule("core/localization.lua")
-Mega.LoadModule("core/config.lua")
 
--- Load libraries
-Mega.LoadModule("library/notifications.lua")
-Mega.LoadModule("library/ui_builder.lua")
-Mega.LoadModule("core/mobile_hud.lua")
+-- Start stylized Loader
+local moduleList = {
+    "core/metadata.lua",
+    "core/dumper.lua",
+    "core/settings.lua",
+    "core/localization.lua",
+    "core/config.lua",
+    "library/notifications.lua",
+    "library/ui_builder.lua",
+    "core/mobile_hud.lua",
+    "features/esp.lua",
+    "features/aimbot.lua",
+    "features/beekeeper.lua",
+    "features/farmer_cletus.lua",
+    "features/taliah.lua",
+    "features/metal_detector.lua",
+    "features/stella_star_collector.lua",
+    "features/noelle.lua",
+    "features/lani.lua",
+    "features/chest_steal.lua",
+    "features/chest_esp.lua",
+    "features/auto_deposit.lua",
+    "features/killaura.lua",
+    "features/bed_nuke.lua",
+    "features/bot.lua",
+    "gui/main_window.lua"
+}
 
--- Load features
-Mega.LoadModule("features/esp.lua")
-Mega.LoadModule("features/aimbot.lua")
-Mega.LoadModule("features/beekeeper.lua")
-Mega.LoadModule("features/farmer_cletus.lua")
-Mega.LoadModule("features/taliah.lua")
-Mega.LoadModule("features/metal_detector.lua")
-Mega.LoadModule("features/stella_star_collector.lua")
-Mega.LoadModule("features/noelle.lua")
-Mega.LoadModule("features/lani.lua")
-Mega.LoadModule("features/chest_steal.lua")
-Mega.LoadModule("features/chest_esp.lua")
-Mega.LoadModule("features/auto_deposit.lua")
-Mega.LoadModule("features/killaura.lua")
-Mega.LoadModule("features/bed_nuke.lua")
-Mega.LoadModule("features/bot.lua")
+-- Preliminary load of the Loader UI module
+Mega.LoadModule("gui/loader_screen.lua")
+local loaderUI = nil
+if Mega.Loader then
+    loaderUI = Mega.Loader.Create()
+end
 
--- Load the main GUI
-Mega.LoadModule("gui/main_window.lua")
+local total = #moduleList
+for i, path in ipairs(moduleList) do
+    if loaderUI then
+        local percent = (i / total) * 100
+        loaderUI.Update(percent, "Loading " .. path .. "...")
+    end
+    Mega.LoadModule(path)
+    task.wait(0.05) -- Subtle delay for visual smoothness
+end
+
+-- Close loader smoothly
+if loaderUI then
+    loaderUI.Update(100, "SYSTEM READY")
+    task.wait(0.5)
+    loaderUI.Destroy()
+end
 
 -- Auto-load last configuration and start 5s background save
 if Mega.ConfigSystem then
