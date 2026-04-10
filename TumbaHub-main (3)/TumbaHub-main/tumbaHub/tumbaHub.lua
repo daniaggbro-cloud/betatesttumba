@@ -109,6 +109,7 @@ end
 -- Load core components in order
 Mega.LoadModule("core/services.lua")
 Mega.LoadModule("core/metadata.lua")
+Mega.LoadModule("core/dumper.lua")
 Mega.LoadModule("core/settings.lua")
 Mega.LoadModule("core/localization.lua")
 Mega.LoadModule("core/config.lua")
