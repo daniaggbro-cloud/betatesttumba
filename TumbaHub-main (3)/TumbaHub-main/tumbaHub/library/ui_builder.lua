@@ -601,3 +601,52 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     return ComponentFrame
 end
 
+function Mega.UI.CreateLabel(parent, textKey)
+    local LabelFrame = Instance.new("Frame")
+    LabelFrame.Name = textKey .. "LabelFrame"
+    LabelFrame.Size = UDim2.new(0.9, 0, 0, 80)
+    LabelFrame.BackgroundTransparency = 1
+    LabelFrame.Parent = parent
+    
+    local LabelBackground = Instance.new("Frame", LabelFrame)
+    LabelBackground.Size = UDim2.new(1, 0, 1, 0)
+    LabelBackground.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+    LabelBackground.BackgroundTransparency = 0.6
+    Instance.new("UICorner", LabelBackground).CornerRadius = UDim.new(0, 12)
+    
+    local LabelStroke = Instance.new("UIStroke", LabelBackground)
+    LabelStroke.Color = Mega.Settings.Menu.AccentColor
+    LabelStroke.Thickness = 1
+    LabelStroke.Transparency = 0.5
+    
+    -- Decorative Animation
+    task.spawn(function()
+        while LabelStroke.Parent do
+            TweenService:Create(LabelStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.2 }):Play()
+            task.wait(2)
+            TweenService:Create(LabelStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.7 }):Play()
+            task.wait(2)
+        end
+    end)
+
+    local Icon = Instance.new("TextLabel", LabelFrame)
+    Icon.Size = UDim2.new(1, 0, 0, 40)
+    Icon.Position = UDim2.new(0, 0, 0, 10)
+    Icon.BackgroundTransparency = 1
+    Icon.Text = "⏳"
+    Icon.TextSize = 30
+    Icon.Parent = LabelFrame
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, 0, 0, 30)
+    TextLabel.Position = UDim2.new(0, 0, 0, 45)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = GetText(textKey)
+    TextLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    TextLabel.TextSize = 16
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Center
+    TextLabel.Parent = LabelFrame
+    
+    return LabelFrame
+end
