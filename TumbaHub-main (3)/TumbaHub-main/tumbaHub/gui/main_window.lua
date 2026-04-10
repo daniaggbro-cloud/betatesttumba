@@ -306,7 +306,6 @@ end)
 -- Tab Icons Mapping (GitHub Paths)
 Mega.Icons = {
     ["tab_home"] = iconBaseUrl .. "home.png",
-    ["tab_updates"] = iconBaseUrl .. "updates.png",
     ["tab_esp"] = iconBaseUrl .. "esp.png",
     ["tab_aim"] = iconBaseUrl .. "aim.png",
     ["tab_player"] = iconBaseUrl .. "player.png",
@@ -320,7 +319,7 @@ Mega.Icons = {
 }
 
 -- Tab System
-local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot" }
+local TabKeys = { "tab_home", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot" }
 local TabButtons = {}
 Mega.Objects.TabFrames = {}
 

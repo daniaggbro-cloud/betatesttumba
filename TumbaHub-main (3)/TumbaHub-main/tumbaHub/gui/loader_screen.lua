@@ -1,5 +1,5 @@
 -- gui/loader_screen.lua
--- Premium Startup Loading GUI for TumbaHub
+-- Enhanced Premium Startup Loading GUI for TumbaHub (v2)
 
 local Services = Mega.Services
 local TweenService = Services.TweenService
@@ -14,61 +14,75 @@ function Loader.Create()
     
     local Background = Instance.new("Frame", ScreenGui)
     Background.Size = UDim2.new(1, 0, 1, 0)
-    Background.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+    Background.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
     Background.BorderSizePixel = 0
+    Background.BackgroundTransparency = 1 -- Will fade in
     
     local Blur = Instance.new("BlurEffect", Services.Lighting)
     Blur.Size = 0
-    TweenService:Create(Blur, TweenInfo.new(1), {Size = 24}):Play()
+    TweenService:Create(Blur, TweenInfo.new(1), {Size = 18}):Play()
+    TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 0.2}):Play()
 
-    local Content = Instance.new("Frame", Background)
-    Content.Size = UDim2.new(0, 400, 0, 300)
-    Content.Position = UDim2.new(0.5, 0, 0.5, 0)
+    -- Using CanvasGroup for GroupTransparency support
+    local Content = Instance.new("CanvasGroup", Background)
+    Content.Size = UDim2.new(0, 320, 0, 240)
+    Content.Position = UDim2.new(0.5, 0, 0.45, 0) -- Slightly higher than center
     Content.AnchorPoint = Vector2.new(0.5, 0.5)
-    Content.BackgroundTransparency = 1
-
-    local Logo = Instance.new("ImageLabel", Content)
-    Logo.Size = UDim2.new(0, 120, 0, 120)
-    Logo.Position = UDim2.new(0.5, 0, 0, 40)
-    Logo.AnchorPoint = Vector2.new(0.5, 0.5)
-    Logo.BackgroundTransparency = 1
-    Logo.Image = "rbxassetid://13388222306" -- Tumba Logo
-    Logo.ImageColor3 = Color3.fromRGB(0, 160, 255)
+    Content.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    Content.BorderSizePixel = 0
+    Content.GroupTransparency = 1
     
-    -- Logo Pulse Animation
+    local ContentCorner = Instance.new("UICorner", Content)
+    ContentCorner.CornerRadius = UDim.new(0, 16)
+    
+    local ContentStroke = Instance.new("UIStroke", Content)
+    ContentStroke.Color = Color3.fromRGB(0, 160, 255)
+    ContentStroke.Thickness = 1.5
+    ContentStroke.Transparency = 0.6
+    
+    -- Pulsing Stroke Animation
     task.spawn(function()
         while ScreenGui.Parent do
-            TweenService:Create(Logo, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 130, 0, 130), ImageTransparency = 0.2}):Play()
-            task.wait(1.5)
-            TweenService:Create(Logo, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 110, 0, 110), ImageTransparency = 0}):Play()
-            task.wait(1.5)
+            TweenService:Create(ContentStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 2}):Play()
+            task.wait(2)
+            TweenService:Create(ContentStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 1.2}):Play()
+            task.wait(2)
         end
     end)
 
+    local Logo = Instance.new("ImageLabel", Content)
+    Logo.Size = UDim2.new(0, 80, 0, 80)
+    Logo.Position = UDim2.new(0.5, 0, 0, 50)
+    Logo.AnchorPoint = Vector2.new(0.5, 0.5)
+    Logo.BackgroundTransparency = 1
+    Logo.Image = "rbxassetid://13388222306"
+    Logo.ImageColor3 = Color3.fromRGB(0, 160, 255)
+    
     local Title = Instance.new("TextLabel", Content)
-    Title.Size = UDim2.new(1, 0, 0, 40)
-    Title.Position = UDim2.new(0, 0, 0, 110)
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.Position = UDim2.new(0, 0, 0, 95)
     Title.BackgroundTransparency = 1
     Title.Text = "TUMBA HUB"
     Title.Font = Enum.Font.GothamBlack
-    Title.TextSize = 32
+    Title.TextSize = 24
     Title.TextColor3 = Color3.new(1, 1, 1)
     
     local Subtitle = Instance.new("TextLabel", Content)
     Subtitle.Size = UDim2.new(1, 0, 0, 20)
-    Subtitle.Position = UDim2.new(0, 0, 0, 145)
+    Subtitle.Position = UDim2.new(0, 0, 0, 120)
     Subtitle.BackgroundTransparency = 1
-    Subtitle.Text = "INITIALIZING SYSTEM..."
+    Subtitle.Text = "PREMIUM EDITION"
     Subtitle.Font = Enum.Font.GothamBold
-    Subtitle.TextSize = 14
+    Subtitle.TextSize = 10
     Subtitle.TextColor3 = Color3.fromRGB(0, 160, 255)
-    Subtitle.TextTransparency = 0.5
+    Subtitle.TextTransparency = 0.4
 
-    -- Progress Container
+    -- Progress Bar (Smaller/Slimmer)
     local BarContainer = Instance.new("Frame", Content)
-    BarContainer.Size = UDim2.new(0.8, 0, 0, 6)
-    BarContainer.Position = UDim2.new(0.1, 0, 0, 200)
-    BarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    BarContainer.Size = UDim2.new(0, 240, 0, 4)
+    BarContainer.Position = UDim2.new(0.5, 0, 0, 165)
+    BarContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+    BarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     BarContainer.BorderSizePixel = 0
     Instance.new("UICorner", BarContainer).CornerRadius = UDim.new(1, 0)
     
@@ -81,40 +95,53 @@ function Loader.Create()
     local Gradient = Instance.new("UIGradient", BarFill)
     Gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255))
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 200))
     })
 
     local PercentText = Instance.new("TextLabel", Content)
     PercentText.Size = UDim2.new(1, 0, 0, 20)
-    PercentText.Position = UDim2.new(0, 0, 0, 220)
+    PercentText.Position = UDim2.new(0, 0, 0, 175)
     PercentText.BackgroundTransparency = 1
     PercentText.Text = "0%"
     PercentText.Font = Enum.Font.GothamSemibold
     PercentText.TextSize = 12
     PercentText.TextColor3 = Color3.new(1, 1, 1)
-    PercentText.TextTransparency = 0.4
 
+    -- Details Ticker
     local StatusText = Instance.new("TextLabel", Content)
-    StatusText.Size = UDim2.new(1, 0, 0, 20)
-    StatusText.Position = UDim2.new(0, 0, 0, 250)
+    StatusText.Size = UDim2.new(0.9, 0, 0, 20)
+    StatusText.Position = UDim2.new(0.5, 0, 0, 200)
+    StatusText.AnchorPoint = Vector2.new(0.5, 0.5)
     StatusText.BackgroundTransparency = 1
-    StatusText.Text = "Waiting for server..."
-    StatusText.Font = Enum.Font.Gotham
-    StatusText.TextSize = 11
-    StatusText.TextColor3 = Color3.new(0.7, 0.7, 0.7)
+    StatusText.Text = "Establishing connection..."
+    StatusText.Font = Enum.Font.Code
+    StatusText.TextSize = 10
+    StatusText.TextColor3 = Color3.fromRGB(150, 150, 170)
+    StatusText.ClipsDescendants = true
+    
+    -- Initial Fade In
+    TweenService:Create(Content, TweenInfo.new(0.6), {GroupTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
 
     -- Methods
     function Loader.Update(percent, status)
-        TweenService:Create(BarFill, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(percent / 100, 0, 1, 0)}):Play()
+        TweenService:Create(BarFill, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(percent / 100, 0, 1, 0)}):Play()
         PercentText.Text = math.floor(percent) .. "%"
-        if status then StatusText.Text = status end
+        if status then 
+            StatusText.Text = "> " .. status 
+        end
     end
 
     function Loader.Destroy()
+        local t = TweenService:Create(Content, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+            GroupTransparency = 1, 
+            Position = UDim2.new(0.5, 0, 0.55, 0),
+            Size = UDim2.new(0, 280, 0, 200)
+        })
+        t:Play()
         TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(Content, TweenInfo.new(0.5), {Position = UDim2.new(0.5, 0, 0.6, 0), GroupTransparency = 1}):Play()
         TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 0}):Play()
-        task.wait(0.5)
+        
+        t.Completed:Wait()
         ScreenGui:Destroy()
         Blur:Destroy()
     end
