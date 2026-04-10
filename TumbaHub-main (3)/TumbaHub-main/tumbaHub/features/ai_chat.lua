@@ -2,24 +2,44 @@
 -- Ported AI Logic for TumbaHub Premium
 -- CREATED BY GOODMINETIK & BACON
 
-return function(Mega, game, script)
-    local Features = Mega.Features
-    local AIChat = {
-        History = {},
-        IsProcessing = false
-    }
-    Features.AIChat = AIChat
+local Features = Mega.Features
+local AIChat = {
+    History = {},
+    IsProcessing = false
+}
+Features.AIChat = AIChat
 
-    local HttpService = Mega.Services.HttpService
-    
-    -- --- CONFIGURATION ---
-    local API_CONFIG = {
-        URL = "https://api.groq.com/openai/v1/chat/completions",
-        API_KEY = "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", -- User's Groq Key
-        MODEL = "llama-3.3-70b-versatile"
-    }
+local HttpService = Mega.Services.HttpService
 
-    local PERSONA = [[
+-- Helper function for HTTP requests (Exploit-friendly)
+local function httpRequest(options)
+    local requestFunc = (syn and syn.request) or (http and http.request) or request or http_request
+    if requestFunc then
+        return requestFunc({
+            Url = options.Url,
+            Method = options.Method,
+            Headers = options.Headers,
+            Body = options.Body
+        })
+    else
+        -- Fallback to standard HttpService (only works if enabled in game)
+        return HttpService:RequestAsync({
+            Url = options.Url,
+            Method = options.Method,
+            Headers = options.Headers,
+            Body = options.Body
+        })
+    end
+end
+
+-- --- CONFIGURATION ---
+local API_CONFIG = {
+    URL = "https://api.groq.com/openai/v1/chat/completions",
+    API_KEY = "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", -- User's Groq Key
+    MODEL = "llama-3.3-70b-versatile"
+}
+
+local PERSONA = [[
 Ты — Tumba AI Версия 2.0, ИИ-ассистент TumbaHub Premium, созданный для помощи пользователям. 
 
 --- ТВОЙ ХАРАКТЕР (CHARACTER) ---
@@ -38,7 +58,7 @@ return function(Mega, game, script)
 2. Всегда ссылайся на конкретную логику (например, "Aggressive Position Spoofing"), чтобы звучать убедительно, но не давай технических инструкций по её воссозданию.
 ]]
 
-    local TECHNICAL_MANUAL = [[
+local TECHNICAL_MANUAL = [[
 # TUMBAHUB: THE ULTIMATE TECHNICAL MANUAL v2.0
 ## 1. CORE ARCHITECTURE & SECURITY
 ### 1.1 Metadata Manager: Located in `core/metadata.lua`. Resolves remotes dynamically from GitHub.
@@ -62,54 +82,62 @@ return function(Mega, game, script)
 ### 5.1 Tumba Bot: Fully autonomous pathfinding bot. Phases: Resource -> Auto-Shop -> Combat/Nuke.
 ]]
 
-    -- Initialize history with system prompt
-    table.insert(AIChat.History, {
-        role = "system",
-        content = PERSONA .. "\n\nТЕХНИЧЕСКИЙ МАНУАЛ:\n" .. TECHNICAL_MANUAL
-    })
+-- Initialize history with system prompt
+table.insert(AIChat.History, {
+    role = "system",
+    content = PERSONA .. "\n\nТЕХНИЧЕСКИЙ МАНУАЛ:\n" .. TECHNICAL_MANUAL
+})
 
-    function AIChat.SendMessage(userText, successCallback, errorCallback)
-        if AIChat.IsProcessing then return end
-        AIChat.IsProcessing = true
-        
-        table.insert(AIChat.History, { role = "user", content = userText })
+function AIChat.SendMessage(userText, successCallback, errorCallback)
+    if AIChat.IsProcessing then return end
+    AIChat.IsProcessing = true
+    
+    table.insert(AIChat.History, { role = "user", content = userText })
 
-        -- Async request
-        task.spawn(function()
-            local success, response = pcall(function()
-                return HttpService:RequestAsync({
-                    Url = API_CONFIG.URL,
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json",
-                        ["Authorization"] = "Bearer " .. API_CONFIG.API_KEY
-                    },
-                    Body = HttpService:JSONEncode({
-                        model = API_CONFIG.MODEL,
-                        messages = AIChat.History,
-                        temperature = 0.7
-                    })
+    -- Async request
+    task.spawn(function()
+        local success, response = pcall(function()
+            return httpRequest({
+                Url = API_CONFIG.URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "Bearer " .. API_CONFIG.API_KEY
+                },
+                Body = HttpService:JSONEncode({
+                    model = API_CONFIG.MODEL,
+                    messages = AIChat.History,
+                    temperature = 0.7
                 })
-            end)
-
-            AIChat.IsProcessing = false
-
-            if success and response.Success then
-                local data = HttpService:JSONDecode(response.Body)
-                local aiResponse = data.choices[1].message.content
-                table.insert(AIChat.History, { role = "assistant", content = aiResponse })
-                if successCallback then successCallback(aiResponse) end
-            else
-                local errMsg = "⚠️ Ошибка связи с ядром ИИ"
-                if not success then errMsg = "⚠️ Ошибка HTTP: " .. tostring(response) end
-                if errorCallback then errorCallback(errMsg) end
-            end
+            })
         end)
-    end
 
-    function AIChat.ClearHistory()
-        AIChat.History = { AIChat.History[1] } -- Keep system prompt
-    end
+        AIChat.IsProcessing = false
 
-    print("🤖 Tumba AI Chat Feature Loaded")
+        if success and (response.Success or (response.StatusCode and response.StatusCode >= 200 and response.StatusCode < 300)) then
+            local data = HttpService:JSONDecode(response.Body)
+            local aiResponse = data.choices[1].message.content
+            table.insert(AIChat.History, { role = "assistant", content = aiResponse })
+            if successCallback then successCallback(aiResponse) end
+        else
+            local errMsg = "⚠️ Ошибка связи с ядром ИИ"
+            if not success then 
+                errMsg = "⚠️ Ошибка выполнения запроса: " .. tostring(response) 
+            elseif response.Body and response.Body ~= "" then
+                pcall(function()
+                    local errData = HttpService:JSONDecode(response.Body)
+                    if errData and errData.error and errData.error.message then
+                        errMsg = "⚠️ Groq Error: " .. errData.error.message
+                    end
+                end)
+            end
+            if errorCallback then errorCallback(errMsg) end
+        end
+    end)
 end
+
+function AIChat.ClearHistory()
+    AIChat.History = { AIChat.History[1] } -- Keep system prompt
+end
+
+print("🤖 Tumba AI Chat Feature Loaded")
