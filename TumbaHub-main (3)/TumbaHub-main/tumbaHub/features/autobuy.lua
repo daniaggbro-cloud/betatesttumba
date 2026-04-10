@@ -2,6 +2,8 @@
 -- Professional AutoBuy System for BedWars
 -- Uses dynamic metadata for item prizes and remotes
 
+print("📦 TumbaHub AutoBuy: Module initialization started...")
+
 local Players = Mega.Services.Players
 local ReplicatedStorage = Mega.Services.ReplicatedStorage
 local lplr = Players.LocalPlayer
@@ -20,15 +22,23 @@ local AutoBuy = {
     CheckInterval = 2, -- Seconds between checks
 }
 
--- Utility: Recursive search for a module or object
+-- Utility: Faster, non-recursive search (BFS)
 local function findDeep(parent, name)
     if not parent then return nil end
-    local found = parent:FindFirstChild(name)
-    if found then return found end
-    for _, child in pairs(parent:GetChildren()) do
-        if child:IsA("Folder") or child:IsA("ModuleScript") then
-            local res = findDeep(child, name)
-            if res then return res end
+    local queue = {parent}
+    local visited = 0
+    while #queue > 0 do
+        visited = visited + 1
+        if visited > 500 then break end -- Safety limit
+        
+        local current = table.remove(queue, 1)
+        local found = current:FindFirstChild(name)
+        if found then return found end
+        
+        for _, child in pairs(current:GetChildren()) do
+            if child:IsA("Folder") or child:IsA("ModuleScript") then
+                table.insert(queue, child)
+            end
         end
     end
     return nil
