@@ -51,40 +51,45 @@ end
 -- Remote Mapping Scanner
 local function scanRemotes()
     local remotes = {}
-    local netManaged = ReplicatedStorage:FindFirstChild("rbxts_include")
-    if netManaged then
-        netManaged = netManaged:FindFirstChild("node_modules")
-        if netManaged then
-            netManaged = netManaged:FindFirstChild("@rbxts")
-            if netManaged then
-                netManaged = netManaged:FindFirstChild("net")
-                if netManaged then
-                   netManaged = netManaged:FindFirstChild("out")
-                   if netManaged then
-                       netManaged = netManaged:FindFirstChild("_NetManaged")
-                   end
+    
+    -- Robust search for _NetManaged
+    local netManaged = nil
+    local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
+    if rbxts then
+        -- Recursively find _NetManaged because some executors/versions change paths
+        local function findNet(parent)
+            local found = parent:FindFirstChild("_NetManaged")
+            if found then return found end
+            for _, child in pairs(parent:GetChildren()) do
+                if child:IsA("Folder") then
+                    local res = findNet(child)
+                    if res then return res end
                 end
             end
+            return nil
         end
+        netManaged = findNet(rbxts)
     end
 
     if netManaged then
-        print("🔍 TumbaHub Dumper: Scanning _NetManaged remotes...")
+        print("🔍 TumbaHub Dumper: Scanning " .. netManaged.Name .. " remotes...")
         for _, remote in pairs(netManaged:GetChildren()) do
-            -- Simple logic: Use name as key and value for now.
-            -- In a real dumper, you would use signatures to map 'SwordHit' -> 'AttackEntity'
-            -- For now, we will use the existing name as a bridge.
+            -- Generic mapping
             remotes[remote.Name] = remote.Name
             
-            -- Examples of signatures (you can expand this):
-            if remote.Name:find("Sword") or remote.Name:find("Hit") then
+            -- Specific keyword mapping for features
+            local n = remote.Name:lower()
+            if n:find("sword") or n:find("hit") then
                 remotes["AttackEntity"] = remote.Name
             end
-            if remote.Name:find("Pickup") then
+            if n:find("pickup") then
                 remotes["PickupItem"] = remote.Name
             end
-            if remote.Name:find("Damage") and remote.Name:find("Block") then
+            if n:find("damage") and n:find("block") then
                 remotes["MinerDig"] = remote.Name
+            end
+            if (n:find("shop") or n:find("purchase")) and n:find("item") then
+                remotes["BedwarsShop_PurchaseItem"] = remote.Name
             end
         end
     end

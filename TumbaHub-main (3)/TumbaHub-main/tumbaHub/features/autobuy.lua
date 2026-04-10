@@ -20,75 +20,97 @@ local AutoBuy = {
     CheckInterval = 2, -- Seconds between checks
 }
 
+-- Utility: Recursive search for a module or object
+local function findDeep(parent, name)
+    local found = parent:FindFirstChild(name)
+    if found then return found end
+    for _, child in pairs(parent:GetChildren()) do
+        local res = findDeep(child, name)
+        if res then return res end
+    end
+    return nil
+end
+
 -- Utility: Get inventory resource count
 local function getResourceCount(name)
     local count = 0
-    -- Try to find the InventoryUtil module
-    local inventoryUtil = ReplicatedStorage:FindFirstChild("TS")
-    if inventoryUtil then
-        inventoryUtil = inventoryUtil:FindFirstChild("inventory")
-        if inventoryUtil then
-            inventoryUtil = inventoryUtil:FindFirstChild("inventory-util")
-            if inventoryUtil then
-                local util = require(inventoryUtil).InventoryUtil
-                if util and util.getAmount then
-                    return util.getAmount(lplr, name)
-                end
-            end
-        end
-    end
     
-    -- Fallback: Manual search in inventory
-    local folder = lplr:FindFirstChild("Backpack") or lplr:FindFirstChild("Inventory")
-    -- In BedWars, items are often in a folder in the player object or handled via ClientStore
-    -- Let's try the more robust way: ClientStore
+    -- 1. Try ClientStore (Most Reliable)
     local clientStore = nil
     pcall(function()
-        clientStore = require(ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController:getStore()
+        -- Attempt common paths for ClientStore
+        local appController = findDeep(ReplicatedStorage:WaitForChild("rbxts_include"), "app-controller")
+        if appController then
+            clientStore = require(appController).AppController:getStore()
+        else
+            -- Check CatV6 style path
+            local storeMod = findDeep(ReplicatedStorage:WaitForChild("rbxts_include"), "client-store")
+            if storeMod then
+                clientStore = require(storeMod).ClientStore
+            end
+        end
     end)
     
     if clientStore then
-        local state = clientStore:getState()
-        if state and state.Inventory and state.Inventory.inventory and state.Inventory.inventory.items then
+        local success, state = pcall(function() return clientStore:getState() end)
+        if success and state and state.Inventory and state.Inventory.inventory and state.Inventory.inventory.items then
             for _, item in ipairs(state.Inventory.inventory.items) do
                 if item.itemType == name then
                     count = count + (item.amount or 1)
                 end
             end
+            return count
         end
     end
+    
+    -- 2. Try InventoryUtil
+    pcall(function()
+        local invUtil = ReplicatedStorage:FindFirstChild("TS"):FindFirstChild("inventory"):FindFirstChild("inventory-util")
+        if invUtil then
+            local util = require(invUtil).InventoryUtil
+            if util and util.getAmount then
+                count = util.getAmount(lplr, name)
+            end
+        end
+    end)
     
     return count
 end
 
 -- Utility: Check if item is in inventory
 local function hasItem(name)
-    local clientStore = nil
-    pcall(function()
-        clientStore = require(ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController:getStore()
-    end)
-    
-    if clientStore then
-        local state = clientStore:getState()
-        if state and state.Inventory and state.Inventory.inventory and state.Inventory.inventory.items then
-            for _, item in ipairs(state.Inventory.inventory.items) do
-                if item.itemType == name then return true end
-            end
-        end
-    end
-    return false
+    -- We can use getResourceCount to check existence
+    return getResourceCount(name) > 0
 end
 
 -- Utility: Buy item via remote
 local function buyItem(itemType)
-    local remote = Mega.GetRemote("BedwarsShop_PurchaseItem") or Mega.GetRemote("PurchaseItem")
+    local remote = Mega.GetRemote("BedwarsShop_PurchaseItem")
+    
+    -- Fallback: Find remote manually if metadata is stale
+    if not remote then
+        local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
+        if rbxts then
+            local nm = findDeep(rbxts, "_NetManaged")
+            if nm then
+                for _, child in pairs(nm:GetChildren()) do
+                    local n = child.Name:lower()
+                    if (n:find("shop") or n:find("purchase")) and n:find("item") then
+                        remote = child
+                        break
+                    end
+                end
+            end
+        end
+    end
+
     if remote then
-        print("🛒 AutoBuy: Purchasing " .. itemType)
-        remote:InvokeServer({
-            shopItem = {
-                itemType = itemType
-            }
-        })
+        -- print("🛒 AutoBuy: Purchasing " .. itemType)
+        if remote:IsA("RemoteEvent") then
+            remote:FireServer({shopItem = {itemType = itemType}})
+        else
+            remote:InvokeServer({shopItem = {itemType = itemType}})
+        end
         return true
     end
     return false
