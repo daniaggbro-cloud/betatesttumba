@@ -2,8 +2,6 @@
 -- Professional AutoBuy System for BedWars
 -- Uses dynamic metadata for item prizes and remotes
 
-local Mega, game, script = ...
-
 local Players = Mega.Services.Players
 local ReplicatedStorage = Mega.Services.ReplicatedStorage
 local lplr = Players.LocalPlayer
