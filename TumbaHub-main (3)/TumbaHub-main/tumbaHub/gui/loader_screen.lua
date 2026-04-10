@@ -1,146 +1,269 @@
 -- gui/loader_screen.lua
--- Enhanced Premium Startup Loading GUI for TumbaHub (v2)
+-- TumbaHub "Titan" Initialization Engine v3.0 (Global Update)
+-- A high-end startup environment featuring multi-stage tracking and live diagnostics.
 
 local Services = Mega.Services
 local TweenService = Services.TweenService
+local RunService = Services.RunService
+local GetText = Mega.GetText
 local Loader = {}
 
 function Loader.Create()
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "TumbaLoader"
+    ScreenGui.Name = "TumbaTitanLoader"
     ScreenGui.IgnoreGuiInset = true
-    ScreenGui.DisplayOrder = 1000
+    ScreenGui.DisplayOrder = 2000
     ScreenGui.Parent = Services.CoreGui
     
-    local Background = Instance.new("Frame", ScreenGui)
-    Background.Size = UDim2.new(1, 0, 1, 0)
-    Background.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
-    Background.BorderSizePixel = 0
-    Background.BackgroundTransparency = 1 -- Will fade in
+    -- Main Overlay
+    local Overlay = Instance.new("Frame", ScreenGui)
+    Overlay.Size = UDim2.new(1, 0, 1, 0)
+    Overlay.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+    Overlay.BorderSizePixel = 0
+    Overlay.BackgroundTransparency = 1 -- Fades in
     
     local Blur = Instance.new("BlurEffect", Services.Lighting)
     Blur.Size = 0
-    TweenService:Create(Blur, TweenInfo.new(1), {Size = 18}):Play()
-    TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 0.2}):Play()
+    TweenService:Create(Blur, TweenInfo.new(1.5), {Size = 24}):Play()
+    TweenService:Create(Overlay, TweenInfo.new(0.8), {BackgroundTransparency = 0.15}):Play()
 
-    -- Using CanvasGroup for GroupTransparency support
-    local Content = Instance.new("CanvasGroup", Background)
-    Content.Size = UDim2.new(0, 320, 0, 240)
-    Content.Position = UDim2.new(0.5, 0, 0.45, 0) -- Slightly higher than center
-    Content.AnchorPoint = Vector2.new(0.5, 0.5)
-    Content.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-    Content.BorderSizePixel = 0
-    Content.GroupTransparency = 1
+    -- Rotating Backdrop (Hex Grid Simulation)
+    local Grid = Instance.new("ImageLabel", Overlay)
+    Grid.Size = UDim2.new(2, 0, 2, 0)
+    Grid.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Grid.AnchorPoint = Vector2.new(0.5, 0.5)
+    Grid.BackgroundTransparency = 1
+    Grid.Image = "rbxassetid://13419086708" -- Hexagon Grid Pattern
+    Grid.ImageColor3 = Color3.fromRGB(0, 160, 255)
+    Grid.ImageTransparency = 0.95
+    Grid.Rotation = 0
     
-    local ContentCorner = Instance.new("UICorner", Content)
-    ContentCorner.CornerRadius = UDim.new(0, 16)
-    
-    local ContentStroke = Instance.new("UIStroke", Content)
-    ContentStroke.Color = Color3.fromRGB(0, 160, 255)
-    ContentStroke.Thickness = 1.5
-    ContentStroke.Transparency = 0.6
-    
-    -- Pulsing Stroke Animation
     task.spawn(function()
         while ScreenGui.Parent do
-            TweenService:Create(ContentStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 2}):Play()
-            task.wait(2)
-            TweenService:Create(ContentStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 1.2}):Play()
-            task.wait(2)
+            Grid.Rotation = Grid.Rotation + 0.05
+            RunService.RenderStepped:Wait()
         end
     end)
 
-    local Logo = Instance.new("ImageLabel", Content)
-    Logo.Size = UDim2.new(0, 80, 0, 80)
-    Logo.Position = UDim2.new(0.5, 0, 0, 50)
-    Logo.AnchorPoint = Vector2.new(0.5, 0.5)
+    -- THE TITAN CONTAINER
+    local Titan = Instance.new("CanvasGroup", Overlay)
+    Titan.Size = UDim2.new(0, 550, 0, 380)
+    Titan.Position = UDim2.new(0.5, 0, 0.48, 0)
+    Titan.AnchorPoint = Vector2.new(0.5, 0.5)
+    Titan.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    Titan.BorderSizePixel = 0
+    Titan.GroupTransparency = 1
+    Instance.new("UICorner", Titan).CornerRadius = UDim.new(0, 12)
+    Instance.new("UIStroke", Titan).Color = Color3.fromRGB(0, 160, 255)
+    
+    -- Header: Stages
+    local Header = Instance.new("Frame", Titan)
+    Header.Size = UDim2.new(1, 0, 0, 40)
+    Header.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+    Header.BorderSizePixel = 0
+    
+    local StageList = {
+        {id = "network", key = "phase_network"},
+        {id = "core", key = "phase_core"},
+        {id = "features", key = "phase_features"},
+        {id = "ui", key = "phase_ui"}
+    }
+    local StageButtons = {}
+    
+    local HeaderLayout = Instance.new("UIListLayout", Header)
+    HeaderLayout.FillDirection = Enum.FillDirection.Horizontal
+    HeaderLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    HeaderLayout.Padding = UDim.new(0, 2)
+    
+    for _, s in ipairs(StageList) do
+        local btn = Instance.new("Frame", Header)
+        btn.Size = UDim2.new(0.25, -2, 1, 0)
+        btn.BackgroundTransparency = 1
+        
+        local label = Instance.new("TextLabel", btn)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = GetText(s.key):match("%((.-)%)") or GetText(s.key)
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 10
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextTransparency = 0.6
+        
+        local line = Instance.new("Frame", btn)
+        line.Size = UDim2.new(0, 0, 0, 2)
+        line.Position = UDim2.new(0.5, 0, 1, -2)
+        line.AnchorPoint = Vector2.new(0.5, 0)
+        line.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
+        line.BorderSizePixel = 0
+        
+        StageButtons[s.id] = {label = label, line = line}
+    end
+
+    -- Stats Panel (Right)
+    local Stats = Instance.new("Frame", Titan)
+    Stats.Size = UDim2.new(0, 140, 0, 200)
+    Stats.Position = UDim2.new(1, -150, 0, 60)
+    Stats.BackgroundTransparency = 1
+    
+    local function CreateStat(name, valFunc)
+        local f = Instance.new("TextLabel", Stats)
+        f.Size = UDim2.new(1, 0, 0, 20)
+        f.BackgroundTransparency = 1
+        f.Font = Enum.Font.Code
+        f.TextSize = 12
+        f.TextColor3 = Color3.fromRGB(0, 160, 255)
+        f.TextXAlignment = Enum.TextXAlignment.Right
+        
+        task.spawn(function()
+            while f.Parent do
+                f.Text = name .. ": " .. valFunc()
+                task.wait(0.5)
+            end
+        end)
+    end
+    
+    CreateStat("PING", function() return math.floor(Services.Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) .. "ms" end)
+    CreateStat("FPS", function() return math.floor(1 / RunService.RenderStepped:Wait()) end)
+    CreateStat("MEM", function() return math.floor(Services.Stats:GetTotalMemoryUsageMb()) .. "MB" end)
+
+    -- LOGS TERMINAL (Bottom)
+    local Terminal = Instance.new("ScrollingFrame", Titan)
+    Terminal.Size = UDim2.new(1, -30, 0, 100)
+    Terminal.Position = UDim2.new(0, 15, 1, -115)
+    Terminal.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+    Terminal.BorderSizePixel = 0
+    Terminal.ScrollBarThickness = 2
+    Terminal.ScrollingEnabled = false
+    Instance.new("UICorner", Terminal).CornerRadius = UDim.new(0, 6)
+    
+    local LogLayout = Instance.new("UIListLayout", Terminal)
+    LogLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    LogLayout.Padding = UDim.new(0, 2)
+    
+    local function AddLog(msg, color)
+        local l = Instance.new("TextLabel", Terminal)
+        l.Size = UDim2.new(1, -10, 0, 16)
+        l.BackgroundTransparency = 1
+        l.Font = Enum.Font.Code
+        l.TextSize = 11
+        l.TextColor3 = color or Color3.fromRGB(150, 150, 170)
+        l.Text = "> " .. msg
+        l.TextXAlignment = Enum.TextXAlignment.Left
+        Terminal.CanvasPosition = Vector2.new(0, 9999)
+        
+        -- Typewriter effect
+        local fullText = l.Text
+        l.Text = "> "
+        task.spawn(function()
+            for i = 3, #fullText do
+                l.Text = fullText:sub(1, i)
+                task.wait(0.01)
+            end
+        end)
+    end
+
+    -- Centerpiece: Logo/Stage Info
+    local Logo = Instance.new("ImageLabel", Titan)
+    Logo.Size = UDim2.new(0, 70, 0, 70)
+    Logo.Position = UDim2.new(0, 60, 0, 100)
     Logo.BackgroundTransparency = 1
     Logo.Image = "rbxassetid://13388222306"
     Logo.ImageColor3 = Color3.fromRGB(0, 160, 255)
     
-    local Title = Instance.new("TextLabel", Content)
-    Title.Size = UDim2.new(1, 0, 0, 30)
-    Title.Position = UDim2.new(0, 0, 0, 95)
-    Title.BackgroundTransparency = 1
-    Title.Text = "TUMBA HUB"
-    Title.Font = Enum.Font.GothamBlack
-    Title.TextSize = 24
-    Title.TextColor3 = Color3.new(1, 1, 1)
+    local PhaseLabel = Instance.new("TextLabel", Titan)
+    PhaseLabel.Size = UDim2.new(0, 300, 0, 30)
+    PhaseLabel.Position = UDim2.new(0, 110, 0, 85)
+    PhaseLabel.BackgroundTransparency = 1
+    PhaseLabel.Font = Enum.Font.GothamBlack
+    PhaseLabel.TextSize = 20
+    PhaseLabel.TextColor3 = Color3.new(1, 1, 1)
+    PhaseLabel.TextXAlignment = Enum.TextXAlignment.Left
     
-    local Subtitle = Instance.new("TextLabel", Content)
-    Subtitle.Size = UDim2.new(1, 0, 0, 20)
-    Subtitle.Position = UDim2.new(0, 0, 0, 120)
-    Subtitle.BackgroundTransparency = 1
-    Subtitle.Text = "PREMIUM EDITION"
-    Subtitle.Font = Enum.Font.GothamBold
-    Subtitle.TextSize = 10
-    Subtitle.TextColor3 = Color3.fromRGB(0, 160, 255)
-    Subtitle.TextTransparency = 0.4
+    local StatusLabel = Instance.new("TextLabel", Titan)
+    StatusLabel.Size = UDim2.new(0, 300, 0, 20)
+    StatusLabel.Position = UDim2.new(0, 110, 0, 110)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Font = Enum.Font.GothamBold
+    StatusLabel.TextSize = 12
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 160, 255)
+    StatusLabel.TextTransparency = 0.5
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Progress Bar (Smaller/Slimmer)
-    local BarContainer = Instance.new("Frame", Content)
-    BarContainer.Size = UDim2.new(0, 240, 0, 4)
-    BarContainer.Position = UDim2.new(0.5, 0, 0, 165)
-    BarContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-    BarContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-    BarContainer.BorderSizePixel = 0
-    Instance.new("UICorner", BarContainer).CornerRadius = UDim.new(1, 0)
+    -- Progress Bar (The Titan Bar)
+    local BarBase = Instance.new("Frame", Titan)
+    BarBase.Size = UDim2.new(1, -60, 0, 6)
+    BarBase.Position = UDim2.new(0.5, 0, 0, 250)
+    BarBase.AnchorPoint = Vector2.new(0.5, 0.5)
+    BarBase.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    BarBase.BorderSizePixel = 0
+    Instance.new("UICorner", BarBase).CornerRadius = UDim.new(1, 0)
     
-    local BarFill = Instance.new("Frame", BarContainer)
+    local BarFill = Instance.new("Frame", BarBase)
     BarFill.Size = UDim2.new(0, 0, 1, 0)
-    BarFill.BackgroundColor3 = Color3.new(1, 1, 1)
+    BarFill.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
     BarFill.BorderSizePixel = 0
     Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
     
-    local Gradient = Instance.new("UIGradient", BarFill)
-    Gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 200))
+    local Laser = Instance.new("Frame", BarFill)
+    Laser.Size = UDim2.new(0, 40, 2, 0)
+    Laser.Position = UDim2.new(1, -20, 0.5, 0)
+    Laser.AnchorPoint = Vector2.new(0.5, 0.5)
+    Laser.BackgroundColor3 = Color3.new(1, 1, 1)
+    Laser.BorderSizePixel = 0
+    Instance.new("UIGradient", Laser).Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0),
+        NumberSequenceKeypoint.new(1, 1)
     })
-
-    local PercentText = Instance.new("TextLabel", Content)
-    PercentText.Size = UDim2.new(1, 0, 0, 20)
-    PercentText.Position = UDim2.new(0, 0, 0, 175)
-    PercentText.BackgroundTransparency = 1
-    PercentText.Text = "0%"
-    PercentText.Font = Enum.Font.GothamSemibold
-    PercentText.TextSize = 12
-    PercentText.TextColor3 = Color3.new(1, 1, 1)
-
-    -- Details Ticker
-    local StatusText = Instance.new("TextLabel", Content)
-    StatusText.Size = UDim2.new(0.9, 0, 0, 20)
-    StatusText.Position = UDim2.new(0.5, 0, 0, 200)
-    StatusText.AnchorPoint = Vector2.new(0.5, 0.5)
-    StatusText.BackgroundTransparency = 1
-    StatusText.Text = "Establishing connection..."
-    StatusText.Font = Enum.Font.Code
-    StatusText.TextSize = 10
-    StatusText.TextColor3 = Color3.fromRGB(150, 150, 170)
-    StatusText.ClipsDescendants = true
     
-    -- Initial Fade In
-    TweenService:Create(Content, TweenInfo.new(0.6), {GroupTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+    local Percent = Instance.new("TextLabel", BarBase)
+    Percent.Size = UDim2.new(0, 50, 0, 20)
+    Percent.Position = UDim2.new(1, -25, 0, -15)
+    Percent.BackgroundTransparency = 1
+    Percent.Font = Enum.Font.Code
+    Percent.TextSize = 14
+    Percent.TextColor3 = Color3.new(1, 1, 1)
+    Percent.Text = "0%"
 
-    -- Methods
+    -- Intro Transition
+    TweenService:Create(Titan, TweenInfo.new(1.2, Enum.EasingStyle.Quart), {GroupTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+
+    -- API Methods
+    function Loader.SetStage(id)
+        for stage, comp in pairs(StageButtons) do
+            local active = stage == id
+            TweenService:Create(comp.label, TweenInfo.new(0.4), {TextTransparency = active and 0 or 0.6}):Play()
+            TweenService:Create(comp.line, TweenInfo.new(0.4), {Size = active and UDim2.new(0.8, 0, 0, 2) or UDim2.new(0, 0, 0, 2)}):Play()
+        end
+        
+        local stageData = nil
+        for _, s in ipairs(StageList) do if s.id == id then stageData = s break end end
+        if stageData then
+            PhaseLabel.Text = GetText(stageData.key)
+            AddLog("SWITCHING TO " .. id:upper() .. " ENVIRONMENT...", Color3.fromRGB(0, 255, 180))
+        end
+    end
+
     function Loader.Update(percent, status)
-        TweenService:Create(BarFill, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(percent / 100, 0, 1, 0)}):Play()
-        PercentText.Text = math.floor(percent) .. "%"
-        if status then 
-            StatusText.Text = "> " .. status 
+        TweenService:Create(BarFill, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = UDim2.new(percent / 100, 0, 1, 0)}):Play()
+        Percent.Text = math.floor(percent) .. "%"
+        if status then
+            StatusLabel.Text = status:upper()
+            AddLog(status)
         end
     end
 
     function Loader.Destroy()
-        local t = TweenService:Create(Content, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            GroupTransparency = 1, 
+        AddLog("INITIALIZATION COMPLETE. READY.", Color3.new(1,1,1))
+        task.wait(0.5)
+        local t = TweenService:Create(Titan, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            GroupTransparency = 1,
             Position = UDim2.new(0.5, 0, 0.55, 0),
-            Size = UDim2.new(0, 280, 0, 200)
+            Size = UDim2.new(0, 450, 0, 300)
         })
         t:Play()
-        TweenService:Create(Background, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 0}):Play()
-        
+        TweenService:Create(Overlay, TweenInfo.new(0.8), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(Blur, TweenInfo.new(0.8), {Size = 0}):Play()
         t.Completed:Wait()
         ScreenGui:Destroy()
         Blur:Destroy()

@@ -4,6 +4,13 @@
 Mega.Localization = {
     CurrentLanguage = "en", -- Default, will be overwritten by loaded setting
     Strings = {
+        -- Loader Phases (Titan Engine v3.0)
+        ["phase_network"] = { ru = "РУКОПОЖАТИЕ (СЕТЬ)", en = "HANDSHAKE (NETWORK)", es = "APRETÓN DE MANOS", pt = "APERTO DE MÃO", ko = "핸드셰이크 (네트워크)", ja = "ハンドシェイク (ネットワーク)", uk = "РУКОСТИСКАННЯ (МЕРЕЖА)" },
+        ["phase_core"] = { ru = "СБОРКА ОКРУЖЕНИЯ", en = "BUILDING CORE", es = "CONSTRUYENDO NÚCLEO", pt = "CONSTRUINDO NÚCLEO", ko = "핵심 구축", ja = "コア構築", uk = "ЗБІРКА ЯДРА" },
+        ["phase_features"] = { ru = "СИНХРОНИЗАЦИЯ ФУНКЦИЙ", en = "SYNCING FEATURES", es = "SINCRONIZANDO FUNCIONES", pt = "SINCRONIZANDO FUNÇÕES", ko = "기능 동기화", ja = "機能の同期", uk = "СИНХРОНІЗАЦІЯ ФУНКЦІЙ" },
+        ["phase_ui"] = { ru = "ФИНАЛИЗАЦИЯ ИНТЕРФЕЙСА", en = "FINALIZING INTERFACE", es = "FINALIZANDO INTERFAZ", pt = "FINALIZANDO INTERFACE", ko = "인터페이스 마무리", ja = "インターフェース完了", uk = "ФІНАЛІЗАЦІЯ ІНТЕРФЕЙСУ" },
+        ["loader_ready"] = { ru = "СИСТЕМА ГОТОВА к ЗАПУСКУ", en = "SYSTEM READY FOR LAUNCH", es = "SISTEMA LISTO", pt = "SISTEMA PRONTO", ko = "시스템 실행 준비 완료", ja = "システムの準備完了", uk = "СИСТЕМА ГОТОВА ДО ЗАПУСКУ" },
+
         -- Notifications
         ["notify_enabled"] = { ru = "ВКЛЮЧЕНО", en = "ENABLED", es = "HABILITADO", pt = "ATIVADO", ko = "활성화됨", ja = "有効", uk = "УВІМКНЕНО" },
         ["notify_disabled"] = { ru = "ВЫКЛЮЧЕН", en = "DISABLED", es = "DESHABILITADO", pt = "DESATIVADO", ko = "비활성화됨", ja = "無効", uk = "ВИМКНЕНО" },

@@ -106,16 +106,48 @@ function Mega.LoadModule(path)
 end
 
 
--- Load core components in order
+-- ==========================================
+-- TITAN INITIALIZATION SEQUENCE (v3.0)
+-- ==========================================
+
+-- 0. Bootstrap Services (Required for Loader)
 Mega.LoadModule("core/services.lua")
 
--- Start stylized Loader
-local moduleList = {
-    "core/metadata.lua",
+-- 1. Initialize Global Titan Loader
+Mega.LoadModule("gui/loader_screen.lua")
+local loaderUI = nil
+if Mega.Loader then
+    loaderUI = Mega.Loader.Create()
+end
+
+local function InitPhase(id, list)
+    if loaderUI then loaderUI.SetStage(id) end
+    local count = #list
+    for i, path in ipairs(list) do
+        if loaderUI then
+            local overallPercent = (i / count) * 100
+            loaderUI.Update(overallPercent, "Syncing: " .. path)
+        end
+        Mega.LoadModule(path)
+        task.wait(0.05)
+    end
+end
+
+-- PHASE 1: NETWORK HANDSHAKE
+InitPhase("network", {
+    "core/metadata.lua"
+})
+
+-- PHASE 2: BUILDING CORE ENVIRONMENT
+InitPhase("core", {
     "core/dumper.lua",
     "core/settings.lua",
     "core/localization.lua",
-    "core/config.lua",
+    "core/config.lua"
+})
+
+-- PHASE 3: SYNCING SYSTEM FEATURES
+InitPhase("features", {
     "library/notifications.lua",
     "library/ui_builder.lua",
     "core/mobile_hud.lua",
@@ -133,31 +165,18 @@ local moduleList = {
     "features/auto_deposit.lua",
     "features/killaura.lua",
     "features/bed_nuke.lua",
-    "features/bot.lua",
+    "features/bot.lua"
+})
+
+-- PHASE 4: FINALIZING INTERFACE
+InitPhase("ui", {
     "gui/main_window.lua"
-}
+})
 
--- Preliminary load of the Loader UI module
-Mega.LoadModule("gui/loader_screen.lua")
-local loaderUI = nil
-if Mega.Loader then
-    loaderUI = Mega.Loader.Create()
-end
-
-local total = #moduleList
-for i, path in ipairs(moduleList) do
-    if loaderUI then
-        local percent = (i / total) * 100
-        loaderUI.Update(percent, "Loading " .. path .. "...")
-    end
-    Mega.LoadModule(path)
-    task.wait(0.05) -- Subtle delay for visual smoothness
-end
-
--- Close loader smoothly
+-- Finish Initialization
 if loaderUI then
-    loaderUI.Update(100, "SYSTEM READY")
-    task.wait(0.5)
+    loaderUI.Update(100, Mega.GetText("loader_ready"))
+    task.wait(1)
     loaderUI.Destroy()
 end
 
