@@ -315,11 +315,12 @@ Mega.Icons = {
     ["tab_users"] = iconBaseUrl .. "users.png",
     ["tab_utils"] = iconBaseUrl .. "utils.png",
     ["tab_settings"] = iconBaseUrl .. "settings.png",
-    ["tab_bot"] = iconBaseUrl .. "bot.png"
+    ["tab_bot"] = iconBaseUrl .. "bot.png",
+    ["tab_ai_chat"] = "rbxassetid://13501704646"
 }
 
 -- Tab System
-local TabKeys = { "tab_home", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot" }
+local TabKeys = { "tab_home", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot", "tab_ai_chat" }
 local TabButtons = {}
 Mega.Objects.TabFrames = {}
 

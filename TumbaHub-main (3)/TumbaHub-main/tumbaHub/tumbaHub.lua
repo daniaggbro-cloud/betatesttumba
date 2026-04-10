@@ -167,7 +167,8 @@ InitPhase("features", {
     "features/auto_deposit.lua",
     "features/killaura.lua",
     "features/bed_nuke.lua",
-    "features/bot.lua"
+    "features/bot.lua",
+    "features/ai_chat.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE
