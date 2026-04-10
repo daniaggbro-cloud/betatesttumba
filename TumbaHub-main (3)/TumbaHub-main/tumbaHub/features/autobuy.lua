@@ -22,11 +22,14 @@ local AutoBuy = {
 
 -- Utility: Recursive search for a module or object
 local function findDeep(parent, name)
+    if not parent then return nil end
     local found = parent:FindFirstChild(name)
     if found then return found end
     for _, child in pairs(parent:GetChildren()) do
-        local res = findDeep(child, name)
-        if res then return res end
+        if child:IsA("Folder") or child:IsA("ModuleScript") then
+            local res = findDeep(child, name)
+            if res then return res end
+        end
     end
     return nil
 end
@@ -38,38 +41,49 @@ local function getResourceCount(name)
     -- 1. Try ClientStore (Most Reliable)
     local clientStore = nil
     pcall(function()
-        -- Attempt common paths for ClientStore
-        local appController = findDeep(ReplicatedStorage:WaitForChild("rbxts_include"), "app-controller")
-        if appController then
-            clientStore = require(appController).AppController:getStore()
-        else
-            -- Check CatV6 style path
-            local storeMod = findDeep(ReplicatedStorage:WaitForChild("rbxts_include"), "client-store")
-            if storeMod then
-                clientStore = require(storeMod).ClientStore
+        local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
+        if rbxts then
+            local appController = findDeep(rbxts, "app-controller")
+            if appController then
+                clientStore = require(appController).AppController:getStore()
+            end
+            if not clientStore then
+                local storeMod = findDeep(rbxts, "client-store")
+                if storeMod then
+                    clientStore = require(storeMod).ClientStore
+                end
             end
         end
     end)
     
     if clientStore then
         local success, state = pcall(function() return clientStore:getState() end)
-        if success and state and state.Inventory and state.Inventory.inventory and state.Inventory.inventory.items then
-            for _, item in ipairs(state.Inventory.inventory.items) do
-                if item.itemType == name then
-                    count = count + (item.amount or 1)
+        if success and state and state.Inventory and state.Inventory.inventory then
+            local items = state.Inventory.inventory.items or state.Inventory.inventory.itemsList
+            if items then
+                for _, item in pairs(items) do -- pairs instead of ipairs in case of dict
+                    if item.itemType == name then
+                        count = count + (item.amount or 1)
+                    end
                 end
+                return count
             end
-            return count
         end
     end
     
-    -- 2. Try InventoryUtil
+    -- 2. Try InventoryUtil Fallback
     pcall(function()
-        local invUtil = ReplicatedStorage:FindFirstChild("TS"):FindFirstChild("inventory"):FindFirstChild("inventory-util")
-        if invUtil then
-            local util = require(invUtil).InventoryUtil
-            if util and util.getAmount then
-                count = util.getAmount(lplr, name)
+        local ts = ReplicatedStorage:FindFirstChild("TS")
+        if ts then
+            local inv = ts:FindFirstChild("inventory")
+            if inv then
+                local invUtil = inv:FindFirstChild("inventory-util")
+                if invUtil then
+                    local util = require(invUtil).InventoryUtil
+                    if util and util.getAmount then
+                        count = util.getAmount(lplr, name)
+                    end
+                end
             end
         end
     end)
@@ -79,7 +93,6 @@ end
 
 -- Utility: Check if item is in inventory
 local function hasItem(name)
-    -- We can use getResourceCount to check existence
     return getResourceCount(name) > 0
 end
 
@@ -87,7 +100,7 @@ end
 local function buyItem(itemType)
     local remote = Mega.GetRemote("BedwarsShop_PurchaseItem")
     
-    -- Fallback: Find remote manually if metadata is stale
+    -- Robust Manual Fallback
     if not remote then
         local rbxts = ReplicatedStorage:FindFirstChild("rbxts_include")
         if rbxts then
@@ -97,6 +110,7 @@ local function buyItem(itemType)
                     local n = child.Name:lower()
                     if (n:find("shop") or n:find("purchase")) and n:find("item") then
                         remote = child
+                        print("🛠 AutoBuy: Found Remote manually -> " .. child.Name)
                         break
                     end
                 end
@@ -105,13 +119,27 @@ local function buyItem(itemType)
     end
 
     if remote then
-        -- print("🛒 AutoBuy: Purchasing " .. itemType)
-        if remote:IsA("RemoteEvent") then
-            remote:FireServer({shopItem = {itemType = itemType}})
-        else
-            remote:InvokeServer({shopItem = {itemType = itemType}})
+        warn("🛒 AutoBuy: Attempting to buy " .. itemType)
+        local args = {
+            shopItem = {
+                itemType = itemType
+            }
+        }
+        
+        local success, err = pcall(function()
+            if remote:IsA("RemoteEvent") then
+                remote:FireServer(args)
+            else
+                remote:InvokeServer(args)
+            end
+        end)
+        
+        if not success then
+            warn("❌ AutoBuy Purchase Error: " .. tostring(err))
         end
-        return true
+        return success
+    else
+        warn("❌ AutoBuy Error: Shop Remote NOT FOUND!")
     end
     return false
 end
@@ -122,6 +150,12 @@ local function processAutoBuy()
     
     local iron = getResourceCount("iron")
     local emeralds = getResourceCount("emerald")
+    
+    -- Debug every 10 seconds to avoid spam
+    if tick() - AutoBuy.LastCheck > 10 then
+        print(string.format("📊 AutoBuy Status: Iron=%d, Emeralds=%d, Enabled=%s", iron, emeralds, tostring(AutoBuy.Enabled)))
+        AutoBuy.LastCheck = tick()
+    end
     
     -- 1. Armor Logic (High Priority)
     if AutoBuy.Categories.Armor.Enabled then
