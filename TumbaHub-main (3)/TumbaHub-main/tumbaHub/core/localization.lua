@@ -362,7 +362,9 @@ Mega.Localization = {
         ["Bottom"] = { ru = "Снизу", en = "Bottom", es = "Abajo", pt = "Abaixo", ko = "아래", ja = "下", uk = "Знизу" },
         ["Top"] = { ru = "Сверху", en = "Top", es = "Arriba", pt = "Acima", ko = "위", ja = "上", uk = "Зверху" },
         ["Center"] = { ru = "По Центру", en = "Center", es = "Centro", pt = "Centro", ko = "중앙", ja = "中央", uk = "По центру" },
-        ["Mouse"] = { ru = "От Курсора", en = "Mouse", es = "Ratón", pt = "Rato", ko = "마우스", ja = "マウス", uk = "Від курсору" }
+        ["Mouse"] = { ru = "От Курсора", en = "Mouse", es = "Ratón", pt = "Rato", ko = "마우스", ja = "マウス", uk = "Від курсору" },
+        ["ai_chat_placeholder"] = { ru = "Введите сообщение...", en = "Type a message...", es = "Escribe un mensaje...", pt = "Digite uma mensagem...", ko = "메시지를 입력하세요...", ja = "メッセージを入力...", uk = "Введіть повідомлення..." },
+        ["ai_chat_send"] = { ru = "Отправить", en = "Send", es = "Enviar", pt = "Enviar", ko = "보내기", ja = "送信", uk = "Надіслати" }
     }
 }
 

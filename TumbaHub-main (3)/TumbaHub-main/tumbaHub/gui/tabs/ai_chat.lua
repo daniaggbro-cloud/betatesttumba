@@ -135,7 +135,7 @@ local function CreateMessageBubble(text, isAI)
     ChatHistory.CanvasPosition = Vector2.new(0, ChatHistory.AbsoluteCanvasSize.Y)
     
     -- Fade in
-    Bubble.GroupTransparency = 1
+    Bubble.BackgroundTransparency = 1
     TweenService:Create(Bubble, TweenInfo.new(0.3), { BackgroundTransparency = isAI and 0.4 or 0.6 }):Play()
 end
 
