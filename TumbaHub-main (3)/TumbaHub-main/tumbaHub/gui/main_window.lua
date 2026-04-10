@@ -316,7 +316,7 @@ Mega.Icons = {
     ["tab_utils"] = iconBaseUrl .. "utils.png",
     ["tab_settings"] = iconBaseUrl .. "settings.png",
     ["tab_bot"] = iconBaseUrl .. "bot.png",
-    ["tab_ai_chat"] = "rbxassetid://13501704646"
+    ["tab_ai_chat"] = iconBaseUrl .. "ai_chat.png"
 }
 
 -- Tab System
