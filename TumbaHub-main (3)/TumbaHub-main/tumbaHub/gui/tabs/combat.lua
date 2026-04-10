@@ -126,7 +126,9 @@ UI.CreateSection(TabFrame, "section_combat_autobuy")
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_autobuy", "Combat.AutoBuy.Enabled", function(state)
     Mega.States.Combat.AutoBuy.Enabled = state
-    -- We load the module separately in tumbaHub.lua so it starts worker loop
+    if Mega.Features.AutoBuy and Mega.Features.AutoBuy.Toggles["Enabled"] then
+        Mega.Features.AutoBuy.Toggles["Enabled"](state)
+    end
 end, {
     UI.CreateToggle(nil, "toggle_autobuy_armor", "Combat.AutoBuy.Armor", function(state)
         if Mega.Features.AutoBuy then Mega.Features.AutoBuy.Toggles["Armor"](state) end
