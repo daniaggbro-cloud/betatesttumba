@@ -120,3 +120,28 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled"
     end
 end, bedNukeSettings)
 --#endregion
+
+--#region -- Auto Buy
+UI.CreateSection(TabFrame, "section_combat_autobuy")
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_autobuy", "Combat.AutoBuy.Enabled", function(state)
+    Mega.States.Combat.AutoBuy.Enabled = state
+    -- We load the module separately in tumbaHub.lua so it starts worker loop
+end, {
+    UI.CreateToggle(nil, "toggle_autobuy_armor", "Combat.AutoBuy.Armor", function(state)
+        if Mega.Features.AutoBuy then Mega.Features.AutoBuy.Toggles["Armor"](state) end
+    end),
+    UI.CreateToggle(nil, "toggle_autobuy_swords", "Combat.AutoBuy.Swords", function(state)
+        if Mega.Features.AutoBuy then Mega.Features.AutoBuy.Toggles["Swords"](state) end
+    end),
+    UI.CreateToggle(nil, "toggle_autobuy_tools", "Combat.AutoBuy.Tools", function(state)
+        if Mega.Features.AutoBuy then Mega.Features.AutoBuy.Toggles["Tools"](state) end
+    end),
+    UI.CreateToggle(nil, "toggle_autobuy_wool", "Combat.AutoBuy.Wool", function(state)
+        if Mega.Features.AutoBuy then Mega.Features.AutoBuy.Toggles["Wool"](state) end
+    end),
+    UI.CreateToggle(nil, "toggle_autobuy_arrows", "Combat.AutoBuy.Arrows", function(state)
+        if Mega.Features.AutoBuy then Mega.Features.AutoBuy.Toggles["Arrows"](state) end
+    end)
+})
+--#endregion
