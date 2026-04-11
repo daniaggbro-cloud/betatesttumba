@@ -13,6 +13,7 @@ if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true,
 if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
+if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, AutoDeposit = false } end
 if not Mega.States.Misc then Mega.States.Misc = {} end
 if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" } end
 
@@ -222,5 +223,19 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_lani", "Misc.Lani.Enabled", functi
 end, {
     UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind", function(key) Mega.States.Misc.Lani.Keybind = key end),
     laniContainer
+})
+--#endregion
+
+--#region -- Lucia (Pinata)
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/lucia.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_lucia", "Lucia.Enabled", function(state)
+    Mega.States.Lucia.Enabled = state
+    if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(state) end
+    notifyFeature("toggle_lucia", state)
+end, {
+    UI.CreateToggle(nil, "toggle_lucia_deposit", "Lucia.AutoDeposit")
 })
 --#endregion
