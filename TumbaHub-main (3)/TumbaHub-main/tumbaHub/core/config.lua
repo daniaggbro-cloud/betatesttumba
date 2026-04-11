@@ -100,6 +100,13 @@ function Mega.ConfigSystem.Load(name)
         Mega.Localization.CurrentLanguage = data.Language
     end
     
+    -- Защита от загрузки старых сломанных лимитов из сохранений (кэша)
+    if Mega.States.Misc and Mega.States.Misc.Adetunde and type(Mega.States.Misc.Adetunde.Range) == "number" then
+        if Mega.States.Misc.Adetunde.Range > 50 then Mega.States.Misc.Adetunde.Range = 50 end
+    end
+    if Mega.States.Combat and Mega.States.Combat.Killaura and type(Mega.States.Combat.Killaura.Range) == "number" then
+        if Mega.States.Combat.Killaura.Range > 25 then Mega.States.Combat.Killaura.Range = 25 end
+    end
 
     return true
 end
@@ -168,4 +175,3 @@ function Mega.ConfigSystem.StartAutosave(interval)
         end
     end)
 end
-
