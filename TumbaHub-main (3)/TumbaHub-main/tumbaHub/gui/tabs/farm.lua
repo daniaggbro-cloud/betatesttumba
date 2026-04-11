@@ -15,7 +15,7 @@ if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } en
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
 if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false } end
 if not Mega.States.Misc then Mega.States.Misc = {} end
-if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" } end
+if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, Keybind = "None" } end
 
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
@@ -176,10 +176,9 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_adetunde", "Misc.Adetunde.Enabled"
     notifyFeature("toggle_adetunde", state)
 end, {
     UI.CreateKeybindButton(nil, "keybind_adetunde", "Misc.Adetunde.Keybind", function(key) Mega.States.Misc.Adetunde.Keybind = key end),
-    UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 10, 100000),
-    UI.CreateSlider(nil, "slider_adetunde_duration", "Misc.Adetunde.Duration", 1, 600, function(val)
-        Mega.States.Misc.Adetunde.Duration = val
-    end)
+    UI.CreateToggle(nil, "toggle_adetunde_target_esp", "Misc.Adetunde.TargetESP"),
+    UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 5, 50),
+    UI.CreateSlider(nil, "slider_adetunde_delay", "Misc.Adetunde.Delay", 0, 1000)
 })
 --#endregion
 
