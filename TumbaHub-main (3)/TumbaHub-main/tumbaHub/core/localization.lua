@@ -77,6 +77,8 @@ Mega.Localization = {
         ["slider_taliah_esp_transparency"] = { ru = "Прозрачность ESP", en = "ESP Transparency", es = "Transparencia ESP", pt = "Transparência ESP", ko = "ESP 투명도", ja = "ESP透明度", uk = "Прозорість ESP" },
         ["toggle_noelle"] = { ru = "Noelle", en = "Noelle", es = "Noelle", pt = "Noelle", ko = "Noelle", ja = "Noelle", uk = "Noelle" },
         ["button_noelle_manager"] = { ru = "🎒 Менеджер Noelle", en = "🎒 Noelle Manager", es = "🎒 Gerente Noelle", pt = "🎒 Gerente Noelle", ko = "🎒 노엘 관리자", ja = "🎒 ノエルマネージャー", uk = "🎒 Менеджер Noelle" },
+        ["toggle_lucia"] = { ru = "Люсия (Lucia)", en = "Lucia", es = "Lucia", pt = "Lucia", ko = "루시아", ja = "ルシア", uk = "Люсія" },
+        ["toggle_lucia_deposit"] = { ru = "Авто-депозит конфет", en = "Auto Deposit Candy", es = "Auto Depositar Dulces", pt = "Auto Depositar Doces", ko = "자동 사탕 보관", ja = "キャンディ自動預け", uk = "Авто-депозит цукерок" },
         ["noelle_title"] = { ru = "Менеджер Слаймов Noelle", en = "Noelle Slime Manager", es = "Gerente de Slimes Noelle", pt = "Gerenciador de Slimes Noelle", ko = "노엘 슬라임 관리자", ja = "ノエルスライムマネージャー", uk = "Менеджер Слаймів Noelle" },
         ["noelle_target"] = { ru = "Цель: %s", en = "Target: %s", es = "Objetivo: %s", pt = "Alvo: %s", ko = "목표: %s", ja = "ターゲット: %s", uk = "Ціль: %s" },
         ["noelle_target_none"] = { ru = "Цель: Нет", en = "Target: None", es = "Objetivo: Ninguno", pt = "Alvo: Nenhum", ko = "목표: 없음", ja = "ターゲット: なし", uk = "Ціль: Немає" },
