@@ -115,6 +115,7 @@ Mega.Localization = {
         ["toggle_killaura_target_esp"] = { ru = "Показывать цель", en = "Show Target", es = "Mostrar Objetivo", pt = "Mostrar Alvo", ko = "대상 표시", ja = "ターゲットを表示", uk = "Показувати ціль" },
         ["toggle_killaura_use_fov"] = { ru = "👁️ Использовать FOV", en = "👁️ Use FOV", es = "👁️ Usar FOV", pt = "👁️ Usar FOV", ko = "👁️ FOV 사용", ja = "👁️ FOV使用", uk = "👁️ Використовувати FOV" },
         ["toggle_killaura_only_on_click"] = { ru = "⚔️ Только при ударе (Trigger)", en = "⚔️ Only on Click", es = "⚔️ Solo al hacer clic", pt = "⚔️ Apenas ao clicar", ko = "⚔️ 클릭 시에만 작동", ja = "⚔️ クリック時のみ", uk = "⚔️ Тільки при ударі" },
+        ["toggle_killaura_autoclick"] = { ru = "🖱️ Авто-клик (Анимация удара)", en = "🖱️ Auto-Click (Swing Animation)", es = "🖱️ Auto-Click", pt = "🖱️ Auto-Click", ko = "🖱️ 자동 클릭", ja = "🖱️ オートクリック", uk = "🖱️ Авто-клік (Анімація)" },
         ["slider_killaura_fov_angle"] = { ru = "📐 Угол обзора (FOV)", en = "📐 FOV Angle", es = "📐 Ángulo de FOV", pt = "📐 Ângulo de FOV", ko = "📐 FOV 각도", ja = "📐 FOV 角", uk = "📐 Кут огляду (FOV)" },
         ["section_combat_autobuy"] = { ru = "🛒 АВТО-ЗАКУПКА (AUTOBUY)", en = "🛒 AUTOBUY (PRO)", es = "🛒 AUTO-COMPRA", pt = "🛒 AUTO-COMPRA", ko = "🛒 자동 구매", ja = "🛒 自動購入", uk = "🛒 АВТО-ЗАКУПІВЛЯ (AUTOBUY)" },
         ["toggle_autobuy"] = { ru = "Включить AutoBuy", en = "Enable AutoBuy", es = "Habilitar AutoBuy", pt = "Ativar AutoBuy", ko = "AutoBuy 활성화", ja = "AutoBuy 有効", uk = "Увімкнути AutoBuy" },
