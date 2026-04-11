@@ -16,6 +16,7 @@ if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds
 if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false } end
 if not Mega.States.Misc then Mega.States.Misc = {} end
 if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 50, Delay = 0, TargetESP = true, Keybind = "None" } end
+if not Mega.States.Misc.Alchemist then Mega.States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true } end
 
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
