@@ -15,12 +15,15 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if States.Lucia == nil then
-    States.Lucia = { Enabled = false, AutoDeposit = false, Range = 20, Legit = false }
+    States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false }
 elseif States.Lucia.Range == nil then
     States.Lucia.Range = 20
 end
 if States.Lucia.Legit == nil then
     States.Lucia.Legit = false
+end
+if States.Lucia.ESP == nil then
+    States.Lucia.ESP = false
 end
 
 if not Mega.Objects.LuciaConnections then Mega.Objects.LuciaConnections = {} end
@@ -84,6 +87,10 @@ local lastCheck = 0
 connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
     if not States.Lucia.Enabled then 
         espFolder:ClearAllChildren()
+        for _, pinata in ipairs(getPinatas()) do
+            local hl = pinata:FindFirstChild("LuciaHighlight")
+            if hl then hl:Destroy() end
+        end
         return 
     end
     
@@ -93,32 +100,37 @@ connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
     for _, pinata in ipairs(pinatas) do
         local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
         if pinataPart then
-            activePinatas[pinataPart] = true
-            local hl = pinata:FindFirstChild("LuciaHighlight")
-            if not hl then
-                hl = Instance.new("Highlight")
-                hl.Name = "LuciaHighlight"
-                hl.FillColor = Color3.fromRGB(255, 100, 200)
-                hl.OutlineColor = Color3.new(1, 1, 1)
-                hl.Parent = pinata
-            end
-            
-            local espName = "ESP_" .. pinata:GetDebugId()
-            if not espFolder:FindFirstChild(espName) then
-                local b = Instance.new("BillboardGui")
-                b.Name = espName
-                b.Adornee = pinataPart
-                b.Size = UDim2.new(0, 100, 0, 30)
-                b.StudsOffset = Vector3.new(0, 3, 0)
-                b.AlwaysOnTop = true
-                local txt = Instance.new("TextLabel", b)
-                txt.Size = UDim2.new(1, 0, 1, 0)
-                txt.BackgroundTransparency = 1
-                txt.Text = "Piñata"
-                txt.TextColor3 = Color3.fromRGB(255, 100, 200)
-                txt.Font = Enum.Font.GothamBold
-                txt.TextStrokeTransparency = 0
-                b.Parent = espFolder
+            if States.Lucia.ESP then
+                activePinatas[pinataPart] = true
+                local hl = pinata:FindFirstChild("LuciaHighlight")
+                if not hl then
+                    hl = Instance.new("Highlight")
+                    hl.Name = "LuciaHighlight"
+                    hl.FillColor = Color3.fromRGB(255, 100, 200)
+                    hl.OutlineColor = Color3.new(1, 1, 1)
+                    hl.Parent = pinata
+                end
+                
+                local espName = "ESP_" .. pinata:GetDebugId()
+                if not espFolder:FindFirstChild(espName) then
+                    local b = Instance.new("BillboardGui")
+                    b.Name = espName
+                    b.Adornee = pinataPart
+                    b.Size = UDim2.new(0, 100, 0, 30)
+                    b.StudsOffset = Vector3.new(0, 3, 0)
+                    b.AlwaysOnTop = true
+                    local txt = Instance.new("TextLabel", b)
+                    txt.Size = UDim2.new(1, 0, 1, 0)
+                    txt.BackgroundTransparency = 1
+                    txt.Text = "Piñata"
+                    txt.TextColor3 = Color3.fromRGB(255, 100, 200)
+                    txt.Font = Enum.Font.GothamBold
+                    txt.TextStrokeTransparency = 0
+                    b.Parent = espFolder
+                end
+            else
+                local hl = pinata:FindFirstChild("LuciaHighlight")
+                if hl then hl:Destroy() end
             end
         end
     end
@@ -205,5 +217,11 @@ end)
 
 function Mega.Features.Lucia.SetEnabled(state)
     States.Lucia.Enabled = state
-    if not state and espFolder then espFolder:ClearAllChildren() end
+    if not state then 
+        if espFolder then espFolder:ClearAllChildren() end 
+        for _, pinata in ipairs(getPinatas()) do
+            local hl = pinata:FindFirstChild("LuciaHighlight")
+            if hl then hl:Destroy() end
+        end
+    end
 end
