@@ -15,9 +15,12 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if States.Lucia == nil then
-    States.Lucia = { Enabled = false, AutoDeposit = false, Range = 20 }
+    States.Lucia = { Enabled = false, AutoDeposit = false, Range = 20, Legit = false }
 elseif States.Lucia.Range == nil then
     States.Lucia.Range = 20
+end
+if States.Lucia.Legit == nil then
+    States.Lucia.Legit = false
 end
 
 if not Mega.Objects.LuciaConnections then Mega.Objects.LuciaConnections = {} end
@@ -146,42 +149,44 @@ connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
         local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
         if pinataPart then
             local dist = (root.Position - pinataPart.Position).Magnitude
-            if dist <= States.Lucia.Range then
+            local targetRange = States.Lucia.Legit and States.Lucia.Range or math.huge
+            
+            if dist <= targetRange then
                 
-                -- 1. Метод через ProximityPrompt (Самый легитный и надежный, если он там есть)
-                local prompt = pinata:FindFirstChildWhichIsA("ProximityPrompt", true)
-                if prompt and prompt.Enabled then
-                    if fireproximityprompt then
-                        fireproximityprompt(prompt)
-                    else
-                        task.spawn(function()
-                            pcall(function()
-                                prompt:InputHoldBegin()
-                                task.wait(prompt.HoldDuration or 0)
-                                prompt:InputHoldEnd()
+                if States.Lucia.Legit then
+                    -- 1. Метод через ProximityPrompt (Легитный)
+                    local prompt = pinata:FindFirstChildWhichIsA("ProximityPrompt", true)
+                    if prompt and prompt.Enabled then
+                        if fireproximityprompt then
+                            fireproximityprompt(prompt)
+                        else
+                            task.spawn(function()
+                                pcall(function()
+                                    prompt:InputHoldBegin()
+                                    task.wait(prompt.HoldDuration or 0)
+                                    prompt:InputHoldEnd()
+                                end)
                             end)
-                        end)
+                        end
+                        return 
                     end
-                    return 
                 end
 
-                -- 2. Метод через Ремоут (Перебор форматов аргументов, которые обычно использует Bedwars)
+                -- 2. Метод через Ремоут (Уязвимость сервера BedWars - дистанция не проверяется)
                 if DepositPinataRemote then
-                    local bPos = pinataPart.Position
-                    local bx, by, bz = math.round(bPos.X / 3), math.round(bPos.Y / 3), math.round(bPos.Z / 3)
-                    local customVec = vector.create(bx, by, bz)
-                    local blockPos = Vector3.new(bx, by, bz)
-                    
-                    local possibleArgs = {
-                        {},
-                        { ["piggyBank"] = pinata },
-                        { ["position"] = customVec },
-                        { ["position"] = blockPos },
-                        { ["blockPosition"] = customVec },
-                        { ["blockRef"] = { ["blockPosition"] = customVec } }
-                    }
-
-                task.spawn(function()
+                    task.spawn(function()
+                        pcall(function()
+                            if DepositPinataRemote:IsA("RemoteEvent") then
+                                DepositPinataRemote:FireServer(pinata)
+                            elseif DepositPinataRemote:IsA("RemoteFunction") then
+                                DepositPinataRemote:InvokeServer(pinata)
+                            end
+                        end)
+                        -- Дублирующие аргументы на случай других проверок
+                        local possibleArgs = {
+                            { ["piggyBank"] = pinata },
+                            {}
+                        }
                         for _, arg in ipairs(possibleArgs) do
                             pcall(function()
                                 if DepositPinataRemote:IsA("RemoteEvent") then
