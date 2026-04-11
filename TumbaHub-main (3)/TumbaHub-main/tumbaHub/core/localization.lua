@@ -78,6 +78,7 @@ Mega.Localization = {
         ["toggle_noelle"] = { ru = "Noelle", en = "Noelle", es = "Noelle", pt = "Noelle", ko = "Noelle", ja = "Noelle", uk = "Noelle" },
         ["button_noelle_manager"] = { ru = "🎒 Менеджер Noelle", en = "🎒 Noelle Manager", es = "🎒 Gerente Noelle", pt = "🎒 Gerente Noelle", ko = "🎒 노엘 관리자", ja = "🎒 ノエルマネージャー", uk = "🎒 Менеджер Noelle" },
         ["toggle_lucia"] = { ru = "Люсия (Lucia)", en = "Lucia", es = "Lucia", pt = "Lucia", ko = "루시아", ja = "ルシア", uk = "Люсія" },
+        ["toggle_lucia_esp"] = { ru = "Подсветка пиньяты", en = "Piñata ESP", es = "ESP de Piñata", pt = "ESP de Piñata", ko = "피냐타 ESP", ja = "ピニャータ ESP", uk = "Підсвічування піньяти" },
         ["toggle_lucia_deposit"] = { ru = "Авто-депозит конфет", en = "Auto Deposit Candy", es = "Auto Depositar Dulces", pt = "Auto Depositar Doces", ko = "자동 사탕 보관", ja = "キャンディ自動預け", uk = "Авто-депозит цукерок" },
         ["slider_lucia_range"] = { ru = "Дистанция депозита", en = "Deposit Range", es = "Rango de depósito", pt = "Alcance de depósito", ko = "보관 범위", ja = "預け範囲", uk = "Дистанція депозиту" },
         ["toggle_lucia_legit"] = { ru = "Легитный режим (с проверкой дистанции)", en = "Legit Mode (Check Distance)", es = "Modo Legit (Verificar Distancia)", pt = "Modo Legit (Verificar Distância)", ko = "합법 모드 (거리 확인)", ja = "合法モード（距離確認）", uk = "Легітний режим (з перевіркою дистанції)" },

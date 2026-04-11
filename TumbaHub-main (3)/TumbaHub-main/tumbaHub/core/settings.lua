@@ -236,7 +236,8 @@ Mega.States = {
         Enabled = false,
         AutoDeposit = false,
         Range = 20,
-        Legit = false
+        Legit = false,
+        ESP = false
     },
     Cletus = {
         Enabled = false,
