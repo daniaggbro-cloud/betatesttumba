@@ -187,6 +187,22 @@ end, {
 })
 --#endregion
 
+--#region -- Alchemist
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/alchemist.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_alchemist", "Misc.Alchemist.Enabled", function(state)
+    if Mega.Features.Alchemist and Mega.Features.Alchemist.SetEnabled then
+        Mega.Features.Alchemist.SetEnabled(state)
+    end
+    notifyFeature("toggle_alchemist", state)
+end, {
+    UI.CreateToggle(nil, "toggle_alchemist_esp", "Misc.Alchemist.ESP"),
+    UI.CreateToggle(nil, "toggle_alchemist_autocollect", "Misc.Alchemist.AutoCollect")
+})
+--#endregion
+
 --#region -- Noelle
 local noelleContainer = Instance.new("Frame")
 noelleContainer.Name = "NoelleContainer"
