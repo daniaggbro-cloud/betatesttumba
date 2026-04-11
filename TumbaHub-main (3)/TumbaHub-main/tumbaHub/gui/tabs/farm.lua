@@ -13,7 +13,7 @@ if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true,
 if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
-if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, AutoDeposit = false, Range = 20, Legit = false } end
+if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false } end
 if not Mega.States.Misc then Mega.States.Misc = {} end
 if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" } end
 
@@ -236,6 +236,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_lucia", "Lucia.Enabled", function(
     if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(state) end
     notifyFeature("toggle_lucia", state)
 end, {
+    UI.CreateToggle(nil, "toggle_lucia_esp", "Lucia.ESP"),
     UI.CreateToggle(nil, "toggle_lucia_deposit", "Lucia.AutoDeposit"),
     UI.CreateToggle(nil, "toggle_lucia_legit", "Lucia.Legit"),
     UI.CreateSlider(nil, "slider_lucia_range", "Lucia.Range", 5, 50)
