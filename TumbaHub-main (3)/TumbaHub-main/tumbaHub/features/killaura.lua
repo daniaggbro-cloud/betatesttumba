@@ -17,12 +17,13 @@ local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90, OnlyOnClick = false }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90, OnlyOnClick = false, AutoClick = false }
 elseif States.Combat.Killaura.TargetESP == nil then
     States.Combat.Killaura.TargetESP = true
     States.Combat.Killaura.UseFOV = false
     States.Combat.Killaura.FOVAngle = 90
     States.Combat.Killaura.OnlyOnClick = false
+    States.Combat.Killaura.AutoClick = false
 end
 
 if not Mega.Objects.KillauraConnections then Mega.Objects.KillauraConnections = {} end
@@ -115,6 +116,8 @@ end
 local killauraActive = false
 local lastAttackTime = 0
 local isManualAttacking = false
+local clickTriggered = false
+local isSimulatingClick = false
 -- Лимит убран для синхронизации с каждым кадром игры (Heartbeat)
 
 -- Отслеживание кликов игрока с фильтром интерфейса
@@ -123,8 +126,13 @@ if not Mega.Objects.KillauraInputConnections then
     
     table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputBegan:Connect(function(input, processed)
         if processed then return end -- Игнорируем клики по интерфейсу (меню, ползунки)
+        if isSimulatingClick then return end -- Игнорируем наши собственные авто-клики
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isManualAttacking = true
+            clickTriggered = true
+            if States.Combat.Killaura.OnlyOnClick then
+                lastAttackTime = 0 -- Сброс таймера для моментального удара
+            end
         end
     end))
     
@@ -238,7 +246,11 @@ function Mega.Features.Killaura.SetEnabled(state)
                     -- Check "Only on Click" condition
                     local canAttack = true
                     if States.Combat.Killaura.OnlyOnClick then
-                        if not isManualAttacking then canAttack = false end
+                        if not clickTriggered then 
+                            canAttack = false 
+                        else
+                            clickTriggered = false -- Сбрасываем триггер после одного удара (1 клик = 1 удар)
+                        end
                     end
 
                     -- Если задержка 0 и проверка пройдена, бьем без остановки на каждом кадре
@@ -270,6 +282,23 @@ function Mega.Features.Killaura.SetEnabled(state)
                             }
                         }
                         pcall(function() SwordHitRemote:FireServer(unpack(args)) end)
+                        
+                        -- [ Симуляция клика (ЛКМ) при ударе киллауры для анимации ]
+                        if States.Combat.Killaura.AutoClick then
+                            task.spawn(function()
+                                isSimulatingClick = true
+                                if mouse1click then
+                                    mouse1click()
+                                else
+                                    local vim = game:GetService("VirtualInputManager")
+                                    vim:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                                    task.wait()
+                                    vim:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+                                end
+                                task.wait(0.05)
+                                isSimulatingClick = false
+                            end)
+                        end
                     end
                 end
                 
