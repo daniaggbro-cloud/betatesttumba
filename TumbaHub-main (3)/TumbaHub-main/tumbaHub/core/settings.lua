@@ -235,7 +235,8 @@ Mega.States = {
     Lucia = {
         Enabled = false,
         AutoDeposit = false,
-        Range = 20
+        Range = 20,
+        Legit = false
     },
     Cletus = {
         Enabled = false,
