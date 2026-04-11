@@ -33,6 +33,23 @@ task.spawn(function()
 end)
 
 local espObjects = {}
+local activeIngredients = {}
+local descAddedConn = nil
+
+local function checkIngredient(obj)
+    if not obj then return end
+    pcall(function()
+        if obj:IsA("Model") or obj:IsA("BasePart") then
+            local name = obj.Name:lower()
+            for key, data in pairs(INGREDIENTS) do
+                if name:find(key) then
+                    activeIngredients[obj] = data
+                    break
+                end
+            end
+        end
+    end)
+end
 
 local function clearESP()
     for obj, esp in pairs(espObjects) do
@@ -84,11 +101,20 @@ function Mega.Features.Alchemist.SetEnabled(state)
     if not state then
         clearESP()
         alchemistActive = false
+        if descAddedConn then descAddedConn:Disconnect(); descAddedConn = nil end
+        table.clear(activeIngredients)
         return
     end
     
     if state and not alchemistActive then
         alchemistActive = true
+        
+        for _, obj in ipairs(Services.Workspace:GetDescendants()) do
+            checkIngredient(obj)
+        end
+        
+        descAddedConn = Services.Workspace.DescendantAdded:Connect(checkIngredient)
+        
         task.spawn(function()
             while States.Misc.Alchemist.Enabled do
                 task.wait(0.15)
@@ -97,63 +123,54 @@ function Mega.Features.Alchemist.SetEnabled(state)
                 local char = LocalPlayer.Character
                 local hrp = char and char:FindFirstChild("HumanoidRootPart")
                 
-                local dropsFolder = Services.Workspace:FindFirstChild("ItemDrops")
-                local mapFolder = Services.Workspace:FindFirstChild("Map")
-                
-                local searchFolders = { Services.Workspace }
-                if dropsFolder then table.insert(searchFolders, dropsFolder) end
-                if mapFolder then table.insert(searchFolders, mapFolder) end
-                
-                for obj, esp in pairs(espObjects) do
+                for obj, data in pairs(activeIngredients) do
                     if not obj or not obj.Parent then
-                        if esp then esp:Destroy() end
-                        espObjects[obj] = nil
+                        activeIngredients[obj] = nil
+                        if espObjects[obj] then
+                            espObjects[obj]:Destroy()
+                            espObjects[obj] = nil
+                        end
+                        continue
                     end
-                end
-
-                for _, folder in ipairs(searchFolders) do
-                    for _, obj in ipairs(folder:GetChildren()) do
-                        local ingData = INGREDIENTS[obj.Name]
+                    
+                    if States.Misc.Alchemist.ESP then
+                        createESP(obj, data)
+                    else
+                        clearESP()
+                    end
+                    
+                    if States.Misc.Alchemist.AutoCollect and hrp and netManaged then
+                        local dropPos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
+                        local dist = (hrp.Position - dropPos).Magnitude
                         
-                        if ingData and (obj:IsA("Model") or obj:IsA("BasePart")) then
-                            if States.Misc.Alchemist.ESP then
-                                createESP(obj, ingData)
-                            else
-                                clearESP()
+                        if dist <= 16 then
+                            local pickupRemote = netManaged:FindFirstChild("PickupItemDrop")
+                            local collectRemote = netManaged:FindFirstChild("CollectCollectableEntity")
+                            
+                            if pickupRemote then
+                                task.spawn(function() pcall(function() 
+                                    if pickupRemote:IsA("RemoteEvent") then pickupRemote:FireServer({itemDrop = obj}) else pickupRemote:InvokeServer({itemDrop = obj}) end
+                                    if pickupRemote:IsA("RemoteEvent") then pickupRemote:FireServer(obj) else pickupRemote:InvokeServer(obj) end
+                                end) end)
+                            end
+                            if collectRemote then
+                                task.spawn(function() pcall(function() 
+                                    if collectRemote:IsA("RemoteEvent") then collectRemote:FireServer({ entity = obj }) else collectRemote:InvokeServer({ entity = obj }) end
+                                    if collectRemote:IsA("RemoteEvent") then collectRemote:FireServer(obj) else collectRemote:InvokeServer(obj) end
+                                end) end)
                             end
                             
-                            if States.Misc.Alchemist.AutoCollect and hrp and netManaged then
-                                local dropPos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
-                                local dist = (hrp.Position - dropPos).Magnitude
-                                
-                                if dist <= 14.5 then
-                                    local pickupRemote = netManaged:FindFirstChild("PickupItemDrop")
-                                    local collectRemote = netManaged:FindFirstChild("CollectCollectableEntity")
-                                    
-                                    if pickupRemote then
-                                        task.spawn(function() pcall(function() 
-                                            if pickupRemote:IsA("RemoteEvent") then pickupRemote:FireServer({itemDrop = obj}) else pickupRemote:InvokeServer({itemDrop = obj}) end
-                                            if pickupRemote:IsA("RemoteEvent") then pickupRemote:FireServer(obj) else pickupRemote:InvokeServer(obj) end
-                                        end) end)
-                                    end
-                                    if collectRemote then
-                                        task.spawn(function() pcall(function() 
-                                            if collectRemote:IsA("RemoteEvent") then collectRemote:FireServer({ entity = obj }) else collectRemote:InvokeServer({ entity = obj }) end
-                                            if collectRemote:IsA("RemoteEvent") then collectRemote:FireServer(obj) else collectRemote:InvokeServer(obj) end
-                                        end) end)
-                                    end
-                                    
-                                    local prompt = obj:FindFirstChildOfClass("ProximityPrompt", true)
-                                    if prompt and fireproximityprompt then
-                                        pcall(function() fireproximityprompt(prompt) end)
-                                    end
-                                end
+                            local prompt = obj:FindFirstChildOfClass("ProximityPrompt", true)
+                            if prompt and fireproximityprompt then
+                                pcall(function() fireproximityprompt(prompt) end)
                             end
                         end
                     end
                 end
             end
             clearESP()
+            table.clear(activeIngredients)
+            if descAddedConn then descAddedConn:Disconnect(); descAddedConn = nil end
             alchemistActive = false
         end)
     end
