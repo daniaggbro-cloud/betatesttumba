@@ -18,7 +18,7 @@ local States = Mega.States
 
 if not States.Misc then States.Misc = {} end
 if not States.Misc.Adetunde then
-    States.Misc.Adetunde = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, Keybind = "None" }
+    States.Misc.Adetunde = { Enabled = false, Range = 50, Delay = 0, TargetESP = true, Keybind = "None" }
 elseif States.Misc.Adetunde.TargetESP == nil then
     States.Misc.Adetunde.TargetESP = true
 end
@@ -140,7 +140,8 @@ function Mega.Features.Adetunde.SetEnabled(state)
                     local weapon = getWeapon()
                     
                     local closestTarget = nil
-                    local closestDist = States.Misc.Adetunde.Range
+                    local currentRange = math.min(States.Misc.Adetunde.Range, 50)
+                    local closestDist = currentRange
 
                     if hrp and weapon then
                         for _, obj in pairs(Services.Workspace:GetChildren()) do
@@ -157,7 +158,7 @@ function Mega.Features.Adetunde.SetEnabled(state)
 
                                     if isEnemy then
                                         local dist = (hrp.Position - tHrp.Position).Magnitude
-                                        if dist < States.Misc.Adetunde.Range and dist > 0 then
+                                        if dist <= currentRange and dist > 0 then
                                             if dist < closestDist then
                                                 closestDist = dist
                                                 closestTarget = obj
