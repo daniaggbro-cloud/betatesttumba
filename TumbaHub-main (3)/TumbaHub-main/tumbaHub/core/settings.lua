@@ -207,8 +207,9 @@ Mega.States = {
         },
         Adetunde = {
             Enabled = false,
-            Range = 100000,
-            Duration = 5,
+            Range = 25,
+            Delay = 0,
+            TargetESP = true,
             Keybind = "None"
         },
         Lani = {
