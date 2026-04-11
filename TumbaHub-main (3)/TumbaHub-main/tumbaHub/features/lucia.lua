@@ -7,7 +7,9 @@ Mega.Features.Lucia = {}
 local Services = Mega.Services or {
     RunService = game:GetService("RunService"),
     CollectionService = game:GetService("CollectionService"),
-    Players = game:GetService("Players")
+    Players = game:GetService("Players"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    CoreGui = game:GetService("CoreGui")
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
@@ -35,33 +37,162 @@ task.spawn(function()
     end
 end)
 
+local espFolder = Services.CoreGui:FindFirstChild("LuciaESP")
+if not espFolder then
+    espFolder = Instance.new("Folder")
+    espFolder.Name = "LuciaESP"
+    espFolder.Parent = Services.CoreGui
+end
+
+local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
+
+local function getCandyCount()
+    local count = 0
+    local inv = Services.ReplicatedStorage:FindFirstChild("Inventories")
+    if inv then
+        local pInv = inv:FindFirstChild(LocalPlayer.Name)
+        if pInv then
+            for _, v in ipairs(pInv:GetChildren()) do
+                if v.Name == "candy" then
+                    count = count + (v:GetAttribute("Amount") or 1)
+                end
+            end
+        end
+    end
+    return count
+end
+
+local function getPinatas()
+    local pinatas = Services.CollectionService:GetTagged("piggy-bank")
+    if #pinatas == 0 then
+        local blocksFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Blocks") or workspace:FindFirstChild("Blocks")
+        if blocksFolder then
+            for _, obj in ipairs(blocksFolder:GetChildren()) do
+                if obj.Name:lower():find("pinata") or obj.Name:lower():find("piggy") then
+                    table.insert(pinatas, obj)
+                end
+            end
+        end
+    end
+    return pinatas
+end
+
 local lastCheck = 0
 connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Lucia.Enabled or not States.Lucia.AutoDeposit then return end
-    if not DepositPinataRemote then return end
+    if not States.Lucia.Enabled then 
+        espFolder:ClearAllChildren()
+        return 
+    end
+    
+    -- Логика ESP Пиньяты
+    local activePinatas = {}
+    local pinatas = getPinatas()
+    for _, pinata in ipairs(pinatas) do
+        local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
+        if pinataPart then
+            activePinatas[pinataPart] = true
+            local hl = pinata:FindFirstChild("LuciaHighlight")
+            if not hl then
+                hl = Instance.new("Highlight")
+                hl.Name = "LuciaHighlight"
+                hl.FillColor = Color3.fromRGB(255, 100, 200)
+                hl.OutlineColor = Color3.new(1, 1, 1)
+                hl.Parent = pinata
+            end
+            
+            local espName = "ESP_" .. pinata:GetDebugId()
+            if not espFolder:FindFirstChild(espName) then
+                local b = Instance.new("BillboardGui")
+                b.Name = espName
+                b.Adornee = pinataPart
+                b.Size = UDim2.new(0, 100, 0, 30)
+                b.StudsOffset = Vector3.new(0, 3, 0)
+                b.AlwaysOnTop = true
+                local txt = Instance.new("TextLabel", b)
+                txt.Size = UDim2.new(1, 0, 1, 0)
+                txt.BackgroundTransparency = 1
+                txt.Text = "Piñata"
+                txt.TextColor3 = Color3.fromRGB(255, 100, 200)
+                txt.Font = Enum.Font.GothamBold
+                txt.TextStrokeTransparency = 0
+                b.Parent = espFolder
+            end
+        end
+    end
+    
+    -- Очистка старого ESP
+    for _, child in ipairs(espFolder:GetChildren()) do
+        if child:IsA("BillboardGui") and child.Adornee then
+            if not activePinatas[child.Adornee] then
+                child:Destroy()
+            end
+        else
+            child:Destroy()
+        end
+    end
+
+    if not States.Lucia.AutoDeposit then return end
     
     if tick() - lastCheck < 0.5 then return end
     lastCheck = tick()
+    
+    if getCandyCount() == 0 then return end
     
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
-    local pinatas = Services.CollectionService:GetTagged("piggy-bank")
     for _, pinata in ipairs(pinatas) do
         local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
         if pinataPart then
             local dist = (root.Position - pinataPart.Position).Magnitude
             if dist <= States.Lucia.Range then
+                
+                -- 1. Метод через ProximityPrompt (Самый легитный и надежный, если он там есть)
+                local prompt = pinata:FindFirstChildWhichIsA("ProximityPrompt", true)
+                if prompt and prompt.Enabled then
+                    if fireproximityprompt then
+                        fireproximityprompt(prompt)
+                    else
+                        task.spawn(function()
+                            pcall(function()
+                                prompt:InputHoldBegin()
+                                task.wait(prompt.HoldDuration or 0)
+                                prompt:InputHoldEnd()
+                            end)
+                        end)
+                    end
+                    return 
+                end
+
+                -- 2. Метод через Ремоут (Перебор форматов аргументов, которые обычно использует Bedwars)
+                if DepositPinataRemote then
+                    local bPos = pinataPart.Position
+                    local bx, by, bz = math.round(bPos.X / 3), math.round(bPos.Y / 3), math.round(bPos.Z / 3)
+                    local customVec = vector.create(bx, by, bz)
+                    local blockPos = Vector3.new(bx, by, bz)
+                    
+                    local possibleArgs = {
+                        {},
+                        { ["piggyBank"] = pinata },
+                        { ["position"] = customVec },
+                        { ["position"] = blockPos },
+                        { ["blockPosition"] = customVec },
+                        { ["blockRef"] = { ["blockPosition"] = customVec } }
+                    }
+
                 task.spawn(function()
-                    pcall(function()
-                        if DepositPinataRemote:IsA("RemoteEvent") then
-                            DepositPinataRemote:FireServer()
-                        elseif DepositPinataRemote:IsA("RemoteFunction") then
-                            DepositPinataRemote:InvokeServer()
+                        for _, arg in ipairs(possibleArgs) do
+                            pcall(function()
+                                if DepositPinataRemote:IsA("RemoteEvent") then
+                                    DepositPinataRemote:FireServer(arg)
+                                elseif DepositPinataRemote:IsA("RemoteFunction") then
+                                    DepositPinataRemote:InvokeServer(arg)
+                                end
+                            end)
                         end
                     end)
-                end)
+                end
             end
         end
     end
@@ -69,4 +200,5 @@ end)
 
 function Mega.Features.Lucia.SetEnabled(state)
     States.Lucia.Enabled = state
+    if not state and espFolder then espFolder:ClearAllChildren() end
 end
