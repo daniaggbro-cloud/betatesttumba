@@ -50,6 +50,11 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/killaura.lua") end)
 end)
 
+-- Защита от старых кэшированных конфигов
+if Mega.States.Combat.Killaura and type(Mega.States.Combat.Killaura.Range) == "number" and Mega.States.Combat.Killaura.Range > 25 then
+    Mega.States.Combat.Killaura.Range = 25
+end
+
 UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", function(state)
     Mega.States.Combat.Killaura.Enabled = state
     if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(state) end

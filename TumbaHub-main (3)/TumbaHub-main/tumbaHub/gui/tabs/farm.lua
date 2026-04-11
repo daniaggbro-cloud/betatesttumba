@@ -170,6 +170,11 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/adetunde.lua") end)
 end)
 
+-- Жесткий сброс значения перед отрисовкой интерфейса, если кэш подвел
+if Mega.States.Misc.Adetunde and type(Mega.States.Misc.Adetunde.Range) == "number" and Mega.States.Misc.Adetunde.Range > 50 then
+    Mega.States.Misc.Adetunde.Range = 50
+end
+
 UI.CreateToggleWithSettings(TabFrame, "toggle_adetunde", "Misc.Adetunde.Enabled", function(state)
     Mega.States.Misc.Adetunde.Enabled = state
     if Mega.Features.Adetunde and Mega.Features.Adetunde.SetEnabled then Mega.Features.Adetunde.SetEnabled(state) end
