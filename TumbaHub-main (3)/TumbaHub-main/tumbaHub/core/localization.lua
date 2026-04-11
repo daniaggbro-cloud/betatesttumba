@@ -79,6 +79,7 @@ Mega.Localization = {
         ["button_noelle_manager"] = { ru = "🎒 Менеджер Noelle", en = "🎒 Noelle Manager", es = "🎒 Gerente Noelle", pt = "🎒 Gerente Noelle", ko = "🎒 노엘 관리자", ja = "🎒 ノエルマネージャー", uk = "🎒 Менеджер Noelle" },
         ["toggle_lucia"] = { ru = "Люсия (Lucia)", en = "Lucia", es = "Lucia", pt = "Lucia", ko = "루시아", ja = "ルシア", uk = "Люсія" },
         ["toggle_lucia_deposit"] = { ru = "Авто-депозит конфет", en = "Auto Deposit Candy", es = "Auto Depositar Dulces", pt = "Auto Depositar Doces", ko = "자동 사탕 보관", ja = "キャンディ自動預け", uk = "Авто-депозит цукерок" },
+        ["slider_lucia_range"] = { ru = "Дистанция депозита", en = "Deposit Range", es = "Rango de depósito", pt = "Alcance de depósito", ko = "보관 범위", ja = "預け範囲", uk = "Дистанція депозиту" },
         ["noelle_title"] = { ru = "Менеджер Слаймов Noelle", en = "Noelle Slime Manager", es = "Gerente de Slimes Noelle", pt = "Gerenciador de Slimes Noelle", ko = "노엘 슬라임 관리자", ja = "ノエルスライムマネージャー", uk = "Менеджер Слаймів Noelle" },
         ["noelle_target"] = { ru = "Цель: %s", en = "Target: %s", es = "Objetivo: %s", pt = "Alvo: %s", ko = "목표: %s", ja = "ターゲット: %s", uk = "Ціль: %s" },
         ["noelle_target_none"] = { ru = "Цель: Нет", en = "Target: None", es = "Objetivo: Ninguno", pt = "Alvo: Nenhum", ko = "목표: 없음", ja = "ターゲット: なし", uk = "Ціль: Немає" },

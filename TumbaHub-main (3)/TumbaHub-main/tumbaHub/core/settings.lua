@@ -232,6 +232,11 @@ Mega.States = {
         SaveBinds = false,
         Binds = {}
     },
+    Lucia = {
+        Enabled = false,
+        AutoDeposit = false,
+        Range = 20
+    },
     Cletus = {
         Enabled = false,
         Range = 20,
