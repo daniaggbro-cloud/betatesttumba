@@ -16,6 +16,7 @@ if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds
 if not Mega.States.Misc then Mega.States.Misc = {} end
 if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" } end
 if not Mega.States.Misc.Alchemist then Mega.States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true, ESPTransparency = 0, Range = 5 } end
+if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false } end
 
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
@@ -174,6 +175,23 @@ end, {
     UI.CreateToggle(nil, "toggle_taliah_collect_legit", "Taliah.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_taliah_radius", "Taliah.CollectRadius", 5, 50),
     UI.CreateSlider(nil, "slider_taliah_esp_transparency", "Taliah.ESPTransparency", 0, 100, function(v) Mega.States.Taliah.ESPTransparency = v/100 end)
+})
+--#endregion
+
+--#region -- Lucia
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/lucia.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_lucia", "Lucia.Enabled", function(state)
+    Mega.States.Lucia.Enabled = state
+    if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(state) end
+    notifyFeature("toggle_lucia", state)
+end, {
+    UI.CreateToggle(nil, "toggle_lucia_autodeposit", "Lucia.AutoDeposit"),
+    UI.CreateToggle(nil, "toggle_lucia_legit", "Lucia.Legit"),
+    UI.CreateToggle(nil, "toggle_lucia_esp", "Lucia.ESP"),
+    UI.CreateSlider(nil, "slider_lucia_range", "Lucia.Range", 5, 100)
 })
 --#endregion
 
