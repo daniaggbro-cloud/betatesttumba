@@ -107,6 +107,8 @@ Mega.Localization = {
         ["slider_bednuke_range"] = { ru = "Макс. дистанция", en = "Max Range", es = "Rango Máximo", pt = "Alcance Máximo", ko = "최대 범위", ja = "最大範囲", uk = "Макс. дистанція" },
         ["slider_bednuke_packets"] = { ru = "Пакетов за тик", en = "Packets per tick", es = "Paquetes por tick", pt = "Pacotes por tick", ko = "틱당 패킷", ja = "ティックごとのパケット", uk = "Пакетів за тік" },
         ["toggle_killaura_target_esp"] = { ru = "Показывать цель", en = "Show Target", es = "Mostrar Objetivo", pt = "Mostrar Alvo", ko = "대상 표시", ja = "ターゲットを表示", uk = "Показувати ціль" },
+        ["toggle_killaura_autoclick"] = { ru = "Легит Авто-Клик (ЛКМ)", en = "Legit Auto-Click (LMB)", es = "Auto Clic Legit", pt = "Auto Clique Legit", ko = "자동 클릭 (Legit)", ja = "オートクリック (Legit)", uk = "Легіт Авто-Клік (ЛКМ)" },
+        ["slider_killaura_autoclick_cps"] = { ru = "Клики в секунду (CPS)", en = "Clicks per second (CPS)", es = "Clics por segundo (CPS)", pt = "Cliques por segundo (CPS)", ko = "초당 클릭 수 (CPS)", ja = "秒間クリック数 (CPS)", uk = "Кліки на секунду (CPS)" },
         ["toggle_killaura_use_fov"] = { ru = "👁️ Использовать FOV", en = "👁️ Use FOV", es = "👁️ Usar FOV", pt = "👁️ Usar FOV", ko = "👁️ FOV 사용", ja = "👁️ FOV使用", uk = "👁️ Використовувати FOV" },
         ["toggle_killaura_only_on_click"] = { ru = "⚔️ Только при ударе (Trigger)", en = "⚔️ Only on Click", es = "⚔️ Solo al hacer clic", pt = "⚔️ Apenas ao clicar", ko = "⚔️ 클릭 시에만 작동", ja = "⚔️ クリック時のみ", uk = "⚔️ Тільки при ударі" },
         ["slider_killaura_fov_angle"] = { ru = "📐 Угол обзора (FOV)", en = "📐 FOV Angle", es = "📐 Ángulo de FOV", pt = "📐 Ângulo de FOV", ko = "📐 FOV 각도", ja = "📐 FOV 角", uk = "📐 Кут огляду (FOV)" },
