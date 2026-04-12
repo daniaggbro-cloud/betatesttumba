@@ -48,11 +48,12 @@ UI.CreateSection(TabFrame, "section_bot_modules")
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_bot_killaura", "Bot.AutoKillaura", nil, {
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
-    UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
-    UI.CreateSlider(nil, "slider_killaura_autoclick_cps", "Combat.Killaura.AutoClickCPS", 1, 50),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000)
 })
+
+UI.CreateToggle(TabFrame, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick")
+UI.CreateSlider(TabFrame, "slider_killaura_autoclick_cps", "Combat.Killaura.AutoClickCPS", 1, 50)
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_bot_scaffold", "Bot.AutoScaffold", nil, {
     UI.CreateSlider(nil, "slider_scaffold_yoffset", "Player.Scaffold.YOffset", -100, 0, function(val) Mega.States.Player.Scaffold.YOffset = val / 10 end),
