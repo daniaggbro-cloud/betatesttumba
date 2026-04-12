@@ -9,21 +9,18 @@ local Services = Mega.Services or {
     Workspace = game:GetService("Workspace"),
     RunService = game:GetService("RunService"),
     Players = game:GetService("Players"),
-    CoreGui = game:GetService("CoreGui"),
-    UserInputService = game:GetService("UserInputService")
+    CoreGui = game:GetService("CoreGui")
 }
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90, OnlyOnClick = false, AutoClick = false }
+    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, AutoClick = false, AutoClickCPS = 25 }
 elseif States.Combat.Killaura.TargetESP == nil then
     States.Combat.Killaura.TargetESP = true
-    States.Combat.Killaura.UseFOV = false
-    States.Combat.Killaura.FOVAngle = 90
-    States.Combat.Killaura.OnlyOnClick = false
     States.Combat.Killaura.AutoClick = false
+    States.Combat.Killaura.AutoClickCPS = 25
 end
 
 if not Mega.Objects.KillauraConnections then Mega.Objects.KillauraConnections = {} end
@@ -34,16 +31,12 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
-local SwordHitRemote = Mega.GetRemote("AttackEntity")
--- Periodically re-check the remote in case of game updates or late loading
+local SwordHitRemote
 task.spawn(function()
-    while task.wait(5) do
-        if not SwordHitRemote then
-            SwordHitRemote = Mega.GetRemote("AttackEntity")
-        end
-    end
+    pcall(function()
+        SwordHitRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("SwordHit")
+    end)
 end)
-
 
 local function getWeapon()
     local char = LocalPlayer.Character
@@ -114,195 +107,128 @@ local function GetTargetVisuals()
 end
 
 local killauraActive = false
-local lastAttackTime = 0
-local isManualAttacking = false
-local clickTriggered = false
-local isSimulatingClick = false
--- Лимит убран для синхронизации с каждым кадром игры (Heartbeat)
-
--- Отслеживание кликов игрока с фильтром интерфейса
-if not Mega.Objects.KillauraInputConnections then
-    Mega.Objects.KillauraInputConnections = {}
-    
-    table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputBegan:Connect(function(input, processed)
-        if processed then return end -- Игнорируем клики по интерфейсу (меню, ползунки)
-        if isSimulatingClick then return end -- Игнорируем наши собственные авто-клики
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isManualAttacking = true
-            clickTriggered = true
-            if States.Combat.Killaura.OnlyOnClick then
-                lastAttackTime = 0 -- Сброс таймера для моментального удара
-            end
-        end
-    end))
-    
-    table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isManualAttacking = false
-        end
-    end))
-end
-
-local function isWithinFOV(targetPart)
-    if not States.Combat.Killaura.UseFOV then return true end
-    
-    local camera = workspace.CurrentCamera
-    if not camera then return true end
-    
-    local lookVector = camera.CFrame.LookVector
-    local directionToTarget = (targetPart.Position - camera.CFrame.Position).Unit
-    local dot = lookVector:Dot(directionToTarget)
-    local angle = math.deg(math.acos(dot))
-    
-    return angle <= (States.Combat.Killaura.FOVAngle or 90)
-end
+local currentKillauraTarget = nil
+local lastAutoClick = 0
 
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
     if not state then
+        currentKillauraTarget = nil
         if targetMarkerArrow then targetMarkerArrow.Adornee = nil end
         if targetMarkerCircle then targetMarkerCircle.Adornee = nil end
+        if connections.AutoClickLoop then
+            connections.AutoClickLoop:Disconnect()
+            connections.AutoClickLoop = nil
+        end
     end
     
     if state and not killauraActive then
         killauraActive = true
+        
+        if not connections.AutoClickLoop then
+            connections.AutoClickLoop = Services.RunService.RenderStepped:Connect(function()
+                if States.Combat.Killaura.Enabled and States.Combat.Killaura.AutoClick and currentKillauraTarget then
+                    local cps = States.Combat.Killaura.AutoClickCPS or 25
+                    if tick() - lastAutoClick >= (1 / cps) then
+                        lastAutoClick = tick()
+                        if mouse1click then
+                            mouse1click()
+                        else
+                            pcall(function()
+                                local vim = game:GetService("VirtualInputManager")
+                                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                            end)
+                        end
+                    end
+                end
+            end)
+        end
+        
         task.spawn(function()
             while States.Combat.Killaura.Enabled do
                 if Mega.Unloaded then break end
 
-                local char = LocalPlayer.Character
-                local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                local weapon = getWeapon()
-                
-                local closestTarget = nil
-                local closestDist = States.Combat.Killaura.Range
-
-                -- 1. Find Closest Target (Optimized search)
-                if hrp then
-                    for _, player in pairs(Services.Players:GetPlayers()) do
-                        if player ~= LocalPlayer and player.Team ~= LocalPlayer.Team then
-                            local tChar = player.Character
-                            local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
-                            local hum = tChar and tChar:FindFirstChild("Humanoid")
-                            
-                            if tHrp and hum and hum.Health > 0 then
-                                local dist = (hrp.Position - tHrp.Position).Magnitude
-                                if dist < closestDist and dist > 0 and isWithinFOV(tHrp) then
-                                    closestDist = dist
-                                    closestTarget = tChar
-                                end
-                            end
-                        end
-                    end
+                if SwordHitRemote then
+                    local char = LocalPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local weapon = getWeapon()
                     
-                    -- Handle NPCS/Dummies if no players found (With Teammate Protection)
-                    if not closestTarget then
+                    local closestTarget = nil
+                    local closestDist = States.Combat.Killaura.Range
+
+                    if hrp and weapon then
                         for _, obj in pairs(Services.Workspace:GetChildren()) do
-                            if obj.Name:lower():find("dummy") or obj:FindFirstChild("Humanoid") then
+                            if obj ~= char and (obj:FindFirstChild("Humanoid") or obj.Name:find("Dummy")) then
                                 local tHrp = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
                                 local hum = obj:FindFirstChild("Humanoid")
                                 
-                                if tHrp and hum and hum.Health > 0 and obj ~= char then
-                                    -- Проверка, не является ли это игроком из нашей команды
+                                if tHrp and (not hum or hum.Health > 0) then
                                     local p = Services.Players:GetPlayerFromCharacter(obj)
                                     local isEnemy = true
-                                    if p and (p == LocalPlayer or (p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team)) then
+                                    if p and p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team then
                                         isEnemy = false
                                     end
 
                                     if isEnemy then
                                         local dist = (hrp.Position - tHrp.Position).Magnitude
-                                        if dist < closestDist and dist > 0 and isWithinFOV(tHrp) then
-                                            closestDist = dist
-                                            closestTarget = obj
+                                        if dist < States.Combat.Killaura.Range and dist > 0 then
+                                            if dist < closestDist then
+                                                closestDist = dist
+                                                closestTarget = obj
+                                            end
+
+                                            local direction = (tHrp.Position - hrp.Position).Unit
+                                            local spoofedSelfPos = hrp.Position
+                                            if dist > 14 then
+                                                spoofedSelfPos = tHrp.Position - (direction * 14)
+                                            end
+                                            
+                                            local args = {
+                                                {
+                                                    ["chargedAttack"] = { ["chargeRatio"] = 0 },
+                                                    ["entityInstance"] = obj,
+                                                    ["validate"] = {
+                                                        ["targetPosition"] = { ["value"] = vec3(tHrp.Position.X, tHrp.Position.Y, tHrp.Position.Z) },
+                                                        ["selfPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y, spoofedSelfPos.Z) },
+                                                        ["raycast"] = {
+                                                            ["cameraPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y + 3, spoofedSelfPos.Z) },
+                                                            ["cursorDirection"] = { ["value"] = vec3(direction.X, direction.Y, direction.Z) }
+                                                        }
+                                                    },
+                                                    ["weapon"] = weapon
+                                                }
+                                            }
+                                            pcall(function() SwordHitRemote:FireServer(unpack(args)) end)
                                         end
                                     end
                                 end
                             end
                         end
                     end
-                end
-
-                -- 2. Visual & Legit Update (Every Heartbeat for smoothness)
-                local arrow, circle = GetTargetVisuals()
-                if closestTarget and States.Combat.Killaura.TargetESP then
-                    local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
                     
-                    arrow.Adornee = tHrp
-                    circle.Adornee = tHrp
-                    arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
-                    circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
-                else
-                    if arrow then arrow.Adornee = nil end
-                    if circle then circle.Adornee = nil end
-                end
-
-                -- 3. Attack Logic (Every Heartbeat for max Speed)
-                if closestTarget and weapon and SwordHitRemote then
-                    local currentTime = tick()
-                    local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
+                    currentKillauraTarget = closestTarget
                     
-                    -- Check "Only on Click" condition
-                    local canAttack = true
-                    if States.Combat.Killaura.OnlyOnClick then
-                        if not clickTriggered then 
-                            canAttack = false 
-                        else
-                            clickTriggered = false -- Сбрасываем триггер после одного удара (1 клик = 1 удар)
-                        end
-                    end
-
-                    -- Если задержка 0 и проверка пройдена, бьем без остановки на каждом кадре
-                    if canAttack and (currentTime - lastAttackTime) >= userDelay then
-                        lastAttackTime = currentTime
-                        
+                    local arrow, circle = GetTargetVisuals()
+                    if closestTarget and States.Combat.Killaura.TargetESP then
                         local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
-                        local direction = (tHrp.Position - hrp.Position).Unit
-                        local spoofedSelfPos = hrp.Position
-                        
-                        -- Агрессивный спуфинг для лучшего рега
-                        if closestDist > 14 then
-                            spoofedSelfPos = tHrp.Position - (direction * 13.5)
-                        end
-                        
-                        local args = {
-                            {
-                                ["chargedAttack"] = { ["chargeRatio"] = 0 },
-                                ["entityInstance"] = closestTarget,
-                                ["validate"] = {
-                                    ["targetPosition"] = { ["value"] = vec3(tHrp.Position.X, tHrp.Position.Y, tHrp.Position.Z) },
-                                    ["selfPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y, spoofedSelfPos.Z) },
-                                    ["raycast"] = {
-                                        ["cameraPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y + 3, spoofedSelfPos.Z) },
-                                        ["cursorDirection"] = { ["value"] = vec3(direction.X, direction.Y, direction.Z) }
-                                    }
-                                },
-                                ["weapon"] = weapon
-                            }
-                        }
-                        pcall(function() SwordHitRemote:FireServer(unpack(args)) end)
-                        
-                        -- [ Симуляция клика (ЛКМ) при ударе киллауры для анимации ]
-                        if States.Combat.Killaura.AutoClick then
-                            task.spawn(function()
-                                isSimulatingClick = true
-                                if mouse1click then
-                                    mouse1click()
-                                else
-                                    local vim = game:GetService("VirtualInputManager")
-                                    vim:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-                                    task.wait()
-                                    vim:SendMouseButtonEvent(0, 0, 0, false, game, 1)
-                                end
-                                task.wait(0.05)
-                                isSimulatingClick = false
-                            end)
-                        end
+                        arrow.Adornee = tHrp
+                        circle.Adornee = tHrp
+                        arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
+                        circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), tick() * 3, 0)
+                        circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+                    else
+                        if arrow then arrow.Adornee = nil end
+                        if circle then circle.Adornee = nil end
                     end
                 end
                 
-                Services.RunService.Heartbeat:Wait()
+                if States.Combat.Killaura.Delay > 0 then
+                    task.wait(States.Combat.Killaura.Delay / 1000)
+                else
+                    Services.RunService.Heartbeat:Wait()
+                end
             end
             killauraActive = false
         end)
