@@ -4,22 +4,6 @@
 local tabKey = "tab_bot"
 local UI = Mega.UI
 
--- Предварительная настройка состояний для предотвращения ошибки "got nil"
-if not Mega.States.Bot then Mega.States.Bot = {} end
-if not Mega.States.Bot.AutoPlay then
-    Mega.States.Bot.AutoPlay = { Enabled = false, Mode = "queue_16v16" }
-end
-if not Mega.States.Bot.AutoLobby then
-    Mega.States.Bot.AutoLobby = { Enabled = false }
-end
-if not Mega.States.Bot.AutoShop then
-    Mega.States.Bot.AutoShop = { 
-        Enabled = false, 
-        TargetIron = 24,
-        MinBlocks = 16
-    }
-end
-
 local TabFrame = Instance.new("ScrollingFrame")
 TabFrame.Name = tabKey
 TabFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -42,6 +26,10 @@ TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 4
 
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/bot.lua") end)
+end)
+
 --#region -- Main Bot
 UI.CreateSection(TabFrame, "section_bot_main")
 UI.CreateToggle(TabFrame, "toggle_bot", "Bot.Enabled", function(state)
@@ -60,6 +48,8 @@ UI.CreateSection(TabFrame, "section_bot_modules")
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_bot_killaura", "Bot.AutoKillaura", nil, {
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
+    UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
+    UI.CreateSlider(nil, "slider_killaura_autoclick_cps", "Combat.Killaura.AutoClickCPS", 1, 50),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000)
 })
@@ -87,48 +77,3 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_bot_spider", "Bot.AutoSpider", nil
     UI.CreateDropdown(nil, "dropdown_spider_mode", "Player.SpiderMode", {"Velocity", "CFrame"}),
     UI.CreateSlider(nil, "slider_spider_speed", "Player.SpiderSpeed", 1, 100)
 })
-
---#region -- Resources & Shop
-UI.CreateSection(TabFrame, "section_bot_resources")
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_bot_autoshop", "Bot.AutoShop.Enabled", function(state)
-    if Mega.Features.ShopManager then
-        Mega.Features.ShopManager.SetEnabled(state)
-    end
-end, {
-    UI.CreateSlider(nil, "slider_bot_target_iron", "Bot.AutoShop.TargetIron", 8, 100),
-    UI.CreateSlider(nil, "slider_bot_min_blocks", "Bot.AutoShop.MinBlocks", 0, 64)
-})
---#endregion
-
---#region -- Auto Play (Lobby)
-UI.CreateSection(TabFrame, "section_bot_autoplay")
-
-local queueNames = {
-    "queue_16v16", "queue_to4", "queue_to2", "queue_to1", "queue_5v5", "queue_skywars"
-}
-
-UI.CreateToggle(TabFrame, "toggle_bot_autoplay", "Bot.AutoPlay.Enabled", function(state)
-    Mega.States.Bot.AutoPlay.Enabled = state
-    if Mega.Features.AutoPlay and Mega.Features.AutoPlay.SetEnabled then
-        Mega.Features.AutoPlay.SetEnabled(state)
-    end
-end)
-
-UI.CreateDropdown(TabFrame, "dropdown_bot_autoplay_mode", "Bot.AutoPlay.Mode", queueNames, nil, true)
-
-UI.CreateToggle(TabFrame, "label_bot_autolobby", "Bot.AutoLobby.Enabled", function(state)
-    if Mega.Features.AutoLobby then
-        Mega.Features.AutoLobby.SetEnabled(state)
-    end
-end)
-
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/autoplay.lua") end)
-    pcall(function() Mega.LoadModule("features/autolobby.lua") end)
-    pcall(function() Mega.LoadModule("features/shop_manager.lua") end)
-    pcall(function() Mega.LoadModule("features/bot.lua") end)
-end)
---#endregion
-
-return TabFrame
