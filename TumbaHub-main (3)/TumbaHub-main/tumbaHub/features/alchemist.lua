@@ -16,13 +16,13 @@ local States = Mega.States
 
 if not States.Misc then States.Misc = {} end
 if not States.Misc.Alchemist then
-    States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true }
+    States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true, ESPTransparency = 0, Range = 5 }
 end
 
 local INGREDIENTS = {
-    ["wild_flower"] = { name = "🌸 ЦВЕТОК", color = Color3.fromRGB(255, 255, 0) },
-    ["mushrooms"]   = { name = "🍄 ГРИБ", color = Color3.fromRGB(255, 50, 50) },
-    ["thorns"]      = { name = "🌿 ШИПЫ", color = Color3.fromRGB(150, 75, 0) }
+    ["wild_flower"] = { name = "🌸", color = Color3.fromRGB(255, 255, 0) },
+    ["mushrooms"]   = { name = "🍄", color = Color3.fromRGB(255, 50, 50) },
+    ["thorns"]      = { name = "🌿", color = Color3.fromRGB(150, 75, 0) }
 }
 
 local netManaged
@@ -72,7 +72,9 @@ local function createESP(item, data)
     text.BackgroundTransparency = 1
     text.Text = data.name
     text.TextColor3 = data.color
-    text.TextStrokeTransparency = 0
+    local trans = States.Misc.Alchemist.ESPTransparency or 0
+    text.TextTransparency = trans
+    text.TextStrokeTransparency = trans
     text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     text.Font = Enum.Font.GothamBlack
     text.TextScaled = true
@@ -91,6 +93,16 @@ local function createESP(item, data)
             end
         end
     end)
+end
+
+function Mega.Features.Alchemist.UpdateVisuals()
+    local trans = States.Misc.Alchemist.ESPTransparency or 0
+    for obj, billboard in pairs(espObjects) do
+        if billboard and billboard:FindFirstChildWhichIsA("TextLabel") then
+            billboard.TextLabel.TextTransparency = trans
+            billboard.TextLabel.TextStrokeTransparency = trans
+        end
+    end
 end
 
 local alchemistActive = false
@@ -136,33 +148,55 @@ function Mega.Features.Alchemist.SetEnabled(state)
                     if States.Misc.Alchemist.ESP then
                         createESP(obj, data)
                     else
-                        clearESP()
+                        if espObjects[obj] then
+                            espObjects[obj]:Destroy()
+                            espObjects[obj] = nil
+                        end
                     end
                     
                     if States.Misc.Alchemist.AutoCollect and hrp and netManaged then
-                        local dropPos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
-                        local dist = (hrp.Position - dropPos).Magnitude
+                        local dropPos
+                        pcall(function()
+                            dropPos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
+                        end)
                         
-                        if dist <= 16 then
-                            local pickupRemote = netManaged:FindFirstChild("PickupItemDrop")
-                            local collectRemote = netManaged:FindFirstChild("CollectCollectableEntity")
+                        if dropPos then
+                            local dist = (hrp.Position - dropPos).Magnitude
                             
-                            if pickupRemote then
-                                task.spawn(function() pcall(function() 
-                                    if pickupRemote:IsA("RemoteEvent") then pickupRemote:FireServer({itemDrop = obj}) else pickupRemote:InvokeServer({itemDrop = obj}) end
-                                    if pickupRemote:IsA("RemoteEvent") then pickupRemote:FireServer(obj) else pickupRemote:InvokeServer(obj) end
-                                end) end)
-                            end
-                            if collectRemote then
-                                task.spawn(function() pcall(function() 
-                                    if collectRemote:IsA("RemoteEvent") then collectRemote:FireServer({ entity = obj }) else collectRemote:InvokeServer({ entity = obj }) end
-                                    if collectRemote:IsA("RemoteEvent") then collectRemote:FireServer(obj) else collectRemote:InvokeServer(obj) end
-                                end) end)
-                            end
-                            
-                            local prompt = obj:FindFirstChildOfClass("ProximityPrompt", true)
-                            if prompt and fireproximityprompt then
-                                pcall(function() fireproximityprompt(prompt) end)
+                            if dist <= (States.Misc.Alchemist.Range or 5) then
+                                local pickupRemote = netManaged:FindFirstChild("PickupItemDrop")
+                                local collectRemote = netManaged:FindFirstChild("CollectCollectableEntity")
+                                
+                                if pickupRemote then
+                                    task.spawn(function() pcall(function() 
+                                        if pickupRemote:IsA("RemoteEvent") then 
+                                            pickupRemote:FireServer({itemDrop = obj})
+                                            pickupRemote:FireServer(obj)
+                                        elseif pickupRemote:IsA("RemoteFunction") then 
+                                            pickupRemote:InvokeServer({itemDrop = obj})
+                                            pickupRemote:InvokeServer(obj)
+                                        end
+                                    end) end)
+                                end
+                                
+                                if collectRemote then
+                                    task.spawn(function() pcall(function() 
+                                        if collectRemote:IsA("RemoteEvent") then 
+                                            collectRemote:FireServer({ entity = obj })
+                                            collectRemote:FireServer(obj)
+                                        elseif collectRemote:IsA("RemoteFunction") then 
+                                            collectRemote:InvokeServer({ entity = obj })
+                                            collectRemote:InvokeServer(obj)
+                                        end
+                                    end) end)
+                                end
+                                
+                                pcall(function()
+                                    local prompt = obj:FindFirstChildWhichIsA("ProximityPrompt", true)
+                                    if prompt and fireproximityprompt then
+                                        fireproximityprompt(prompt)
+                                    end
+                                end)
                             end
                         end
                     end
