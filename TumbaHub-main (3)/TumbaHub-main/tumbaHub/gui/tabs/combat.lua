@@ -50,11 +50,6 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/killaura.lua") end)
 end)
 
--- Защита от старых кэшированных конфигов
-if Mega.States.Combat.Killaura and type(Mega.States.Combat.Killaura.Range) == "number" and Mega.States.Combat.Killaura.Range > 25 then
-    Mega.States.Combat.Killaura.Range = 25
-end
-
 UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", function(state)
     Mega.States.Combat.Killaura.Enabled = state
     if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(state) end
@@ -63,33 +58,13 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enable
     end
 end, {
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
-    UI.CreateToggle(nil, "toggle_killaura_use_fov", "Combat.Killaura.UseFOV"),
-    UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
-    UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
-    UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
-    UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 22),
+    UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 100),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
-    UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura"),
-    UI.CreateToggle(nil, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)
-        if Mega.MobileHUD then Mega.MobileHUD.SetVisible("killaura", state) end
-    end)
+    UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura")
 })
 
--- Register mobile button
-if Mega.MobileHUD then
-    Mega.MobileHUD.CreateActionButton("killaura", "Killaura", "rbxassetid://6031280882", function()
-        local newState = not Mega.States.Combat.Killaura.Enabled
-        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_killaura"] then
-            Mega.Objects.Toggles["toggle_killaura"](newState)
-        end
-    end, function() return Mega.States.Combat.Killaura.Enabled end)
-    
-    -- Load state slightly delayed to ensure settings are loaded
-    task.spawn(function()
-        task.wait(1)
-        Mega.MobileHUD.SetVisible("killaura", Mega.States.Combat.Killaura.MobileBtn)
-    end)
-end
+UI.CreateToggle(TabFrame, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick")
+UI.CreateSlider(TabFrame, "slider_killaura_autoclick_cps", "Combat.Killaura.AutoClickCPS", 1, 50)
 --#endregion
 
 --#region -- Bed Nuke
@@ -125,10 +100,4 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled"
         Mega.Features.BedNuke.SetEnabled(state)
     end
 end, bedNukeSettings)
---#endregion
-
---#region -- Auto Buy
-UI.CreateSection(TabFrame, "section_combat_autobuy")
-
-UI.CreateLabel(TabFrame, "coming_soon")
 --#endregion
