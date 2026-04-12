@@ -31,10 +31,10 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
-local SwordHitRemote
+local netManaged
 task.spawn(function()
     pcall(function()
-        SwordHitRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("SwordHit")
+        netManaged = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
     end)
 end)
 
@@ -150,6 +150,13 @@ function Mega.Features.Killaura.SetEnabled(state)
             while States.Combat.Killaura.Enabled do
                 if Mega.Unloaded then break end
 
+                if not netManaged or not netManaged.Parent then
+                    pcall(function()
+                        netManaged = Services.ReplicatedStorage.rbxts_include.node_modules["@rbxts"].net.out._NetManaged
+                    end)
+                end
+                local SwordHitRemote = netManaged and netManaged:FindFirstChild("SwordHit")
+
                 if SwordHitRemote then
                     local char = LocalPlayer.Character
                     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -161,7 +168,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                     if hrp and weapon then
                         for _, obj in pairs(Services.Workspace:GetChildren()) do
                             if obj ~= char and (obj:FindFirstChild("Humanoid") or obj.Name:find("Dummy")) then
-                                local tHrp = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+                                local tHrp = obj:FindFirstChild("HumanoidRootPart") or (obj:IsA("Model") and obj.PrimaryPart) or (obj:IsA("BasePart") and obj)
                                 local hum = obj:FindFirstChild("Humanoid")
                                 
                                 if tHrp and (not hum or hum.Health > 0) then
@@ -212,7 +219,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                     
                     local arrow, circle = GetTargetVisuals()
                     if closestTarget and States.Combat.Killaura.TargetESP then
-                        local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
+                        local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or (closestTarget:IsA("Model") and closestTarget.PrimaryPart) or (closestTarget:IsA("BasePart") and closestTarget)
                         arrow.Adornee = tHrp
                         circle.Adornee = tHrp
                         arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
