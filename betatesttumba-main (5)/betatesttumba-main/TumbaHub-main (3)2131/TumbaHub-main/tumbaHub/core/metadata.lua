@@ -10,7 +10,7 @@ Mega.MetadataManager = MetadataManager
 
 local jsonContent = nil
 
-local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
+local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/betatesttumba-main%20(5)/betatesttumba-main/TumbaHub-main%20(3)2131/TumbaHub-main/tumbaHub/"
 
 -- Function to load metadata
 function MetadataManager.Init()

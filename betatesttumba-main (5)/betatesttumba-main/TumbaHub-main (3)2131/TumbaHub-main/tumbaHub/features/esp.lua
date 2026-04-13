@@ -47,8 +47,8 @@ local ICONS = {
     ["crit_star"] = "rbxassetid://9866757805",
     ["vitality_star"] = "rbxassetid://9866757969",
     ["alchemy_crystal"] = "rbxassetid://9134545166",
-    ["death_adder_crystal"] = {name = "death_adder_crystal", url = "https://raw.githubusercontent.com/I-S-1/TumbaHub-Assets/main/death_adder_crystal.png"},
-    ["sheep_herder"] = {name = "sheep_herder", url = "https://raw.githubusercontent.com/I-S-1/TumbaHub-Assets/main/sheep_herder.png"}
+    ["death_adder_crystal"] = {name = "death_adder_crystal", url = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/betatesttumba-main%20(5)/betatesttumba-main/TumbaHub-main%20(3)2131/TumbaHub-main/tumbaHub/icon/death_adder_crystal.png"},
+    ["sheep_herder"] = {name = "sheep_herder", url = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/betatesttumba-main%20(5)/betatesttumba-main/TumbaHub-main%20(3)2131/TumbaHub-main/tumbaHub/icon/sheep_herder.png"}
 }
 
 local function isShopItem(v)
