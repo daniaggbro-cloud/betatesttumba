@@ -110,8 +110,8 @@ MainStroke.Transparency = 0.6
 
 local MainGradient = Instance.new("UIGradient", MainFrame)
 MainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Settings.Menu.SectionGradient1),
-    ColorSequenceKeypoint.new(1, Settings.Menu.SectionGradient2)
+    ColorSequenceKeypoint.new(0, Settings.Menu.SectionGradient1 or Settings.Menu.BackgroundColor or Color3.fromRGB(30, 30, 45)),
+    ColorSequenceKeypoint.new(1, Settings.Menu.SectionGradient2 or Settings.Menu.BackgroundColor or Color3.fromRGB(20, 20, 30))
 }
 MainGradient.Rotation = 90
 
