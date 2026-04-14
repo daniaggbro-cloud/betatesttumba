@@ -108,10 +108,13 @@ MainStroke.Color = Settings.Menu.AccentColor
 MainStroke.Thickness = 1.5
 MainStroke.Transparency = 0.6
 
+local grad1 = typeof(Settings.Menu.SectionGradient1) == "Color3" and Settings.Menu.SectionGradient1 or typeof(Settings.Menu.BackgroundColor) == "Color3" and Settings.Menu.BackgroundColor or Color3.fromRGB(30, 30, 45)
+local grad2 = typeof(Settings.Menu.SectionGradient2) == "Color3" and Settings.Menu.SectionGradient2 or typeof(Settings.Menu.BackgroundColor) == "Color3" and Settings.Menu.BackgroundColor or Color3.fromRGB(20, 20, 30)
+
 local MainGradient = Instance.new("UIGradient", MainFrame)
 MainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Settings.Menu.SectionGradient1 or Settings.Menu.BackgroundColor or Color3.fromRGB(30, 30, 45)),
-    ColorSequenceKeypoint.new(1, Settings.Menu.SectionGradient2 or Settings.Menu.BackgroundColor or Color3.fromRGB(20, 20, 30))
+    ColorSequenceKeypoint.new(0, grad1),
+    ColorSequenceKeypoint.new(1, grad2)
 }
 MainGradient.Rotation = 90
 
