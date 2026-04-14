@@ -31,6 +31,24 @@ Mega.Objects.TabFrames[tabKey] = TabFrame
 --#region -- Automation
 UI.CreateSection(TabFrame, "section_combat_auto")
 
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/aimbot.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_aimbot", "Combat.Aimbot.Enabled", function(state)
+    Mega.States.Combat.Aimbot.Enabled = state
+    if Mega.Features.Aimbot and Mega.Features.Aimbot.SetEnabled then Mega.Features.Aimbot.SetEnabled(state) end
+end, {
+    UI.CreateSlider(nil, "slider_aimbot_fov", "Combat.Aimbot.FOV", 50, 1000)
+})
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_autoshoot", "Combat.AutoShoot.Enabled", function(state)
+    Mega.States.Combat.AutoShoot.Enabled = state
+    if Mega.Features.Aimbot and Mega.Features.Aimbot.SetAutoShoot then Mega.Features.Aimbot.SetAutoShoot(state) end
+end, {
+    UI.CreateSlider(nil, "slider_autoshoot_delay", "Combat.AutoShoot.Delay", 0, 1000)
+})
+
 UI.CreateToggle(TabFrame, "toggle_triggerbot", "Combat.TriggerBot")
 UI.CreateToggle(TabFrame, "toggle_autoshoot", "Combat.AutoShoot")
 UI.CreateToggle(TabFrame, "toggle_rapidfire", "Combat.RapidFire")
