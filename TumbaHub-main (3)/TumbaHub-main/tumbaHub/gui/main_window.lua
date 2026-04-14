@@ -1,804 +1,663 @@
--- gui/main_window.lua
--- Creates the main GUI window, sidebar, tabs, and status indicator.
--- Handles tab switching and menu visibility.
+-- library/ui_builder.lua
+-- GUI element factory functions (CreateToggle, CreateSlider, etc.)
 
-local Services = Mega.Services
-local Settings = Mega.Settings
-local States = Mega.States
+Mega.UI = {}
+
 local GetText = Mega.GetText
-local iconBaseUrl = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/icon/"
+local ShowNotification = Mega.ShowNotification
+local TweenService = Mega.Services.TweenService
+local UserInputService = Mega.Services.UserInputService
 
-function Mega.ReloadGUI()
-    -- 1. Очищаем все старые подключения и объекты перед рестартом
-    if Mega.Objects and Mega.Objects.Connections then
-        for _, conn in pairs(Mega.Objects.Connections) do
-            pcall(function() conn:Disconnect() end)
+function Mega.UI.CreateSection(parent, titleKey)
+    local Section = Instance.new("Frame")
+    Section.Name = titleKey .. "Section"
+    Section.Size = UDim2.new(0.95, 0, 0, 45)
+    Section.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+    Section.BackgroundTransparency = 0.5 -- Sleeker glass look
+    Section.BorderSizePixel = 0
+
+    local SectionCorner = Instance.new("UICorner")
+    SectionCorner.CornerRadius = UDim.new(0, 10)
+    SectionCorner.Parent = Section
+    
+    local SectionStroke = Instance.new("UIStroke", Section)
+    SectionStroke.Color = Mega.Settings.Menu.AccentColor
+    SectionStroke.Thickness = 1.2
+    SectionStroke.Transparency = 0.7
+    
+    local SectionGradient = Instance.new("UIGradient")
+    
+    local success = pcall(function()
+        local grad1 = typeof(Mega.Settings.Menu.SectionGradient1) == "Color3" and Mega.Settings.Menu.SectionGradient1 or Color3.fromRGB(15, 15, 25)
+        local grad2 = typeof(Mega.Settings.Menu.SectionGradient2) == "Color3" and Mega.Settings.Menu.SectionGradient2 or Color3.fromRGB(10, 10, 20)
+        SectionGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, grad1),
+            ColorSequenceKeypoint.new(1, grad2)
+        }
+    end)
+    if not success then
+        SectionGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+        }
+    end
+    SectionGradient.Rotation = 45
+    SectionGradient.Parent = Section
+
+    local SectionTitle = Instance.new("TextLabel")
+    SectionTitle.Name = "SectionTitle"
+    SectionTitle.Size = UDim2.new(1, -20, 1, 0)
+    SectionTitle.Position = UDim2.new(0, 15, 0, 0)
+    SectionTitle.BackgroundTransparency = 1
+    SectionTitle.Text = GetText(titleKey)
+    SectionTitle.TextColor3 = Mega.Settings.Menu.TextColor
+    SectionTitle.TextSize = 14
+    SectionTitle.Font = Enum.Font.GothamBold
+    SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    SectionTitle.Parent = Section
+    
+    Section.Parent = parent
+    return Section
+end
+
+function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
+    local translatedText = GetText(textKey)
+    
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Name = textKey .. "Toggle"
+    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    ToggleFrame.BackgroundTransparency = 1
+    ToggleFrame.Parent = parent
+
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Name = "Label"
+    ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Text = " " .. translatedText
+    ToggleLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    ToggleLabel.TextSize = 13
+    ToggleLabel.Font = Enum.Font.Gotham
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleLabel.Parent = ToggleFrame
+
+    local function getState()
+        local path = statePath
+        local value = Mega.States
+        for part in path:gmatch("[^%.]+") do
+            value = value and value[part]
         end
+        return value
     end
 
-    if Mega.Objects.GUI then
-        local wasEnabled = Mega.Objects.GUI.Enabled
-        Mega.Objects.GUI:Destroy()
-        Mega.Objects.GUI = nil
-        
-        if Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then
-            Services.CoreGui.TumbaStatusIndicator:Destroy()
-        end
+    local initialState = getState()
 
-        -- Очищаем кэш вкладок, чтобы они перерисовались с новым языком
-        Mega.Objects.TabFrames = {}
-        Mega.Objects.Connections = {}
-        Mega.Objects.Toggles = {}
-        
-        for k in pairs(Mega.LoadedModules) do
-            if k:find("^gui/tabs/") then
-                Mega.LoadedModules[k] = nil
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "Toggle"
+    ToggleButton.Size = UDim2.new(0, 44, 0, 22)
+    ToggleButton.Position = UDim2.new(1, -54, 0.5, -11)
+    ToggleButton.BackgroundColor3 = initialState and Mega.Settings.Menu.AccentColor or Mega.Settings.Menu.ToggleOffColor
+    ToggleButton.BorderSizePixel = 0
+    ToggleButton.Text = ""
+    ToggleButton.AutoButtonColor = false
+    ToggleButton.Parent = ToggleFrame
+
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(1, 0)
+    ToggleCorner.Parent = ToggleButton
+
+    local ToggleCircle = Instance.new("Frame")
+    ToggleCircle.Name = "Circle"
+    ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
+    ToggleCircle.Position = initialState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+    ToggleCircle.BackgroundColor3 = Mega.Settings.Menu.BackgroundColor
+    ToggleCircle.Parent = ToggleButton
+    
+    local CircleCorner = Instance.new("UICorner")
+    CircleCorner.CornerRadius = UDim.new(1, 0)
+    CircleCorner.Parent = ToggleCircle
+
+    local function SetState(newState)
+        local path = statePath
+        local tbl = Mega.States
+        local key
+        for part in path:gmatch("[^%.]+") do
+            if tbl[part] == nil and part ~= path:match("([^%.]+)$") then
+                tbl[part] = {}
+            end
+            key = part
+            if part ~= path:match("([^%.]+)$") then
+                tbl = tbl[part]
             end
         end
+        tbl[key] = newState
+
+        TweenService:Create(ToggleButton, TweenInfo.new(0.2), { BackgroundColor3 = newState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80) }):Play()
+        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = newState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9) }):Play()
         
-        Mega.InitializeMainGUI()
+        if callback then pcall(callback, newState) end
         
-        if Mega.Objects.GUI then
-            Mega.Objects.GUI.Enabled = wasEnabled
-        end
-    end
-end
-
-function Mega.InitializeMainGUI()
-
--- Main GUI container
-local TumbaGUI = Instance.new("ScreenGui")
-TumbaGUI.Name = "TumbaMegaSystem"
-TumbaGUI.Parent = Services.CoreGui
-TumbaGUI.Enabled = false
-TumbaGUI.ResetOnSpawn = false
-TumbaGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
-Mega.Objects.GUI = TumbaGUI
-
-local isMobile = Services.UserInputService.TouchEnabled
-
--- Draggable Main Frame
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 1100, 0, 650)
-MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-
--- UIScale for smart responsiveness
-local MenuScale = Instance.new("UIScale", MainFrame)
-Mega.Objects.MenuScale = MenuScale
-
-local function UpdateScale()
-    local viewportSize = Services.Workspace.CurrentCamera.ViewportSize
-    -- Detection: Touch enabled but NO keyboard = Phone/Tablet
-    local isRealMobile = Services.UserInputService.TouchEnabled and not Services.UserInputService.KeyboardEnabled
-    
-    local baseWidth = 1100
-    local baseHeight = 650
-    
-    local scaleX = viewportSize.X / (baseWidth + 50)
-    local scaleY = viewportSize.Y / (baseHeight + 50)
-    local targetScale = math.min(scaleX, scaleY)
-    
-    if isRealMobile then
-        -- On mobile, we want to use as much screen as possible while staying centered
-        targetScale = math.clamp(targetScale, 0.4, 0.95)
-    else
-        targetScale = math.clamp(targetScale, 0.5, 1)
+        local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
+        ShowNotification(translatedText .. ": " .. statusText, 2)
     end
     
-    MenuScale.Scale = targetScale
-end
+    Mega.Objects.Toggles[textKey] = SetState
+    ToggleButton.MouseButton1Click:Connect(function() SetState(not getState()) end)
 
-UpdateScale()
-Mega.Objects.Connections.MenuScaleUpdate = Services.Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-MainFrame.BackgroundColor3 = Settings.Menu.BackgroundColor
-MainFrame.BackgroundTransparency = Settings.Menu.Transparency
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.ClipsDescendants = false
-MainFrame.Parent = TumbaGUI
-
-local MainCorner = Instance.new("UICorner", MainFrame)
-MainCorner.CornerRadius = UDim.new(0, 15)
-
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Settings.Menu.AccentColor
-MainStroke.Thickness = 1.5
-MainStroke.Transparency = 0.6
-
-local MainGradient = Instance.new("UIGradient", MainFrame)
-MainGradient.Rotation = 90
-
-local success = pcall(function()
-    local grad1 = typeof(Settings.Menu.SectionGradient1) == "Color3" and Settings.Menu.SectionGradient1 or typeof(Settings.Menu.BackgroundColor) == "Color3" and Settings.Menu.BackgroundColor or Color3.fromRGB(30, 30, 45)
-    local grad2 = typeof(Settings.Menu.SectionGradient2) == "Color3" and Settings.Menu.SectionGradient2 or typeof(Settings.Menu.BackgroundColor) == "Color3" and Settings.Menu.BackgroundColor or Color3.fromRGB(20, 20, 30)
-    MainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, grad1),
-        ColorSequenceKeypoint.new(1, grad2)
-    }
-end)
-
-if not success then
-    MainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
-    }
-end
-
--- Shadow
-local Shadow = Instance.new("ImageLabel")
-Shadow.Size = UDim2.new(1, 40, 1, 40)
-Shadow.Position = UDim2.new(0, -20, 0, -20)
-Shadow.BackgroundTransparency = 1
-Shadow.Image = "rbxassetid://1316045217"
-Shadow.ImageColor3 = Settings.Menu.AccentColor
-Shadow.ImageTransparency = 0.7
-Shadow.ScaleType = Enum.ScaleType.Slice
-Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-Shadow.ZIndex = 0
-Shadow.Parent = MainFrame
-
--- Title Bar
-local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, -220, 0, 50) -- Adjusted for new sidebar
-TitleBar.Position = UDim2.new(0, 220, 0, 5)
-TitleBar.BackgroundTransparency = 1
-TitleBar.BorderSizePixel = 0
-TitleBar.Parent = MainFrame
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -120, 1, 0)
-Title.Position = UDim2.new(0, 10, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = GetText("title_bar", Settings.System.Version)
-Title.TextColor3 = Settings.Menu.TextColor
-Title.TextSize = 18
-Title.Font = Enum.Font.GothamBlack
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TitleBar
-
--- Canvas Group for smooth fade/minimize (Linux Style)
-local WindowCanvas = Instance.new("CanvasGroup", MainFrame)
-WindowCanvas.Size = UDim2.new(1, 0, 1, 0)
-WindowCanvas.BackgroundTransparency = 1
-WindowCanvas.BorderSizePixel = 0
-
-local MinimizeButton = Instance.new("ImageButton", MainFrame)
-MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Size = UDim2.new(0, 26, 0, 26) -- Slightly more refined size
-MinimizeButton.Position = UDim2.new(1, -38, 0, 12)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.Image = Mega.GetImageFromURL(iconBaseUrl .. "minimize.png", "minimize.png")
-MinimizeButton.ImageColor3 = Settings.Menu.AccentColor
-
-local btnCorner = Instance.new("UICorner", MinimizeButton)
-btnCorner.CornerRadius = UDim.new(1, 0)
-
-local btnStroke = Instance.new("UIStroke", MinimizeButton)
-btnStroke.Color = Settings.Menu.AccentColor
-btnStroke.Thickness = 1.5
-btnStroke.Transparency = 0.6
-btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-MinimizeButton.MouseEnter:Connect(function()
-    Services.TweenService:Create(MinimizeButton, TweenInfo.new(0.3), { ImageTransparency = 0, Rotation = 90 }):Play()
-    Services.TweenService:Create(btnStroke, TweenInfo.new(0.3), { Transparency = 0.2, Thickness = 2 }):Play()
-end)
-MinimizeButton.MouseLeave:Connect(function()
-    Services.TweenService:Create(MinimizeButton, TweenInfo.new(0.3), { ImageTransparency = 0.2, Rotation = 0 }):Play()
-    Services.TweenService:Create(btnStroke, TweenInfo.new(0.3), { Transparency = 0.6, Thickness = 1.5 }):Play()
-end)
-
-MinimizeButton.Parent = TitleBar
-Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 10)
-
--- Sidebar & Content
--- Move elements into Canvas for clean animation
-TitleBar.Parent = WindowCanvas
-
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 210, 1, -10) -- Full height sidebar
-Sidebar.Position = UDim2.new(0, 5, 0, 5)
-Sidebar.BackgroundColor3 = Settings.Menu.SidebarColor
-Sidebar.BackgroundTransparency = 0.2
-Sidebar.BorderSizePixel = 0
-Sidebar.Parent = WindowCanvas
-Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
-
--- User Profile Widget
-local UserProfile = Instance.new("Frame", Sidebar)
-UserProfile.Name = "UserProfile"
-UserProfile.Size = UDim2.new(1, -20, 0, 60)
-UserProfile.Position = UDim2.new(0, 10, 0, 10)
-UserProfile.BackgroundTransparency = 1
-
-local AvatarImage = Instance.new("ImageLabel", UserProfile)
-AvatarImage.Size = UDim2.new(0, 44, 0, 44)
-AvatarImage.Position = UDim2.new(0, 5, 0.5, -22)
-AvatarImage.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-AvatarImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. Services.Players.LocalPlayer.UserId .. "&w=150&h=150"
-Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", AvatarImage).Color = Settings.Menu.AccentColor
-
-local UserName = Instance.new("TextLabel", UserProfile)
-UserName.Size = UDim2.new(1, -60, 0, 20)
-UserName.Position = UDim2.new(0, 55, 0.5, -12)
-UserName.BackgroundTransparency = 1
-UserName.Text = Services.Players.LocalPlayer.Name
-UserName.TextColor3 = Color3.new(1, 1, 1)
-UserName.TextSize = 14
-UserName.Font = Enum.Font.GothamBold
-UserName.TextXAlignment = Enum.TextXAlignment.Left
-
-local UserStatus = Instance.new("TextLabel", UserProfile)
-UserStatus.Size = UDim2.new(1, -60, 0, 15)
-UserStatus.Position = UDim2.new(0, 55, 0.5, 5)
-UserStatus.BackgroundTransparency = 1
-UserStatus.Text = GetText("user_status_beloved")
-UserStatus.TextColor3 = Settings.Menu.AccentColor
-UserStatus.TextSize = 10
-UserStatus.Font = Enum.Font.GothamSemibold
-UserStatus.TextXAlignment = Enum.TextXAlignment.Left
-
-local Separator = Instance.new("Frame", Sidebar)
-Separator.Size = UDim2.new(1, -30, 0, 1)
-Separator.Position = UDim2.new(0, 15, 0, 75)
-Separator.BackgroundColor3 = Color3.new(1, 1, 1)
-Separator.BackgroundTransparency = 0.8
-Separator.BorderSizePixel = 0
-
-local TabContainer = Instance.new("ScrollingFrame")
-TabContainer.Size = UDim2.new(1, -10, 1, -90)
-TabContainer.Position = UDim2.new(0, 5, 0, 85)
-TabContainer.BackgroundTransparency = 1
-TabContainer.BorderSizePixel = 0
-TabContainer.ScrollBarThickness = 0
-TabContainer.Parent = Sidebar
-local TabListLayout = Instance.new("UIListLayout", TabContainer)
-TabListLayout.Padding = UDim.new(0, 5)
-
-local ContentContainer = Instance.new("Frame")
-ContentContainer.Size = UDim2.new(1, -235, 1, -70)
-ContentContainer.Position = UDim2.new(0, 225, 0, 60)
-ContentContainer.BackgroundTransparency = 1
-ContentContainer.Parent = WindowCanvas
-Mega.Objects.ContentContainer = ContentContainer
-
--- Minimize Logic (Linux Style Genie Animation)
-local isMinimized = false
-local originalSize = MainFrame.Size
-local originalPos = MainFrame.Position
-local miniSize = UDim2.new(0, 40, 0, 40)
-
-local function ToggleMenu(state)
-    if state == nil then state = not TumbaGUI.Enabled end
-    TumbaGUI.Enabled = state
-    
-    if state then
-        -- Restore animation
-        MainFrame.Visible = true
-        MainFrame.Size = UDim2.new(0, 10, 0, 10)
-        WindowCanvas.GroupTransparency = 1
-        
-        Services.TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            Size = originalSize,
-            Position = originalPos
-        }):Play()
-        Services.TweenService:Create(WindowCanvas, TweenInfo.new(0.5), { GroupTransparency = 0 }):Play()
+    if initialState and callback then
+        task.spawn(callback, true)
     end
+
+    return ToggleFrame
 end
 
-MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = true
-    -- Animate to the corner where the icon usually is
-    local targetPos = UDim2.new(1, -50, 0, 50) 
-    
-    Services.TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-        Size = miniSize,
-        Position = targetPos
-    }):Play()
-    
-    Services.TweenService:Create(WindowCanvas, TweenInfo.new(0.4), { GroupTransparency = 1 }):Play()
-    
-    task.delay(0.5, function()
-        if isMinimized then
-            ToggleMenu(false)
-            -- Reset for next time
-            MainFrame.Size = originalSize
-            MainFrame.Position = originalPos
-            WindowCanvas.GroupTransparency = 0
-            isMinimized = false
-        end
+function Mega.UI.CreateButton(parent, textKey, callback)
+    local Button = Instance.new("TextButton")
+    Button.Name = textKey .. "Button"
+    Button.Size = UDim2.new(0.9, 0, 0, 40)
+    Button.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+    Button.BorderSizePixel = 0
+    Button.Text = GetText(textKey)
+    Button.TextColor3 = Mega.Settings.Menu.TextColor
+    Button.TextSize = 13
+    Button.Font = Enum.Font.GothamSemibold
+    Button.AutoButtonColor = false
+    Button.Parent = parent
+
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
+    ButtonCorner.Parent = Button
+
+    local ButtonStroke = Instance.new("UIStroke", Button)
+    ButtonStroke.Color = Mega.Settings.Menu.AccentColor
+    ButtonStroke.Thickness = 1
+    ButtonStroke.Transparency = 0.8
+
+    Button.MouseEnter:Connect(function() 
+        TweenService:Create(Button, TweenInfo.new(0.3), { 
+            BackgroundColor3 = Mega.Settings.Menu.AccentColor,
+            BackgroundTransparency = 0.2
+        }):Play() 
+        TweenService:Create(ButtonStroke, TweenInfo.new(0.3), { Transparency = 0.4 }):Play()
     end)
-end)
--- CloseButton logic removed as requested
-
--- Tab Icons Mapping (GitHub Paths)
-Mega.Icons = {
-    ["tab_home"] = iconBaseUrl .. "home.png",
-    ["tab_esp"] = iconBaseUrl .. "esp.png",
-    ["tab_aim"] = iconBaseUrl .. "aim.png",
-    ["tab_player"] = iconBaseUrl .. "player.png",
-    ["tab_combat"] = iconBaseUrl .. "combat.png",
-    ["tab_visuals"] = iconBaseUrl .. "visuals.png",
-    ["tab_farm"] = iconBaseUrl .. "kit.png",
-    ["tab_users"] = iconBaseUrl .. "users.png",
-    ["tab_utils"] = iconBaseUrl .. "utils.png",
-    ["tab_settings"] = iconBaseUrl .. "settings.png",
-    ["tab_bot"] = iconBaseUrl .. "bot.png",
-    ["tab_ai_chat"] = iconBaseUrl .. "ai_chat.png"
-}
-
--- Tab System
-local TabKeys = { "tab_home", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot", "tab_ai_chat" }
-local TabButtons = {}
-Mega.Objects.TabFrames = {}
-
-local function SelectTab(tabKey, tabButton)
-    local indicator = tabButton:FindFirstChild("Indicator")
-    
-    -- De-select all other buttons
-    for k, btn in pairs(TabButtons) do
-        local otherInd = btn:FindFirstChild("Indicator")
-        local tabText = btn:FindFirstChild("TabText")
-        local icon = btn:FindFirstChild("Icon")
-        if otherInd then
-            Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
-        end
-        if icon then
-            Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Settings.Menu.IconColor, ImageTransparency = 0.3 }):Play()
-        end
-        if tabText then
-            Services.TweenService:Create(tabText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextMutedColor }):Play()
-        end
-        Services.TweenService:Create(btn, TweenInfo.new(0.3), {
-            BackgroundColor3 = Settings.Menu.ElementColor,
-            BackgroundTransparency = 0.5
-        }):Play()
-    end
-    
-    -- Select the current button
-    if indicator then
-        Services.TweenService:Create(indicator, TweenInfo.new(0.3), { Size = UDim2.new(0, 4, 0.6, 0), BackgroundTransparency = 0 }):Play()
-    end
-    local currentIcon = tabButton:FindFirstChild("Icon")
-    if currentIcon then
-        Services.TweenService:Create(currentIcon, TweenInfo.new(0.3), { ImageColor3 = Settings.Menu.IconActiveColor, ImageTransparency = 0 }):Play()
-    end
-    local currentText = tabButton:FindFirstChild("TabText")
-    if currentText then
-        Services.TweenService:Create(currentText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextColor }):Play()
-    end
-    Services.TweenService:Create(tabButton, TweenInfo.new(0.3), {
-        BackgroundColor3 = Settings.Menu.AccentColor,
-        BackgroundTransparency = 0.8, -- Subtle highlight
-        TextColor3 = Settings.Menu.TextColor
-    }):Play()
-
-    -- Hide all other frames
-    for k, frame in pairs(Mega.Objects.TabFrames) do
-        frame.Visible = false
-    end
-    
-    -- Load module if it's the first time
-    local modulePath = "gui/tabs/" .. tabKey:gsub("^tab_", "") .. ".lua"
-    if not Mega.LoadedModules[modulePath] then
-        Mega.LoadModule(modulePath)
-    end
-    
-    -- Show the frame for this tab
-    if Mega.Objects.TabFrames[tabKey] then
-        local frame = Mega.Objects.TabFrames[tabKey]
-        frame.Visible = true
-    end
-
-    Title.Text = GetText("title_bar_with_tab", GetText(tabKey))
-end
-
-for _, tabKey in ipairs(TabKeys) do
-    local tabName = GetText(tabKey)
-    local TabButton = Instance.new("TextButton", TabContainer)
-    TabButton.Name = tabKey
-    TabButton.Size = UDim2.new(1, -10, 0, 40)
-    TabButton.BackgroundColor3 = Settings.Menu.ElementColor
-    TabButton.BackgroundTransparency = 0.5
-    TabButton.Text = tabName
-    TabButton.TextColor3 = Settings.Menu.TextMutedColor
-    TabButton.TextSize = 13
-    TabButton.Font = Enum.Font.GothamSemibold
-    TabButton.Text = "" -- Clear standard text
-    TabButton.AutoButtonColor = false
-    Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 8)
-    
-    local Icon = Instance.new("ImageLabel", TabButton)
-    Icon.Name = "Icon"
-    Icon.Size = UDim2.new(0, 20, 0, 20)
-    Icon.Position = UDim2.new(0, 15, 0.5, -10)
-    Icon.BackgroundTransparency = 1
-    Icon.ScaleType = Enum.ScaleType.Fit
-    Icon.Image = Mega.GetImageFromURL(Mega.Icons[tabKey] or "", tabKey .. ".png")
-    Icon.ImageColor3 = Settings.Menu.IconColor
-    Icon.ImageTransparency = 0.3
-    
-    local TabText = Instance.new("TextLabel", TabButton)
-    TabText.Name = "TabText"
-    TabText.Size = UDim2.new(1, -50, 1, 0)
-    TabText.Position = UDim2.new(0, 50, 0, 0)
-    TabText.BackgroundTransparency = 1
-    TabText.Text = GetText(tabKey)
-    TabText.TextColor3 = Settings.Menu.TextMutedColor
-    TabText.TextSize = 14
-    TabText.Font = Enum.Font.GothamBold
-    TabText.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local Indicator = Instance.new("Frame", TabButton)
-    Indicator.Name = "Indicator"
-    Indicator.Size = UDim2.new(0, 0, 0.6, 0)
-    Indicator.Position = UDim2.new(0, -15, 0.2, 0)
-    Indicator.BackgroundColor3 = Settings.Menu.AccentColor
-    Indicator.BackgroundTransparency = 1
-    Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
-    
-    TabButton.MouseEnter:Connect(function()
-        if Title.Text:find(GetText(tabKey)) then return end
-        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.3 }):Play()
-        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextColor }):Play()
-        Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0 }):Play()
+    Button.MouseLeave:Connect(function() 
+        TweenService:Create(Button, TweenInfo.new(0.3), { 
+            BackgroundColor3 = Mega.Settings.Menu.ElementColor,
+            BackgroundTransparency = 0
+        }):Play() 
+        TweenService:Create(ButtonStroke, TweenInfo.new(0.3), { Transparency = 0.8 }):Play()
     end)
-    TabButton.MouseLeave:Connect(function()
-        if Title.Text:find(GetText(tabKey)) then return end
-        Services.TweenService:Create(TabButton, TweenInfo.new(0.3), { BackgroundTransparency = 0.5 }):Play()
-        Services.TweenService:Create(TabText, TweenInfo.new(0.3), { TextColor3 = Settings.Menu.TextMutedColor }):Play()
-        Services.TweenService:Create(Icon, TweenInfo.new(0.3), { ImageTransparency = 0.3 }):Play()
+    Button.MouseButton1Click:Connect(function() 
+        pcall(function()
+            local originalSize = Button.Size
+            Button:TweenSize(UDim2.new(originalSize.X.Scale * 0.95, originalSize.X.Offset, originalSize.Y.Scale * 0.95, originalSize.Y.Offset), "Out", "Quad", 0.05, true)
+            task.wait(0.05)
+            Button:TweenSize(originalSize, "Out", "Quad", 0.05, true)
+        end)
+        if callback then pcall(callback) end 
     end)
-    
-    TabButton.MouseButton1Click:Connect(function() SelectTab(tabKey, TabButton) end)
-    TabButtons[tabKey] = TabButton
+
+    return Button
 end
 
--- Select the first tab by default
-task.wait(0.1)
-SelectTab("tab_home", TabButtons["tab_home"])
-
--- === ФОНОВАЯ ПРОГРУЗКА ВСЕХ ВКЛАДОК ===
--- Прогружаем модули с небольшим КД, чтобы функции из конфига активировались автоматически
-task.spawn(function()
-    for _, tabKey in ipairs(TabKeys) do
-        local modulePath = "gui/tabs/" .. tabKey:gsub("^tab_", "") .. ".lua"
-        if not Mega.LoadedModules[modulePath] then
-            pcall(function() Mega.LoadModule(modulePath) end)
-            task.wait(0.15) -- КД 150мс между прогрузкой вкладок, чтобы избежать фризов игры
-        end
-    end
-end)
-
--- Keybinds Logic
-Mega.Objects.Connections.MainWindowKeybinds = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    local key = input.KeyCode.Name
+function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
+    local translatedText = GetText(textKey)
     
-    if key == States.Keybinds.Menu and key ~= "None" then
-        ToggleMenu()
-    end
-    
-    if key == States.Keybinds.Killaura and key ~= "None" then
-        local newState = not States.Combat.Killaura.Enabled
-        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_killaura"] then
-            Mega.Objects.Toggles["toggle_killaura"](newState)
-        else
-            States.Combat.Killaura.Enabled = newState
-            if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(newState) end
-            if Mega.ShowNotification then Mega.ShowNotification((GetText("toggle_killaura") or "Killaura") .. ": " .. (newState and GetText("notify_enabled") or GetText("notify_disabled")), 2) end
+    local function getState()
+        local path = statePath
+        local value = Mega.States
+        for part in path:gmatch("[^%.]+") do
+            value = value and value[part]
         end
-    end
-    
-    if key == States.Keybinds.Scaffold and key ~= "None" then
-        local newState = not States.Player.Scaffold.Enabled
-        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_scaffold"] then
-            Mega.Objects.Toggles["toggle_scaffold"](newState)
-        else
-            States.Player.Scaffold.Enabled = newState
-            if Mega.Features.Scaffold and Mega.Features.Scaffold.SetEnabled then Mega.Features.Scaffold.SetEnabled(newState) end
-            if Mega.ShowNotification then Mega.ShowNotification((GetText("toggle_scaffold") or "Scaffold") .. ": " .. (newState and GetText("notify_enabled") or GetText("notify_disabled")), 2) end
-        end
-    end
-end)
-
--- Status Indicator GUI
-if Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then
-    Services.CoreGui.TumbaStatusIndicator:Destroy()
-end
-
-local StatusGUI = Instance.new("ScreenGui", Services.CoreGui)
-StatusGUI.Name = "TumbaStatusIndicator"
-StatusGUI.ResetOnSpawn = false
-StatusGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-local StatusIndicator = Instance.new("Frame", StatusGUI)
-StatusIndicator.Name = "StatusList"
-StatusIndicator.Size = UDim2.new(0, 200, 1, 0)
-StatusIndicator.Position = UDim2.new(1, -210, 0, 70) -- Moved down to avoid overlap with menu icon
-StatusIndicator.BackgroundTransparency = 1
-local StatusLayout = Instance.new("UIListLayout", StatusIndicator)
-StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-StatusLayout.SortOrder = Enum.SortOrder.LayoutOrder
-StatusLayout.Padding = UDim.new(0, 4)
-
-local Watermark = Instance.new("TextLabel", StatusIndicator)
-Watermark.Name = "Watermark"
-Watermark.Text = "TUMBA HUB"
-Watermark.Font = Enum.Font.GothamBlack
-Watermark.TextSize = 22
-Watermark.TextColor3 = Settings.Menu.AccentColor
-Watermark.Size = UDim2.new(1, 0, 0, 30)
-Watermark.BackgroundTransparency = 1
-Watermark.TextXAlignment = Enum.TextXAlignment.Right
-Watermark.LayoutOrder = -1
-Instance.new("UIStroke", Watermark).Thickness = 2
-
--- Function to update the status list (will be called by features)
-function Mega.UpdateStatus()
-    if not Settings.System.ShowStatusIndicator then
-        StatusIndicator.Visible = false
-        return
-    end
-    StatusIndicator.Visible = true
-
-    if Settings.StatusIndicator.RainbowMode then
-        Watermark.TextColor3 = Color3.fromHSV((tick() % 5) / 5, 0.8, 1)
-    else
-        Watermark.TextColor3 = Settings.Menu.AccentColor
+        return value or min
     end
 
-    for _, child in pairs(StatusIndicator:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
-    end
-    
-    local activeCount = 0
-    local function AddStatus(text, color)
-        local item = Instance.new("Frame", StatusIndicator)
-        item.Size = UDim2.new(0, Services.TextService:GetTextSize(text, 14, Enum.Font.GothamBold, Vector2.new(1000, 1000)).X + 24, 0, 28)
-        item.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-        item.BackgroundTransparency = 0.3
-        item.LayoutOrder = activeCount
-        Instance.new("UICorner", item).CornerRadius = UDim.new(0, 4)
-        
-        local bar = Instance.new("Frame", item)
-        bar.Size = UDim2.new(0, 3, 1, 0)
-        bar.Position = UDim2.new(1, -3, 0, 0)
-        bar.BackgroundColor3 = color or Settings.Menu.AccentColor
-        Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 4)
-        
-        local label = Instance.new("TextLabel", item)
-        label.Size = UDim2.new(1, -10, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = text
-        label.TextColor3 = Color3.new(1,1,1)
-        label.TextSize = 14
-        label.Font = Enum.Font.GothamBold
-        label.TextXAlignment = Enum.TextXAlignment.Right
-        Instance.new("UIStroke", label).Thickness = 1
-        activeCount = activeCount + 1
-    end
+    local currentValue = getState()
 
-    if States.ESP.Enabled then AddStatus("ESP", Settings.Menu.SecondaryColor) end
-    if States.KitESP.Enabled then AddStatus("Kit ESP", Color3.fromRGB(255, 165, 0)) end
-    if States.AimAssist.Enabled then AddStatus("Aim Assist", Settings.Menu.AccentColor) end
-    if States.Player.Speed then AddStatus("Speed", Color3.fromRGB(255, 220, 0)) end
-    if States.Player.Fly then AddStatus("Fly", Color3.fromRGB(100, 200, 255)) end
-    if States.Player.NoClip then AddStatus("NoClip", Color3.fromRGB(150, 255, 150)) end
-end
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Name = textKey .. "Slider"
+    SliderFrame.Size = UDim2.new(0.9, 0, 0, 60)
+    SliderFrame.BackgroundTransparency = 1
+    SliderFrame.Parent = parent
 
--- Auto-update status and apply UIScale
-Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
-    if TumbaGUI.Enabled then
-        Mega.UpdateStatus()
-    end
-    
-    -- Smart UI Scaling for Main Menu
-    if workspace.CurrentCamera then
-        local vp = workspace.CurrentCamera.ViewportSize
-        -- If width < 1200 or height < 700 we need to scale down
-        if vp.X > 0 and vp.Y > 0 then
-            local scaleX = (vp.X * 0.95) / 1100
-            local scaleY = (vp.Y * 0.90) / 650
-            MenuScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.3, 1)
-        end
-    end
-end)
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Name = "Label"
+    SliderLabel.Size = UDim2.new(1, 0, 0, 20)
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.Text = GetText("slider_label", translatedText, currentValue)
+    SliderLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    SliderLabel.TextSize = 12
+    SliderLabel.Font = Enum.Font.Gotham
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SliderLabel.Parent = SliderFrame
 
--- Mobile Toggle GUI
-if Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
-    Services.CoreGui.TumbaMobileToggle:Destroy()
-end
+    local SliderTrack = Instance.new("Frame")
+    SliderTrack.Name = "Track"
+    SliderTrack.Size = UDim2.new(1, 0, 0, 6)
+    SliderTrack.Position = UDim2.new(0, 0, 0, 35)
+    SliderTrack.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
+    SliderTrack.BorderSizePixel = 0
+    SliderTrack.Parent = SliderFrame
 
--- Premium Mobile Button GUI
-local MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
-MobileGUI.Name = "TumbaMobileToggle"
-MobileGUI.ResetOnSpawn = false
-MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    local TrackCorner = Instance.new("UICorner")
+    TrackCorner.CornerRadius = UDim.new(0, 3)
+    TrackCorner.Parent = SliderTrack
 
-local ToggleButton = Instance.new("ImageButton", MobileGUI)
-ToggleButton.Name = "TumbaMenuIcon"
-ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- Slightly larger for accessibility
-ToggleButton.AnchorPoint = Vector2.new(1, 0)
-ToggleButton.Position = UDim2.new(1, -15, 0, 15) -- Pushed bit from edges
-ToggleButton.BackgroundTransparency = 1 
-ToggleButton.Image = Mega.GetImageFromURL(iconBaseUrl .. "minimize.png", "minimize.png")
-ToggleButton.ImageColor3 = Settings.Menu.AccentColor
-ToggleButton.Active = true
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Name = "Fill"
+    SliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
+    SliderFill.BackgroundColor3 = Mega.Settings.Menu.AccentColor
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Parent = SliderTrack
 
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(0, 3)
+    FillCorner.Parent = SliderFill
 
-local btnStroke = Instance.new("UIStroke", ToggleButton)
-btnStroke.Color = Settings.Menu.AccentColor
-btnStroke.Thickness = 1.5 -- Slightly thicker for premium feel
-btnStroke.Transparency = 0.6
-btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    local SliderButton = Instance.new("TextButton")
+    SliderButton.Name = "Button"
+    SliderButton.Size = UDim2.new(0, 16, 0, 16)
+    SliderButton.Position = UDim2.new(SliderFill.Size.X.Scale, -8, 0.5, -8)
+    SliderButton.BackgroundColor3 = Mega.Settings.Menu.AccentColor
+    SliderButton.BorderSizePixel = 0
+    SliderButton.Text = ""
+    SliderButton.AutoButtonColor = false
+    SliderButton.Parent = SliderTrack
 
--- Custom Smooth Drag Logic (Replaces deprecated Draggable)
--- Custom Smooth Drag Logic with Click Detection
-local dragging = false
-local dragStart = nil
-local startPos = nil
-local hasDragged = false
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(1, 0)
+    ButtonCorner.Parent = SliderButton
 
-ToggleButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        hasDragged = false
-        dragStart = input.Position
-        startPos = ToggleButton.Position
-    end
-end)
+    local dragging = false
+    SliderButton.MouseButton1Down:Connect(function() dragging = true end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
-Services.UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        if delta.Magnitude > 5 then
-            hasDragged = true
-        end
-        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.08, Enum.EasingStyle.Sine), {
-            Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        }):Play()
-    end
-end)
-
-Services.UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    Mega.Services.RunService.RenderStepped:Connect(function()
         if dragging then
-            dragging = false
-            if not hasDragged then
-                -- Register as a click if we didn't drag it!
-                ToggleMenu()
+            local mousePos = UserInputService:GetMouseLocation()
+            local framePos = SliderTrack.AbsolutePosition
+            local frameSize = SliderTrack.AbsoluteSize
+            local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
+            local newValue = math.floor(min + relativeX * (max - min) + 0.5)
+
+            local path = statePath
+            local tbl = Mega.States
+            local key
+            for part in path:gmatch("[^%.]+") do
+                key = part
+                if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
             end
-        end
-    end
-end)
+            tbl[key] = newValue
 
--- Dynamic Updater
-Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
-    btnStroke.Color = Settings.Menu.AccentColor
-    ToggleButton.ImageColor3 = Settings.Menu.AccentColor
-    
-    -- Sync visibility with Settings
-    local showBtn = Settings.Menu.ShowMenuIcon
-    if showBtn == nil then showBtn = false end -- Default to false
-    MobileGUI.Enabled = showBtn
-    
-    -- Visual feedback based on open state
-    if TumbaGUI.Enabled then
-        btnStroke.Transparency = 0.4 -- Glow bit more when open
-        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 180, ImageTransparency = 0 }):Play()
-    else
-        btnStroke.Transparency = 0.7 
-        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 0, ImageTransparency = 0.2 }):Play()
-    end
-end)
-
-end -- End of Mega.InitializeMainGUI
-
-local function LoadStartupConfig()
-    if not Mega.ConfigSystem or not Mega.ConfigSystem.Load then return end
-    pcall(function()
-        if isfile and readfile and isfile("tumbaHub/configs/LastConfig.txt") then
-            local lastConf = readfile("tumbaHub/configs/LastConfig.txt")
-            if lastConf and lastConf ~= "" then
-                Mega.ConfigSystem.Load(lastConf)
-            end
+            SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+            SliderButton.Position = UDim2.new(relativeX, -8, 0.5, -8)
+            SliderLabel.Text = GetText("slider_label", translatedText, newValue)
+            if callback then pcall(callback, newValue) end
         end
     end)
-    -- Загружаем autosave поверх, чтобы восстановить точное состояние до телепорта
-    Mega.ConfigSystem.Load("autosave")
+
+    return SliderFrame
 end
 
-if not Mega.HasSavedLanguage() then
-    local LanguagePrompt = Instance.new("ScreenGui")
-    LanguagePrompt.Name = "LanguagePrompt"
-    LanguagePrompt.Parent = Services.CoreGui
-    LanguagePrompt.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    local Background = Instance.new("Frame")
-    Background.Size = UDim2.new(0, 300, 0, 470)
-    Background.Position = UDim2.new(0.5, -150, 0.5, -210)
+function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, optionsAreKeys)
+    local function getState()
+        local path = statePath
+        local value = Mega.States
+        for part in path:gmatch("[^%.]+") do value = value and value[part] end
+        return value
+    end
     
-    local LangScale = Instance.new("UIScale", Background)
-    local LangScaleUpdate = Services.RunService.RenderStepped:Connect(function()
-        if workspace.CurrentCamera then
-            local vp = workspace.CurrentCamera.ViewportSize
-            if vp.X > 0 and vp.Y > 0 then
-                local scaleX = (vp.X * 0.95) / 300
-                local scaleY = (vp.Y * 0.90) / 470
-                LangScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.3, 1)
+    local initialValue = getState()
+
+    local DropdownFrame = Instance.new("Frame")
+    DropdownFrame.Name = textKey .. "Dropdown"
+    DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    DropdownFrame.BackgroundTransparency = 1
+    DropdownFrame.ZIndex = 5
+    DropdownFrame.Parent = parent
+
+    local DropdownLabel = Instance.new("TextLabel")
+    DropdownLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    DropdownLabel.BackgroundTransparency = 1
+    DropdownLabel.Text = GetText("dropdown_label", GetText(textKey))
+    DropdownLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    DropdownLabel.TextSize = 13
+    DropdownLabel.Font = Enum.Font.Gotham
+    DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DropdownLabel.Parent = DropdownFrame
+
+    local DropdownButton = Instance.new("TextButton")
+    DropdownButton.Size = UDim2.new(0, 200, 0, 30)
+    DropdownButton.Position = UDim2.new(1, -200, 0.5, -15)
+    DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor:Lerp(Color3.new(1, 1, 1), 0.05)
+    DropdownButton.BorderSizePixel = 0
+    local displayText = (optionsAreKeys and GetText(initialValue)) or initialValue
+    DropdownButton.Text = tostring(displayText or "")
+    DropdownButton.TextColor3 = Mega.Settings.Menu.TextColor
+    DropdownButton.TextSize = 11
+    DropdownButton.Font = Enum.Font.GothamBold
+    DropdownButton.AutoButtonColor = false
+    DropdownButton.Parent = DropdownFrame
+    
+    Instance.new("UICorner", DropdownButton).CornerRadius = UDim.new(0, 8)
+    local ButtonStroke = Instance.new("UIStroke", DropdownButton)
+    ButtonStroke.Color = Mega.Settings.Menu.AccentColor
+    ButtonStroke.Transparency = 0.8
+
+    local DropdownList = Instance.new("ScrollingFrame")
+    DropdownList.Size = UDim2.new(0, 200, 0, 0)
+    DropdownList.Position = UDim2.new(1, -200, 1, 5)
+    DropdownList.BackgroundColor3 = Mega.Settings.Menu.SidebarColor
+    DropdownList.BorderSizePixel = 0
+    DropdownList.ScrollBarThickness = 2
+    DropdownList.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
+    DropdownList.Visible = false
+    DropdownList.ClipsDescendants = true
+    DropdownList.ZIndex = 500 -- Ensure it's on top
+    DropdownList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    DropdownList.Parent = DropdownFrame
+    
+    Instance.new("UICorner", DropdownList).CornerRadius = UDim.new(0, 8)
+    local ListStroke = Instance.new("UIStroke", DropdownList)
+    ListStroke.Color = Mega.Settings.Menu.AccentColor
+    ListStroke.Transparency = 0.6
+
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 2)
+    ListLayout.Parent = DropdownList
+
+    for i, optionKey in ipairs(options) do
+        local translatedOption = (optionsAreKeys and GetText(optionKey)) or optionKey
+        local ListItem = Instance.new("TextButton")
+        ListItem.Size = UDim2.new(1, -10, 0, 30)
+        ListItem.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+        ListItem.BackgroundTransparency = 0.2
+        ListItem.BorderSizePixel = 0
+        ListItem.Text = tostring(translatedOption)
+        ListItem.TextColor3 = Color3.new(1, 1, 1)
+        ListItem.TextSize = 12
+        ListItem.Font = Enum.Font.GothamSemibold
+        ListItem.AutoButtonColor = false
+        ListItem.LayoutOrder = i
+        ListItem.ZIndex = 510
+        ListItem.Parent = DropdownList
+        
+        Instance.new("UICorner", ListItem).CornerRadius = UDim.new(0, 6)
+
+        ListItem.MouseEnter:Connect(function()
+            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.AccentColor, BackgroundTransparency = 0.5}):Play()
+        end)
+        ListItem.MouseLeave:Connect(function()
+            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.ElementColor, BackgroundTransparency = 0.2}):Play()
+        end)
+
+        ListItem.MouseButton1Click:Connect(function()
+            DropdownButton.Text = translatedOption
+            DropdownList.Visible = false
+            DropdownList.Size = UDim2.new(0, 200, 0, 0)
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
+            
+            local path = statePath
+            local tbl = Mega.States
+            local key
+            for part in path:gmatch("[^%.]+") do
+                key = part
+                if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
             end
+            tbl[key] = optionKey
+            if callback then pcall(callback, optionKey) end
+        end)
+    end
+
+    DropdownButton.MouseButton1Click:Connect(function()
+        local isExpanding = not DropdownList.Visible
+        
+        if isExpanding then
+            DropdownList.Visible = true
+            local targetListHeight = math.min(#options * 32 + 10, 150)
+            
+            -- Smart Direction: Проверяем, сколько места осталось внизу
+            local parentTab = parent:FindFirstAncestorOfClass("ScrollingFrame") or parent
+            local screenHeight = parentTab.AbsoluteSize.Y
+            local buttonPosInTab = DropdownButton.AbsolutePosition.Y - parentTab.AbsolutePosition.Y
+            local spaceBelow = screenHeight - buttonPosInTab - 35
+            
+            local openUpwards = spaceBelow < (targetListHeight + 20)
+            
+            -- Устанавливаем позицию в зависимости от направления
+            if openUpwards then
+                DropdownList.Position = UDim2.new(1, -200, 0, -targetListHeight - 5)
+                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35) -- Не расширяем вниз, если открываемся вверх
+            else
+                DropdownList.Position = UDim2.new(1, -200, 1, 5)
+                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetListHeight + 5)
+            end
+            
+            DropdownList.ZIndex = 500
+            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetListHeight) }):Play()
+        else
+            local t = TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, 0) })
+            t:Play()
+            t.Completed:Connect(function() 
+                if not DropdownList.Visible then return end -- Avoid double-toggle issues
+                DropdownList.Visible = false 
+            end)
+            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
         end
     end)
-    Background.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    Background.BorderSizePixel = 0
-    Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 10)
-    Background.Parent = LanguagePrompt
 
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 50)
-    Title.Position = UDim2.new(0, 0, 0, 10)
-    Title.BackgroundTransparency = 1
-    Title.TextColor3 = Color3.new(1, 1, 1)
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 18
-    Title.Text = "TUMBA v5.0 - Select Language"
-    Title.TextXAlignment = Enum.TextXAlignment.Center
-    Title.Parent = Background
+    return DropdownFrame
+end
 
-    local ButtonContainer = Instance.new("Frame")
-    ButtonContainer.Size = UDim2.new(1, 0, 0, 400)
-    ButtonContainer.Position = UDim2.new(0, 0, 0, 70)
-    ButtonContainer.BackgroundTransparency = 1
-    ButtonContainer.Parent = Background
 
-    local ButtonLayout = Instance.new("UIListLayout", ButtonContainer)
-    ButtonLayout.FillDirection = Enum.FillDirection.Vertical
-    ButtonLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    ButtonLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-    ButtonLayout.Padding = UDim.new(0, 10)
+function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
+    local function getState()
+        local path = statePath
+        local value = Mega.States
+        for part in path:gmatch("[^%.]+") do value = value and value[part] end
+        return value
+    end
 
-    local function OnLanguageSelected(lang)
-        Mega.Localization.CurrentLanguage = lang
-        Mega.SaveLanguage(lang)
-        LoadStartupConfig()
-        
-        -- Clean up scale loop
-        pcall(function() LangScaleUpdate:Disconnect() end)
-        
-        LanguagePrompt:Destroy()
-        if Mega.ShowNotification then
-            Mega.ShowNotification("Меню открывается на RightShift", 5)
+    local currentKey = getState()
+
+    local KeybindFrame = Instance.new("Frame")
+    KeybindFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    KeybindFrame.BackgroundTransparency = 1
+    KeybindFrame.Parent = parent
+
+    local KeybindLabel = Instance.new("TextLabel")
+    KeybindLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    KeybindLabel.BackgroundTransparency = 1
+    KeybindLabel.Text = " " .. GetText(textKey)
+    KeybindLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    KeybindLabel.TextSize = 13
+    KeybindLabel.Font = Enum.Font.Gotham
+    KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+    KeybindLabel.Parent = KeybindFrame
+
+    local KeybindButton = Instance.new("TextButton")
+    KeybindButton.Size = UDim2.new(0.3, 0, 0, 25)
+    KeybindButton.Position = UDim2.new(0.65, 0, 0.5, -12.5)
+    KeybindButton.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
+    KeybindButton.Text = currentKey or GetText("keybind_none")
+    KeybindButton.TextColor3 = Mega.Settings.Menu.TextColor
+    KeybindButton.TextSize = 11
+    KeybindButton.Font = Enum.Font.GothamBold
+    KeybindButton.Parent = KeybindFrame
+    local KeybindCorner = Instance.new("UICorner")
+    KeybindCorner.CornerRadius = UDim.new(0, 6)
+    KeybindCorner.Parent = KeybindButton
+
+    local listening = false
+    KeybindButton.MouseButton1Click:Connect(function()
+        if UserInputService.TouchEnabled then
+            ShowNotification("📱 На телефоне лучше включи галочку 'Показывать на экране' в самом низу!", 5)
         end
-        Mega.InitializeMainGUI()
+        listening = true
+        KeybindButton.Text = GetText("keybind_listening")
+    end)
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed or not listening then return end
+        local key = input.KeyCode.Name
+        if key == "Unknown" then return end
+        listening = false
+        
+        -- Логика: если нажата та же клавиша, сбрасываем в None
+        if key == currentKey then
+            key = "None"
+        end
+        currentKey = key -- Обновляем текущий ключ для следующего сравнения
+
+        KeybindButton.Text = key
+        
+        local path = statePath
+        local tbl = Mega.States
+        for part in path:gmatch("[^%.]+") do
+            if tbl[part] == nil and part ~= path:match("([^%.]+)$") then tbl[part] = {} end
+            if part ~= path:match("([^%.]+)$") then tbl = tbl[part] else tbl[part] = key end
+        end
+
+        if callback then pcall(callback, key) end
+        
+        local notifyText = (key == "None") and Mega.GetText("notify_keybind_removed", GetText(textKey)) or GetText("notify_keybind_set", GetText(textKey), key)
+        ShowNotification(notifyText, 3)
+    end)
+    return KeybindFrame
+end
+
+function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, settingsElements)
+    -- This is the main container for the whole component, its height will be animated
+    local ComponentFrame = Instance.new("Frame")
+    ComponentFrame.Name = textKey .. "Component"
+    ComponentFrame.Size = UDim2.new(0.95, 0, 0, 40) -- Initial height
+    ComponentFrame.BackgroundTransparency = 1
+    ComponentFrame.ClipsDescendants = true
+    ComponentFrame.Parent = parent
+    
+    local ComponentLayout = Instance.new("UIListLayout", ComponentFrame)
+    ComponentLayout.Padding = UDim.new(0, 5)
+
+    -- Frame for the main toggle bar
+    local ControlFrame = Instance.new("Frame")
+    ControlFrame.Name = "ControlFrame"
+    ControlFrame.Size = UDim2.new(1, 0, 0, 35)
+    ControlFrame.BackgroundTransparency = 1
+    ControlFrame.Parent = ComponentFrame
+
+    -- The actual toggle from CreateToggle, but adapted
+    local ToggleFrame = Mega.UI.CreateToggle(ControlFrame, textKey, statePath, callback)
+    ToggleFrame.Size = UDim2.new(1, -50, 1, 0) -- Make space for settings button
+
+    -- Settings Button (Gear Icon)
+    local SettingsButton = Instance.new("TextButton")
+    SettingsButton.Name = "SettingsButton"
+    SettingsButton.Size = UDim2.new(0, 35, 0, 25)
+    SettingsButton.Position = UDim2.new(1, -45, 0.5, -12.5)
+    SettingsButton.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
+    SettingsButton.Text = "⚙️"
+    SettingsButton.TextColor3 = Mega.Settings.Menu.TextColor
+    SettingsButton.TextSize = 18
+    SettingsButton.Font = Enum.Font.Gotham
+    SettingsButton.Parent = ControlFrame
+    Instance.new("UICorner", SettingsButton).CornerRadius = UDim.new(0, 6)
+    
+    -- Container for the collapsible settings
+    local SettingsContainer = Instance.new("Frame")
+    SettingsContainer.Name = "SettingsContainer"
+    SettingsContainer.Size = UDim2.new(0.9, 0, 0, 0) -- Will be auto-sized
+    SettingsContainer.Position = UDim2.new(0.5, 0, 0, 0)
+    SettingsContainer.AnchorPoint = Vector2.new(0.5, 0)
+    SettingsContainer.BackgroundTransparency = 1
+    SettingsContainer.Parent = ComponentFrame
+    
+    local SettingsLayout = Instance.new("UIListLayout", SettingsContainer)
+    SettingsLayout.Padding = UDim.new(0, 8)
+    SettingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    -- This will make the container resize automatically based on its children
+    SettingsContainer.AutomaticSize = Enum.AutomaticSize.Y
+    
+    -- Parent all the setting elements to the container
+    for i, element in ipairs(settingsElements or {}) do
+        element.LayoutOrder = i
+        element.Parent = SettingsContainer
     end
 
-    local languages = {
-        { Name = "English", Code = "en" }, { Name = "Русский", Code = "ru" },
-        { Name = "Українська", Code = "uk" }, { Name = "Español", Code = "es" },
-        { Name = "Português", Code = "pt" }, { Name = "한국어", Code = "ko" },
-        { Name = "日本語", Code = "ja" }
-    }
+    local isExpanded = false
+    local initialHeight = ComponentFrame.AbsoluteSize.Y
+    
+    SettingsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        if isExpanded then
+            local settingsHeight = SettingsLayout.AbsoluteContentSize.Y
+            local targetHeight = initialHeight + settingsHeight + ComponentLayout.Padding.Offset
+            ComponentFrame.Size = UDim2.new(0.95, 0, 0, targetHeight)
+        end
+    end)
 
-    for _, lang in ipairs(languages) do
-        local btn = Instance.new("TextButton", ButtonContainer)
-        btn.Size = UDim2.new(0, 250, 0, 40)
-        btn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-        btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Font = Enum.Font.GothamSemibold
-        btn.Text = lang.Name
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-        btn.MouseButton1Click:Connect(function() OnLanguageSelected(lang.Code) end)
-    end
-else
-    LoadStartupConfig()
-    if Mega.ShowNotification then
-        Mega.ShowNotification("Меню открывается на RightShift", 5)
-    end
-    Mega.InitializeMainGUI()
+    SettingsButton.MouseButton1Click:Connect(function()
+        isExpanded = not isExpanded
+        
+        -- Safe height calculation (UIListLayout AbsoluteContentSize handles AutomaticSize timing issues)
+        local settingsHeight = SettingsLayout.AbsoluteContentSize.Y
+        local targetHeight = isExpanded and (initialHeight + settingsHeight + ComponentLayout.Padding.Offset) or initialHeight
+        
+        local tween = TweenService:Create(ComponentFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Size = UDim2.new(0.95, 0, 0, targetHeight) })
+        tween:Play()
+    end)
+    return ComponentFrame
+end
+
+function Mega.UI.CreateLabel(parent, textKey)
+    local LabelFrame = Instance.new("Frame")
+    LabelFrame.Name = textKey .. "LabelFrame"
+    LabelFrame.Size = UDim2.new(0.9, 0, 0, 80)
+    LabelFrame.BackgroundTransparency = 1
+    LabelFrame.Parent = parent
+    
+    local LabelBackground = Instance.new("Frame", LabelFrame)
+    LabelBackground.Size = UDim2.new(1, 0, 1, 0)
+    LabelBackground.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+    LabelBackground.BackgroundTransparency = 0.6
+    Instance.new("UICorner", LabelBackground).CornerRadius = UDim.new(0, 12)
+    
+    local LabelStroke = Instance.new("UIStroke", LabelBackground)
+    LabelStroke.Color = Mega.Settings.Menu.AccentColor
+    LabelStroke.Thickness = 1
+    LabelStroke.Transparency = 0.5
+    
+    -- Decorative Animation
+    task.spawn(function()
+        while LabelStroke.Parent do
+            TweenService:Create(LabelStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.2 }):Play()
+            task.wait(2)
+            TweenService:Create(LabelStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.7 }):Play()
+            task.wait(2)
+        end
+    end)
+
+    local Icon = Instance.new("TextLabel", LabelFrame)
+    Icon.Size = UDim2.new(1, 0, 0, 40)
+    Icon.Position = UDim2.new(0, 0, 0, 10)
+    Icon.BackgroundTransparency = 1
+    Icon.Text = "⏳"
+    Icon.TextSize = 30
+    Icon.Parent = LabelFrame
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, 0, 0, 30)
+    TextLabel.Position = UDim2.new(0, 0, 0, 45)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = GetText(textKey)
+    TextLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    TextLabel.TextSize = 16
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Center
+    TextLabel.Parent = LabelFrame
+    
+    return LabelFrame
 end
