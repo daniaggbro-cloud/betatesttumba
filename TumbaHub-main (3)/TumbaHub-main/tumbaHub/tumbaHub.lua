@@ -153,7 +153,6 @@ InitPhase("features", {
     "library/ui_builder.lua",
     "core/mobile_hud.lua",
     "features/esp.lua",
-    "features/aimbot.lua",
     "features/beekeeper.lua",
     "features/farmer_cletus.lua",
     "features/taliah.lua",
