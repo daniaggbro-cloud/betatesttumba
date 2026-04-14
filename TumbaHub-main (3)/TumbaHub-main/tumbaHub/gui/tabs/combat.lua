@@ -32,8 +32,37 @@ Mega.Objects.TabFrames[tabKey] = TabFrame
 UI.CreateSection(TabFrame, "section_combat_auto")
 
 UI.CreateToggle(TabFrame, "toggle_triggerbot", "Combat.TriggerBot")
-UI.CreateToggle(TabFrame, "toggle_autoshoot", "Combat.AutoShoot")
 UI.CreateToggle(TabFrame, "toggle_rapidfire", "Combat.RapidFire")
+--#endregion
+
+--#region -- Aimbot & AutoShoot
+UI.CreateSection(TabFrame, "tab_aim")
+
+-- Защита от конфликта типов данных в кэше конфигов
+if type(Mega.States.Combat.AutoShoot) ~= "table" then
+    Mega.States.Combat.AutoShoot = { Enabled = (Mega.States.Combat.AutoShoot == true), Delay = 500 }
+end
+if type(Mega.States.Combat.Aimbot) ~= "table" then
+    Mega.States.Combat.Aimbot = { Enabled = false, FOV = 250 }
+end
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/aimbot.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_aim", "Combat.Aimbot.Enabled", function(state)
+    Mega.States.Combat.Aimbot.Enabled = state
+    if Mega.Features.Aimbot and Mega.Features.Aimbot.SetEnabled then Mega.Features.Aimbot.SetEnabled(state) end
+end, {
+    UI.CreateSlider(nil, "slider_aim_fov", "Combat.Aimbot.FOV", 10, 1500, function(val) Mega.States.Combat.Aimbot.FOV = val end)
+})
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_autoshoot", "Combat.AutoShoot.Enabled", function(state)
+    Mega.States.Combat.AutoShoot.Enabled = state
+    if Mega.Features.Aimbot and Mega.Features.Aimbot.SetAutoShoot then Mega.Features.Aimbot.SetAutoShoot(state) end
+end, {
+    UI.CreateSlider(nil, "slider_killaura_delay", "Combat.AutoShoot.Delay", 0, 1000, function(val) Mega.States.Combat.AutoShoot.Delay = val end)
+})
 --#endregion
 
 --#region -- Accuracy
