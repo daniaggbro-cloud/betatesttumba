@@ -126,6 +126,23 @@ if Mega.Loader then
     loaderUI = Mega.Loader.Create()
 end
 
+--#region -- ROBUST INITIALIZATION (BedWars Compatibility)
+print("🛡️ TumbaHub: Waiting for game engine initialization...")
+local startTime = tick()
+repeat
+    task.wait(0.5)
+    local ready = pcall(function()
+        return game:GetService("ReplicatedStorage"):FindFirstChild("rbxts_include") 
+            and game:GetService("Players").LocalPlayer 
+            and game:GetService("Players").LocalPlayer:FindFirstChild("PlayerScripts")
+    end)
+    if ready then break end
+until tick() - startTime > 30 
+
+task.wait(2) 
+print("🛡️ TumbaHub: Environment ready. Starting modules...")
+--#endregion
+
 local function InitPhase(id, list)
     if loaderUI and loaderUI.SetStage then 
         loaderUI.SetStage(id) 

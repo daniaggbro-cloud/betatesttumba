@@ -27,18 +27,22 @@ end
 local function scanForConstants(parent, results)
     for _, child in pairs(parent:GetChildren()) do
         if child:IsA("ModuleScript") then
-            -- Skip some very large or problematic modules if needed
-            local success, data = pcall(function() return require(child) end)
-            if success and type(data) == "table" then
-                local key = translatePath(child)
-                -- Clean the table a bit to avoid circular references/functions
-                local cleaned = {}
-                for k, v in pairs(data) do
-                    if type(v) ~= "function" and type(v) ~= "userdata" then
-                        cleaned[k] = v
+            -- Skip problematic modules that often cause registration errors in BedWars
+            local name = child.Name:lower()
+            if name:find("component") or name:find("controller") or name:find("service") or name:find("knit") then
+                -- Skip requiring these during broad scan to avoid Side Effects
+            else
+                local success, data = pcall(function() return require(child) end)
+                if success and type(data) == "table" then
+                    local key = translatePath(child)
+                    local cleaned = {}
+                    for k, v in pairs(data) do
+                        if type(v) ~= "function" and type(v) ~= "userdata" then
+                            cleaned[k] = v
+                        end
                     end
+                    results[key] = HttpService:JSONEncode(cleaned)
                 end
-                results[key] = HttpService:JSONEncode(cleaned)
             end
         end
         -- Recursive call for folders
