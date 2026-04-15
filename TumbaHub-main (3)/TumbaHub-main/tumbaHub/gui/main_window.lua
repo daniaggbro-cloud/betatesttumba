@@ -67,7 +67,7 @@ local MenuScale = Instance.new("UIScale", MainFrame)
 Mega.Objects.MenuScale = MenuScale
 
 local function UpdateScale()
-    local vp = services and services.Workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
+    local vp = Services and Services.Workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
     local scaleX = vp.X / 1100
     local scaleY = vp.Y / 700
     MenuScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.5, 1)
