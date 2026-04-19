@@ -48,6 +48,22 @@ UI.CreateToggle(TabFrame, "toggle_fame_spam", "Misc.FameSpam")
 UI.CreateToggle(TabFrame, "toggle_fames_mom", "Misc.FamesMom")
 --#endregion
 
+--#region -- Auto-Honor
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/auto_honor.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_auto_honor", "Misc.AutoHonor.Enabled", function(state)
+    Mega.States.Misc.AutoHonor.Enabled = state
+    if Mega.Features.AutoHonor and Mega.Features.AutoHonor.SetEnabled then Mega.Features.AutoHonor.SetEnabled(state) end
+    if Mega.ShowNotification then
+        Mega.ShowNotification((Mega.GetText("toggle_auto_honor") or "Auto Honor") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
+    end
+end, {
+    UI.CreateDropdown(nil, "dropdown_auto_honor_target", "Misc.AutoHonor.Target", {"Teammate", "Enemy"}, function(val) Mega.States.Misc.AutoHonor.Target = val end)
+})
+--#endregion
+
 --#region -- Auto-Loot
 
 task.spawn(function()
