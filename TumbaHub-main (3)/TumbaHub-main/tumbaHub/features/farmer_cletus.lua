@@ -139,15 +139,37 @@ end
 local function getShopItemPrice(itemType)
     local price = nil
     pcall(function()
-        local Store = require(LocalPlayer.PlayerScripts.TS.ui.store).ClientStore
-        local shopItems = Store:getState().Bedwars.shopItems
-        for _, item in ipairs(shopItems) do
-            if item.itemType == itemType then
-                price = item.price
-                break
+        local storeScript = LocalPlayer.PlayerScripts:FindFirstChild("TS") and LocalPlayer.PlayerScripts.TS:FindFirstChild("ui") and LocalPlayer.PlayerScripts.TS.ui:FindFirstChild("store")
+        if storeScript then
+            local Store = require(storeScript).ClientStore
+            local state = Store:getState()
+            
+            -- Try different possible state paths
+            local shopData = (state.Bedwars and state.Bedwars.shopItems) or (state.Shop and state.Shop.shopItems)
+            if shopData then
+                for _, item in ipairs(shopData) do
+                    if item.itemType == itemType then
+                        price = item.price
+                        break
+                    end
+                end
             end
         end
     end)
+    
+    -- Fallback: check config
+    if not price then
+        pcall(function()
+            local shopItemsModule = Services.ReplicatedStorage:FindFirstChild("TS") and Services.ReplicatedStorage.TS:FindFirstChild("bedwars") and Services.ReplicatedStorage.TS.bedwars:FindFirstChild("shop") and Services.ReplicatedStorage.TS.bedwars.shop:FindFirstChild("shop-items")
+            if shopItemsModule then
+                local config = require(shopItemsModule).ShopItemConfig
+                if config and config[itemType] then
+                    price = config[itemType].price
+                end
+            end
+        end)
+    end
+    
     return price
 end
 
@@ -189,16 +211,20 @@ local function StartHarvestLoop()
         end
 
         -- 2. Auto Buy Seeds
-        if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1 then
+        if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1.5 then
             lastAutoBuyRun = tick()
             
             local currentPrice = getShopItemPrice("melon_seeds")
-            if currentPrice and currentPrice <= States.Cletus.AutoBuyMaxPrice then
+            -- If we can't get the price, we try to guess it or use a default (2) to see if it works
+            local priceToUse = currentPrice or 2 
+            
+            if priceToUse <= States.Cletus.AutoBuyMaxPrice then
                 local emeralds = getItemCount("emerald")
-                if emeralds >= currentPrice then
+                if emeralds >= priceToUse then
                     if not purchaseRemote then
                         pcall(function()
-                            purchaseRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("BedwarsPurchaseItem")
+                            local netManaged = Services.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
+                            purchaseRemote = netManaged:FindFirstChild("BedwarsPurchaseItem")
                         end)
                     end
                     
@@ -209,7 +235,7 @@ local function StartHarvestLoop()
                                     currency = "emerald",
                                     itemType = "melon_seeds",
                                     amount = 1,
-                                    price = currentPrice,
+                                    price = priceToUse,
                                     category = "Combat",
                                     requiresKit = { "farmer_cletus" }
                                 },
@@ -217,8 +243,14 @@ local function StartHarvestLoop()
                             }
                         }
                         task.spawn(function()
-                            pcall(function() purchaseRemote:InvokeServer(unpack(args)) end)
+                            print("[Cletus] Attempting to buy melon_seeds for " .. tostring(priceToUse) .. " emeralds")
+                            local success, result = pcall(function() return purchaseRemote:InvokeServer(unpack(args)) end)
+                            if not success then
+                                warn("[Cletus] Purchase failed: " .. tostring(result))
+                            end
                         end)
+                    else
+                        warn("[Cletus] PurchaseRemote not found!")
                     end
                 end
             end
