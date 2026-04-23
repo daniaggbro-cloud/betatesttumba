@@ -114,24 +114,42 @@ local function UpdateCletusTransparency()
     end
 end
 
--- Helper: Count items in inventory
-local function getItemCount(itemName)
+-- Helper: Count items in inventory (Legacy + Rodux)
+local function getEmeraldCount()
     local count = 0
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    local character = LocalPlayer.Character
-    
-    local function scan(container)
-        if not container then return end
-        for _, item in ipairs(container:GetChildren()) do
-            if item.Name == itemName then
-                local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
-                count = count + (tonumber(amount) or 0)
+    -- 1. Try Rodux Store (Most accurate for Bedwars)
+    pcall(function()
+        local storeScript = LocalPlayer.PlayerScripts:FindFirstChild("TS") and LocalPlayer.PlayerScripts.TS:FindFirstChild("ui") and LocalPlayer.PlayerScripts.TS.ui:FindFirstChild("store")
+        if storeScript then
+            local Store = require(storeScript).ClientStore
+            local state = Store:getState()
+            local items = state.Inventory and state.Inventory.currInventory and state.Inventory.currInventory.inventory and state.Inventory.currInventory.inventory.items
+            if items then
+                for _, item in ipairs(items) do
+                    if item.itemType == "emerald" then
+                        count = count + (item.amount or 0)
+                    end
+                end
             end
         end
+    end)
+
+    -- 2. Fallback: Scan physical backpack
+    if count == 0 then
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        local character = LocalPlayer.Character
+        local function scan(container)
+            if not container then return end
+            for _, item in ipairs(container:GetChildren()) do
+                if item.Name:lower() == "emerald" then
+                    local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
+                    count = count + (tonumber(amount) or 0)
+                end
+            end
+        end
+        scan(backpack)
+        scan(character)
     end
-    
-    scan(backpack)
-    scan(character)
     return count
 end
 
@@ -180,6 +198,8 @@ local function StartHarvestLoop()
     local lastCletusRun = 0
     local lastAutoBuyRun = 0
     
+    print("[Cletus] Loop started")
+
     connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
         if not States.Cletus.Enabled then return end
         
@@ -211,15 +231,18 @@ local function StartHarvestLoop()
         end
 
         -- 2. Auto Buy Seeds
-        if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1.5 then
+        if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1.0 then
             lastAutoBuyRun = tick()
             
             local currentPrice = getShopItemPrice("melon_seeds")
-            -- If we can't get the price, we try to guess it or use a default (2) to see if it works
-            local priceToUse = currentPrice or 2 
+            local priceToUse = currentPrice or 2 -- Fallback to 2
             
+            local emeralds = getEmeraldCount()
+            
+            -- Debug print (can be seen in F9)
+            -- print("[Cletus] Checking: Price=" .. tostring(priceToUse) .. " | MyEmis=" .. tostring(emeralds) .. " | Limit=" .. tostring(States.Cletus.AutoBuyMaxPrice))
+
             if priceToUse <= States.Cletus.AutoBuyMaxPrice then
-                local emeralds = getItemCount("emerald")
                 if emeralds >= priceToUse then
                     if not purchaseRemote then
                         pcall(function()
@@ -243,14 +266,15 @@ local function StartHarvestLoop()
                             }
                         }
                         task.spawn(function()
-                            print("[Cletus] Attempting to buy melon_seeds for " .. tostring(priceToUse) .. " emeralds")
+                            print("[Cletus] Buying for " .. tostring(priceToUse) .. " emeralds...")
                             local success, result = pcall(function() return purchaseRemote:InvokeServer(unpack(args)) end)
-                            if not success then
+                            if success then
+                                print("[Cletus] Purchase successful!")
+                                if Mega.ShowNotification then Mega.ShowNotification("Bought melon seeds!", 1) end
+                            else
                                 warn("[Cletus] Purchase failed: " .. tostring(result))
                             end
                         end)
-                    else
-                        warn("[Cletus] PurchaseRemote not found!")
                     end
                 end
             end
