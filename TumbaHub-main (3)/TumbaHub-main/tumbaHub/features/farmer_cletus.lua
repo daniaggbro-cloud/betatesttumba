@@ -271,50 +271,52 @@ local function StartHarvestLoop()
         if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1.0 then
             lastAutoBuyRun = tick()
             
-            -- Check if near shop first to save resources
-            if not isNearShop() then return end
-            
+            local isNear = isNearShop()
             local currentPrice = getShopItemPrice("melon_seeds")
-            local priceToUse = currentPrice or 2 -- Fallback to 2
-            
+            local priceToUse = tonumber(currentPrice) or 2 -- Fallback to 2
+            local limit = tonumber(States.Cletus.AutoBuyMaxPrice) or 2
             local emeralds = getEmeraldCount()
             
-            -- Debug print (can be seen in F9)
-            -- print("[Cletus] Near Shop! Checking: Price=" .. tostring(priceToUse) .. " | MyEmis=" .. tostring(emeralds) .. " | Limit=" .. tostring(States.Cletus.AutoBuyMaxPrice))
+            -- Enable this for deep debugging in F9
+            -- print(string.format("[Cletus-Debug] NearShop: %s | Price: %s | Limit: %s | Emeralds: %s", tostring(isNear), tostring(priceToUse), tostring(limit), tostring(emeralds)))
 
-            if priceToUse <= States.Cletus.AutoBuyMaxPrice then
-                if emeralds >= priceToUse then
-                    if not purchaseRemote then
-                        pcall(function()
-                            local netManaged = Services.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-                            purchaseRemote = netManaged:FindFirstChild("BedwarsPurchaseItem")
-                        end)
-                    end
-                    
-                    if purchaseRemote then
-                        local args = {
-                            {
-                                shopItem = {
-                                    currency = "emerald",
-                                    itemType = "melon_seeds",
-                                    amount = 1,
-                                    price = priceToUse,
-                                    category = "Combat",
-                                    requiresKit = { "farmer_cletus" }
-                                },
-                                shopId = "1_item_shop"
+            if isNear then
+                if priceToUse <= limit then
+                    if emeralds >= priceToUse then
+                        if not purchaseRemote then
+                            pcall(function()
+                                local netManaged = Services.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
+                                purchaseRemote = netManaged:WaitForChild("BedwarsPurchaseItem", 5)
+                            end)
+                        end
+                        
+                        if purchaseRemote then
+                            local args = {
+                                {
+                                    shopItem = {
+                                        currency = "emerald",
+                                        itemType = "melon_seeds",
+                                        amount = 1,
+                                        price = priceToUse,
+                                        category = "Combat",
+                                        requiresKit = { "farmer_cletus" }
+                                    },
+                                    shopId = "1_item_shop"
+                                }
                             }
-                        }
-                        task.spawn(function()
-                            print("[Cletus] Buying for " .. tostring(priceToUse) .. " emeralds...")
-                            local success, result = pcall(function() return purchaseRemote:InvokeServer(unpack(args)) end)
-                            if success then
-                                print("[Cletus] Purchase successful!")
-                                if Mega.ShowNotification then Mega.ShowNotification("Bought melon seeds!", 1) end
-                            else
-                                warn("[Cletus] Purchase failed: " .. tostring(result))
-                            end
-                        end)
+                            task.spawn(function()
+                                print(string.format("[Cletus] Buying melon seeds for %d emeralds...", priceToUse))
+                                local success, result = pcall(function() return purchaseRemote:InvokeServer(unpack(args)) end)
+                                if success and result ~= false then
+                                    print("[Cletus] Purchase successful!")
+                                    if Mega.ShowNotification then Mega.ShowNotification("Bought melon seeds!", 1) end
+                                else
+                                    warn("[Cletus] Purchase failed: " .. tostring(result))
+                                end
+                            end)
+                        else
+                            warn("[Cletus] Could not find BedwarsPurchaseItem remote!")
+                        end
                     end
                 end
             end
