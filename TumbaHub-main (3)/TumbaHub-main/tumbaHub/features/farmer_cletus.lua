@@ -192,6 +192,43 @@ local function getShopItemPrice(itemType)
 end
 
 local purchaseRemote
+local shopCache = {}
+local lastShopCacheUpdate = 0
+
+-- Helper: Check if near shop
+local function isNearShop()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    if tick() - lastShopCacheUpdate > 10 then
+        lastShopCacheUpdate = tick()
+        table.clear(shopCache)
+        for _, obj in ipairs(workspace:GetChildren()) do
+            if (obj.Name == "ItemShop" or obj.Name == "item_shop" or obj.Name == "1_item_shop") and obj:IsA("Model") then
+                local root = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+                if root then table.insert(shopCache, root) end
+            end
+        end
+        -- Fallback if not found in workspace directly
+        if #shopCache == 0 then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if (obj.Name == "ItemShop" or obj.Name == "item_shop" or obj.Name == "1_item_shop") and obj:IsA("Model") then
+                    local root = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+                    if root then table.insert(shopCache, root) end
+                end
+            end
+        end
+    end
+    
+    for _, root in ipairs(shopCache) do
+        if root and root.Parent and (hrp.Position - root.Position).Magnitude <= 35 then
+            return true
+        end
+    end
+    return false
+end
+
 local function StartHarvestLoop()
     if connections.AutoHarvestLoop then connections.AutoHarvestLoop:Disconnect() end
     
@@ -234,13 +271,16 @@ local function StartHarvestLoop()
         if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1.0 then
             lastAutoBuyRun = tick()
             
+            -- Check if near shop first to save resources
+            if not isNearShop() then return end
+            
             local currentPrice = getShopItemPrice("melon_seeds")
             local priceToUse = currentPrice or 2 -- Fallback to 2
             
             local emeralds = getEmeraldCount()
             
             -- Debug print (can be seen in F9)
-            -- print("[Cletus] Checking: Price=" .. tostring(priceToUse) .. " | MyEmis=" .. tostring(emeralds) .. " | Limit=" .. tostring(States.Cletus.AutoBuyMaxPrice))
+            -- print("[Cletus] Near Shop! Checking: Price=" .. tostring(priceToUse) .. " | MyEmis=" .. tostring(emeralds) .. " | Limit=" .. tostring(States.Cletus.AutoBuyMaxPrice))
 
             if priceToUse <= States.Cletus.AutoBuyMaxPrice then
                 if emeralds >= priceToUse then
