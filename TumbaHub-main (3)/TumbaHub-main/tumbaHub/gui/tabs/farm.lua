@@ -90,6 +90,8 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_cletus", "Cletus.Enabled", functio
     notifyFeature("toggle_cletus", state)
 end, {
     UI.CreateToggle(nil, "toggle_cletus_harvest", "Cletus.AutoHarvest"),
+    UI.CreateToggle(nil, "toggle_cletus_autobuy", "Cletus.AutoBuy"),
+    UI.CreateSlider(nil, "slider_cletus_autobuy_max_price", "Cletus.AutoBuyMaxPrice", 1, 10),
     UI.CreateToggle(nil, "toggle_cletus_esp", "Cletus.ESP", function() if Mega.Features.Cletus then Mega.Features.Cletus.RecreateESP() end end),
     UI.CreateSlider(nil, "slider_cletus_range", "Cletus.Range", 5, 100),
     UI.CreateSlider(nil, "slider_cletus_esp_transparency", "Cletus.ESPTransparency", 0, 100, function(v) Mega.States.Cletus.ESPTransparency = v/100; if Mega.Features.Cletus then Mega.Features.Cletus.UpdateVisuals() end end)

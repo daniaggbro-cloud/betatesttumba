@@ -212,6 +212,8 @@ Mega.States = {
         Enabled = false,
         Range = 20,
         AutoHarvest = false,
+        AutoBuy = false,
+        AutoBuyMaxPrice = 2,
         ESP = false,
         ESPTransparency = 0.75
     },

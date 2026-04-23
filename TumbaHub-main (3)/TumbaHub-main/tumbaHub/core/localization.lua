@@ -54,6 +54,8 @@ Mega.Localization = {
         ["toggle_cletus_harvest"] = { ru = "Авто-сбор урожая", en = "Auto Harvest", es = "Cosecha Auto", pt = "Colheita Auto", ko = "자동 수확", ja = "自動収穫", uk = "Авто-збір врожаю" },
         ["slider_cletus_range"] = { ru = "Дистанция сбора", en = "Harvest Range", es = "Rango de Cosecha", pt = "Alcance da Colheita", ko = "수확 범위", ja = "収穫範囲", uk = "Дистанція збору" },
         ["toggle_cletus_esp"] = { ru = "Подсветка урожая", en = "Crop ESP", es = "ESP de Cultivos", pt = "ESP de Colheita", ko = "작물 ESP", ja = "作物ESP", uk = "Підсвічування врожаю" },
+        ["toggle_cletus_autobuy"] = { ru = "Авто-закупка семян", en = "Auto-Buy Seeds", es = "Auto-Compra de Semillas", pt = "Auto-Compra de Sementes", ko = "씨앗 자동 구매", ja = "種子の自動購入", uk = "Авто-закупівля насіння" },
+        ["slider_cletus_autobuy_max_price"] = { ru = "Макс. цена (Изумруды)", en = "Max Price (Emeralds)", es = "Precio Máximo", pt = "Preço Máximo", ko = "최대 가격", ja = "最大価格", uk = "Макс. ціна (Смарагди)" },
         ["slider_cletus_esp_transparency"] = { ru = "Прозрачность ESP", en = "ESP Transparency", es = "Transparencia ESP", pt = "Transparência ESP", ko = "ESP 투명도", ja = "ESP透明度", uk = "Прозорість ESP" },
         ["toggle_eldertree"] = { ru = "Элдертри (Eldertree)", en = "Eldertree", es = "Eldertree", pt = "Eldertree", ko = "엘더트리", ja = "エルダーツリー", uk = "Елдертрі" },
         ["slider_eldertree_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },

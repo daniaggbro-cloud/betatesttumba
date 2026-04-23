@@ -114,14 +114,55 @@ local function UpdateCletusTransparency()
     end
 end
 
+-- Helper: Count items in inventory
+local function getItemCount(itemName)
+    local count = 0
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local character = LocalPlayer.Character
+    
+    local function scan(container)
+        if not container then return end
+        for _, item in ipairs(container:GetChildren()) do
+            if item.Name == itemName then
+                local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
+                count = count + (tonumber(amount) or 0)
+            end
+        end
+    end
+    
+    scan(backpack)
+    scan(character)
+    return count
+end
+
+-- Helper: Get current shop item price
+local function getShopItemPrice(itemType)
+    local price = nil
+    pcall(function()
+        local Store = require(LocalPlayer.PlayerScripts.TS.ui.store).ClientStore
+        local shopItems = Store:getState().Bedwars.shopItems
+        for _, item in ipairs(shopItems) do
+            if item.itemType == itemType then
+                price = item.price
+                break
+            end
+        end
+    end)
+    return price
+end
+
+local purchaseRemote
 local function StartHarvestLoop()
     if connections.AutoHarvestLoop then connections.AutoHarvestLoop:Disconnect() end
     
     local lastCletusRun = 0
+    local lastAutoBuyRun = 0
+    
     connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
-        if not States.Cletus.Enabled or not States.Cletus.AutoHarvest then return end
+        if not States.Cletus.Enabled then return end
         
-        if tick() - lastCletusRun > 0.5 then
+        -- 1. Auto Harvest
+        if States.Cletus.AutoHarvest and tick() - lastCletusRun > 0.5 then
             lastCletusRun = tick()
 
             local char = LocalPlayer.Character
@@ -142,6 +183,42 @@ local function StartHarvestLoop()
                                 end)
                             end
                         end
+                    end
+                end
+            end
+        end
+
+        -- 2. Auto Buy Seeds
+        if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1 then
+            lastAutoBuyRun = tick()
+            
+            local currentPrice = getShopItemPrice("melon_seeds")
+            if currentPrice and currentPrice <= States.Cletus.AutoBuyMaxPrice then
+                local emeralds = getItemCount("emerald")
+                if emeralds >= currentPrice then
+                    if not purchaseRemote then
+                        pcall(function()
+                            purchaseRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("BedwarsPurchaseItem")
+                        end)
+                    end
+                    
+                    if purchaseRemote then
+                        local args = {
+                            {
+                                shopItem = {
+                                    currency = "emerald",
+                                    itemType = "melon_seeds",
+                                    amount = 1,
+                                    price = currentPrice,
+                                    category = "Combat",
+                                    requiresKit = { "farmer_cletus" }
+                                },
+                                shopId = "1_item_shop"
+                            }
+                        }
+                        task.spawn(function()
+                            pcall(function() purchaseRemote:InvokeServer(unpack(args)) end)
+                        end)
                     end
                 end
             end
