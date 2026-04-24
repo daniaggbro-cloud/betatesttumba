@@ -50,13 +50,17 @@ local function performReach()
     
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local cam = Services.Workspace.CurrentCamera
     local weapon = getWeapon()
     local remote = GetSwordRemote()
     
-    if hrp and weapon and remote then
+    if hrp and cam and weapon and remote then
         local maxReach = States.Combat.Reach.Distance or 18
-        local closestTarget = nil
-        local closestDist = maxReach
+        local bestTarget = nil
+        local bestDot = 0.7 -- Minimum dot product (FOV check, ~45 degrees)
+        
+        local camPos = cam.CFrame.Position
+        local lookDir = cam.CFrame.LookVector
         
         -- Target search
         for _, obj in pairs(Services.Workspace:GetChildren()) do
@@ -72,11 +76,18 @@ local function performReach()
                     end
                     
                     if isEnemy then
-                        local dist = (hrp.Position - tHrp.Position).Magnitude
+                        local targetPos = tHrp.Position
+                        local dist = (hrp.Position - targetPos).Magnitude
+                        
                         if dist <= maxReach and dist > 0 then
-                            if dist < closestDist then
-                                closestDist = dist
-                                closestTarget = obj
+                            -- Direction/FOV check: is the player looking at the target?
+                            local dirToTarget = (targetPos - camPos).Unit
+                            local dot = lookDir:Dot(dirToTarget)
+                            
+                            if dot > bestDot then
+                                -- We pick the target that is closest to the center of the screen
+                                bestDot = dot
+                                bestTarget = obj
                             end
                         end
                     end
@@ -85,22 +96,24 @@ local function performReach()
         end
         
         -- Fire hit if target found
-        if closestTarget then
-            local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or (closestTarget:IsA("Model") and closestTarget.PrimaryPart)
-            local direction = (tHrp.Position - hrp.Position).Unit
+        if bestTarget then
+            local tHrp = bestTarget:FindFirstChild("HumanoidRootPart") or (bestTarget:IsA("Model") and bestTarget.PrimaryPart)
+            local targetPos = tHrp.Position
+            local direction = (targetPos - hrp.Position).Unit
+            local dist = (hrp.Position - targetPos).Magnitude
             
             -- Server-side distance check bypass (spoof self position within 14 studs)
             local spoofedSelfPos = hrp.Position
-            if closestDist > 14 then
-                spoofedSelfPos = tHrp.Position - (direction * 14)
+            if dist > 14 then
+                spoofedSelfPos = targetPos - (direction * 14)
             end
             
             local args = {
                 {
                     ["chargedAttack"] = { ["chargeRatio"] = 0 },
-                    ["entityInstance"] = closestTarget,
+                    ["entityInstance"] = bestTarget,
                     ["validate"] = {
-                        ["targetPosition"] = { ["value"] = vec3(tHrp.Position.X, tHrp.Position.Y, tHrp.Position.Z) },
+                        ["targetPosition"] = { ["value"] = vec3(targetPos.X, targetPos.Y, targetPos.Z) },
                         ["selfPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y, spoofedSelfPos.Z) },
                         ["raycast"] = {
                             ["cameraPosition"] = { ["value"] = vec3(spoofedSelfPos.X, spoofedSelfPos.Y + 3, spoofedSelfPos.Z) },
