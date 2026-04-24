@@ -44,9 +44,16 @@ end
 
 local vec3 = Vector3.new
 
+local lastHitTime = 0
+local COOLDOWN = 0.12 -- 120ms cooldown between reach hits
+
 -- Main logic function
 local function performReach()
     if not States.Combat.Reach.Enabled then return end
+    
+    -- Cooldown check
+    local now = tick()
+    if now - lastHitTime < COOLDOWN then return end
     
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -57,35 +64,53 @@ local function performReach()
     if hrp and cam and weapon and remote then
         local maxReach = States.Combat.Reach.Distance or 18
         local bestTarget = nil
-        local bestDot = 0.7 -- Minimum dot product (FOV check, ~45 degrees)
+        local bestDot = 0.8 -- Minimum dot product (FOV check, more strict)
         
         local camPos = cam.CFrame.Position
         local lookDir = cam.CFrame.LookVector
+        local myPos = hrp.Position
         
-        -- Target search
-        for _, obj in pairs(Services.Workspace:GetChildren()) do
-            if obj ~= char and (obj:FindFirstChild("Humanoid") or obj.Name:find("Dummy")) then
-                local tHrp = obj:FindFirstChild("HumanoidRootPart") or (obj:IsA("Model") and obj.PrimaryPart)
-                local hum = obj:FindFirstChild("Humanoid")
+        -- Optimized Target search (Iterate players instead of workspace)
+        local players = Services.Players:GetPlayers()
+        for i = 1, #players do
+            local p = players[i]
+            if p ~= LocalPlayer and p.Character then
+                local targetChar = p.Character
+                local tHrp = targetChar:FindFirstChild("HumanoidRootPart")
+                local hum = targetChar:FindFirstChild("Humanoid")
                 
-                if tHrp and (not hum or hum.Health > 0) then
-                    local p = Services.Players:GetPlayerFromCharacter(obj)
-                    local isEnemy = true
-                    if p and p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team then
-                        isEnemy = false
-                    end
-                    
-                    if isEnemy then
+                if tHrp and hum and hum.Health > 0 then
+                    -- Team check
+                    if not (p.Team and LocalPlayer.Team and p.Team == LocalPlayer.Team) then
                         local targetPos = tHrp.Position
-                        local dist = (hrp.Position - targetPos).Magnitude
+                        local dist = (myPos - targetPos).Magnitude
                         
                         if dist <= maxReach and dist > 0 then
-                            -- Direction/FOV check: is the player looking at the target?
                             local dirToTarget = (targetPos - camPos).Unit
                             local dot = lookDir:Dot(dirToTarget)
                             
                             if dot > bestDot then
-                                -- We pick the target that is closest to the center of the screen
+                                bestDot = dot
+                                bestTarget = targetChar
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- Also check dummies (optional but common in testing)
+        if not bestTarget then
+            for _, obj in pairs(Services.Workspace:GetChildren()) do
+                if obj.Name:find("Dummy") or obj:GetAttribute("IsDummy") then
+                    local tHrp = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+                    if tHrp then
+                        local targetPos = tHrp.Position
+                        local dist = (myPos - targetPos).Magnitude
+                        if dist <= maxReach and dist > 0 then
+                            local dirToTarget = (targetPos - camPos).Unit
+                            local dot = lookDir:Dot(dirToTarget)
+                            if dot > bestDot then
                                 bestDot = dot
                                 bestTarget = obj
                             end
@@ -97,13 +122,15 @@ local function performReach()
         
         -- Fire hit if target found
         if bestTarget then
-            local tHrp = bestTarget:FindFirstChild("HumanoidRootPart") or (bestTarget:IsA("Model") and bestTarget.PrimaryPart)
-            local targetPos = tHrp.Position
-            local direction = (targetPos - hrp.Position).Unit
-            local dist = (hrp.Position - targetPos).Magnitude
+            lastHitTime = now -- Update cooldown
             
-            -- Server-side distance check bypass (spoof self position within 14 studs)
-            local spoofedSelfPos = hrp.Position
+            local tHrp = bestTarget:FindFirstChild("HumanoidRootPart") or bestTarget.PrimaryPart
+            local targetPos = tHrp.Position
+            local direction = (targetPos - myPos).Unit
+            local dist = (myPos - targetPos).Magnitude
+            
+            -- Server-side distance check bypass
+            local spoofedSelfPos = myPos
             if dist > 14 then
                 spoofedSelfPos = targetPos - (direction * 14)
             end
