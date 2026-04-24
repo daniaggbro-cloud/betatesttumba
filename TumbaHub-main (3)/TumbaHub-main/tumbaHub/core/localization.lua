@@ -106,6 +106,8 @@ Mega.Localization = {
         ["toggle_killaura"] = { ru = "Killaura", en = "Killaura", es = "Killaura", pt = "Killaura", ko = "킬라우라", ja = "キルオーラ", uk = "Killaura" },
         ["slider_killaura_range"] = { ru = "Дистанция", en = "Range", es = "Rango", pt = "Alcance", ko = "범위", ja = "範囲", uk = "Дистанція" },
         ["slider_killaura_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
+        ["toggle_reach"] = { ru = "Дистанция атаки (Reach)", en = "Attack Reach", es = "Alcance de Ataque", pt = "Alcance de Ataque", ko = "공격 범위", ja = "アタックリーチ", uk = "Дистанція атаки (Reach)" },
+        ["slider_reach_distance"] = { ru = "Дальность Reach", en = "Reach Distance", es = "Distancia de Reach", pt = "Distância de Reach", ko = "Reach 거리", ja = "Reach 距離", uk = "Дальність Reach" },
         ["slider_bednuke_min_range"] = { ru = "Мин. дистанция", en = "Min Range", es = "Rango Mínimo", pt = "Alcance Mínimo", ko = "최소 범위", ja = "最小範囲", uk = "Мін. дистанція" },
         ["slider_bednuke_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
         ["section_combat_bednuke"] = { ru = "🛏️ BED NUKE", en = "🛏️ BED NUKE", es = "🛏️ BED NUKE", pt = "🛏️ BED NUKE", ko = "🛏️ BED NUKE", ja = "🛏️ BED NUKE", uk = "🛏️ BED NUKE" },

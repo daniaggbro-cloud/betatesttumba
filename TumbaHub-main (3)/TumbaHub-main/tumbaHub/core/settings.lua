@@ -151,6 +151,10 @@ Mega.States = {
             Delay = 0,
             AutoClick = false,
             AutoClickCPS = 25
+        },
+        Reach = {
+            Enabled = false,
+            Distance = 18
         }
     },
     Misc = {
