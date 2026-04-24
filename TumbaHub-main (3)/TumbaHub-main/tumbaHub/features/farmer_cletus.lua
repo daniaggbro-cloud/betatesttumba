@@ -1,44 +1,58 @@
 -- features/farmer_cletus.lua
--- Logic for Cletus (Farming) - Ported from tumbaHub.lua
+-- Logic for Cletus (Farming) - Optimized for Performance
+-- Removed Auto-Buy functionality
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Cletus = {}
 
+-- Localize Services for speed
 local Services = Mega.Services
+local RunService = Services.RunService
+local CollectionService = Services.CollectionService
 local LocalPlayer = Services.LocalPlayer
+local CoreGui = Services.CoreGui
+local ReplicatedStorage = Services.ReplicatedStorage
+
 local States = Mega.States
+local Objects = Mega.Objects
 
-if not Mega.Objects.CletusConnections then Mega.Objects.CletusConnections = {} end
-local connections = Mega.Objects.CletusConnections
+if not Objects.CletusConnections then Objects.CletusConnections = {} end
+local connections = Objects.CletusConnections
 
+-- Disconnect old connections
 for k, conn in pairs(connections) do
     if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
 end
 table.clear(connections)
 
--- Контейнер для событий ESP
+-- ESP Connections container
 local espConnections = {}
 
--- Remote
-local CropHarvestRemote = Mega.GetRemote("HarvestCrop")
--- Periodically re-check the remote
+-- Remote Cache
+local CropHarvestRemote
+local function GetHarvestRemote()
+    if not CropHarvestRemote then
+        CropHarvestRemote = Mega.GetRemote("HarvestCrop")
+    end
+    return CropHarvestRemote
+end
+
+-- Periodically re-check the remote (less frequently)
 task.spawn(function()
-    while task.wait(5) do
-        if not CropHarvestRemote then
-            CropHarvestRemote = Mega.GetRemote("HarvestCrop")
-        end
+    while task.wait(10) do
+        CropHarvestRemote = Mega.GetRemote("HarvestCrop")
     end
 end)
 
+-- Vector helper
+local vec3 = Vector3.new
 
-local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
-
--- Cletus ESP Logic
-local cletusEspFolder = Services.CoreGui:FindFirstChild("CletusESP")
+-- Cletus ESP Setup
+local cletusEspFolder = CoreGui:FindFirstChild("CletusESP")
 if not cletusEspFolder then
     cletusEspFolder = Instance.new("Folder")
     cletusEspFolder.Name = "CletusESP"
-    cletusEspFolder.Parent = Services.CoreGui
+    cletusEspFolder.Parent = CoreGui
 end
 
 local function EnableCletusESP()
@@ -51,29 +65,36 @@ local function EnableCletusESP()
     if States.Cletus.Enabled and States.Cletus.ESP then
         local function updateCrop(crop)
             if not crop:IsA("BasePart") then return end
+            
+            local stage = crop:GetAttribute("CropStage")
             local espName = crop:GetDebugId()
             local existing = cletusEspFolder:FindFirstChild(espName)
 
-            local stage = crop:GetAttribute("CropStage")
-
             if stage and stage >= 3 then
                 if not existing then
-                    local esp = Instance.new("BoxHandleAdornment")
-                    esp.Name = espName
-                    esp.Adornee = crop
-                    esp.Size = crop.Size + Vector3.new(0.1, 0.1, 0.1)
-                    
-                    local color = Color3.fromRGB(0, 255, 0)
-                    if crop.Name:lower():find("carrot") then
-                        color = Color3.fromRGB(255, 170, 0)
-                    elseif crop.Name:lower():find("melon") then
-                        color = Color3.fromRGB(170, 255, 127)
-                    end
-                    esp.Color3 = color
-                    esp.AlwaysOnTop = true
-                    esp.ZIndex = 5
-                    esp.Transparency = States.Cletus.ESPTransparency
-                    esp.Parent = cletusEspFolder
+                    task.defer(function() -- Optimization: Defer creation
+                        if not crop.Parent then return end
+                        local esp = Instance.new("BoxHandleAdornment")
+                        esp.Name = espName
+                        esp.Adornee = crop
+                        esp.Size = crop.Size + vec3(0.1, 0.1, 0.1)
+                        
+                        local lowerName = crop.Name:lower()
+                        local color = vec3(0, 255, 0)
+                        if lowerName:find("carrot") then
+                            color = Color3.fromRGB(255, 170, 0)
+                        elseif lowerName:find("melon") then
+                            color = Color3.fromRGB(170, 255, 127)
+                        else
+                            color = Color3.fromRGB(0, 255, 0)
+                        end
+                        
+                        esp.Color3 = color
+                        esp.AlwaysOnTop = true
+                        esp.ZIndex = 5
+                        esp.Transparency = States.Cletus.ESPTransparency
+                        esp.Parent = cletusEspFolder
+                    end)
                 end
             else
                 if existing then existing:Destroy() end
@@ -97,230 +118,81 @@ local function EnableCletusESP()
             table.insert(espConnections, ancestryConn)
         end
 
-        local addedConn = Services.CollectionService:GetInstanceAddedSignal("Crop"):Connect(onCropAdded)
+        local addedConn = CollectionService:GetInstanceAddedSignal("Crop"):Connect(onCropAdded)
         table.insert(espConnections, addedConn)
 
-        for _, crop in ipairs(Services.CollectionService:GetTagged("Crop")) do
-            onCropAdded(crop)
+        -- Initial scan (Optimized)
+        local allCrops = CollectionService:GetTagged("Crop")
+        for i = 1, #allCrops do
+            onCropAdded(allCrops[i])
+            if i % 10 == 0 then task.wait() end -- Prevent spike
         end
     end
 end
 
 local function UpdateCletusTransparency()
+    local transparency = States.Cletus.ESPTransparency
     for _, h in ipairs(cletusEspFolder:GetChildren()) do
         if h:IsA("BoxHandleAdornment") then
-            h.Transparency = States.Cletus.ESPTransparency
+            h.Transparency = transparency
         end
     end
 end
 
--- Helper: Count items in inventory (Legacy + Rodux)
-local function getEmeraldCount()
-    local count = 0
-    -- 1. Try Rodux Store (Most accurate for Bedwars)
-    pcall(function()
-        local storeScript = LocalPlayer.PlayerScripts:FindFirstChild("TS") and LocalPlayer.PlayerScripts.TS:FindFirstChild("ui") and LocalPlayer.PlayerScripts.TS.ui:FindFirstChild("store")
-        if storeScript then
-            local Store = require(storeScript).ClientStore
-            local state = Store:getState()
-            local items = state.Inventory and state.Inventory.currInventory and state.Inventory.currInventory.inventory and state.Inventory.currInventory.inventory.items
-            if items then
-                for _, item in ipairs(items) do
-                    if item.itemType == "emerald" then
-                        count = count + (item.amount or 0)
-                    end
-                end
-            end
-        end
-    end)
-
-    -- 2. Fallback: Scan physical backpack
-    if count == 0 then
-        local backpack = LocalPlayer:FindFirstChild("Backpack")
-        local character = LocalPlayer.Character
-        local function scan(container)
-            if not container then return end
-            for _, item in ipairs(container:GetChildren()) do
-                if item.Name:lower() == "emerald" then
-                    local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
-                    count = count + (tonumber(amount) or 0)
-                end
-            end
-        end
-        scan(backpack)
-        scan(character)
-    end
-    return count
-end
-
--- Helper: Get current shop item price
-local function getShopItemPrice(itemType)
-    local price = nil
-    pcall(function()
-        local storeScript = LocalPlayer.PlayerScripts:FindFirstChild("TS") and LocalPlayer.PlayerScripts.TS:FindFirstChild("ui") and LocalPlayer.PlayerScripts.TS.ui:FindFirstChild("store")
-        if storeScript then
-            local Store = require(storeScript).ClientStore
-            local state = Store:getState()
-            
-            -- Try different possible state paths
-            local shopData = (state.Bedwars and state.Bedwars.shopItems) or (state.Shop and state.Shop.shopItems)
-            if shopData then
-                for _, item in ipairs(shopData) do
-                    if item.itemType == itemType then
-                        price = item.price
-                        break
-                    end
-                end
-            end
-        end
-    end)
-    
-    -- Fallback: check config
-    if not price then
-        pcall(function()
-            local shopItemsModule = Services.ReplicatedStorage:FindFirstChild("TS") and Services.ReplicatedStorage.TS:FindFirstChild("bedwars") and Services.ReplicatedStorage.TS.bedwars:FindFirstChild("shop") and Services.ReplicatedStorage.TS.bedwars.shop:FindFirstChild("shop-items")
-            if shopItemsModule then
-                local config = require(shopItemsModule).ShopItemConfig
-                if config and config[itemType] then
-                    price = config[itemType].price
-                end
-            end
-        end)
-    end
-    
-    return price
-end
-
-local purchaseRemote
-local shopCache = {}
-local lastShopCacheUpdate = 0
-
--- Helper: Check if near shop
-local function isNearShop()
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
-    
-    if tick() - lastShopCacheUpdate > 10 then
-        lastShopCacheUpdate = tick()
-        table.clear(shopCache)
-        for _, obj in ipairs(workspace:GetChildren()) do
-            if (obj.Name == "ItemShop" or obj.Name == "item_shop" or obj.Name == "1_item_shop") and obj:IsA("Model") then
-                local root = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
-                if root then table.insert(shopCache, root) end
-            end
-        end
-        -- Fallback if not found in workspace directly
-        if #shopCache == 0 then
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if (obj.Name == "ItemShop" or obj.Name == "item_shop" or obj.Name == "1_item_shop") and obj:IsA("Model") then
-                    local root = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
-                    if root then table.insert(shopCache, root) end
-                end
-            end
-        end
-    end
-    
-    for _, root in ipairs(shopCache) do
-        if root and root.Parent and (hrp.Position - root.Position).Magnitude <= 35 then
-            return true
-        end
-    end
-    return false
-end
-
+-- Optimized Harvest Loop (Polling instead of Heartbeat)
 local function StartHarvestLoop()
-    if connections.AutoHarvestLoop then connections.AutoHarvestLoop:Disconnect() end
+    if connections.AutoHarvestLoop then 
+        connections.AutoHarvestLoop = false -- Signal to stop
+    end
     
-    local lastCletusRun = 0
-    local lastAutoBuyRun = 0
+    connections.AutoHarvestLoop = true
     
-    print("[Cletus] Loop started")
-
-    connections.AutoHarvestLoop = Services.RunService.Heartbeat:Connect(function()
-        if not States.Cletus.Enabled then return end
-        
-        -- 1. Auto Harvest
-        if States.Cletus.AutoHarvest and tick() - lastCletusRun > 0.5 then
-            lastCletusRun = tick()
-
-            local char = LocalPlayer.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            
-            if hrp then
-                local crops = Services.CollectionService:GetTagged("Crop")
-                for _, crop in ipairs(crops) do
-                    if crop:IsA("BasePart") then
-                        local stage = crop:GetAttribute("CropStage")
-                        if stage and stage >= 3 then
-                            local dist = (hrp.Position - crop.Position).Magnitude
-                            if dist <= States.Cletus.Range then
-                                local blockPos = Vector3.new(math.round(crop.Position.X / 3), math.round(crop.Position.Y / 3), math.round(crop.Position.Z / 3))
-                                local args = {{ ["position"] = vector.create(blockPos.X, blockPos.Y, blockPos.Z) }}
-                                task.spawn(function()
-                                    pcall(function() if CropHarvestRemote then CropHarvestRemote:InvokeServer(unpack(args)) end end)
-                                end)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        -- 2. Auto Buy Seeds
-        if States.Cletus.AutoBuy and tick() - lastAutoBuyRun > 1.0 then
-            lastAutoBuyRun = tick()
-            
-            local isNear = isNearShop()
-            local currentPrice = getShopItemPrice("melon_seeds")
-            local priceToUse = tonumber(currentPrice) or 2 -- Fallback to 2
-            local limit = tonumber(States.Cletus.AutoBuyMaxPrice) or 2
-            local emeralds = getEmeraldCount()
-            
-            -- Enable this for deep debugging in F9
-            -- print(string.format("[Cletus-Debug] NearShop: %s | Price: %s | Limit: %s | Emeralds: %s", tostring(isNear), tostring(priceToUse), tostring(limit), tostring(emeralds)))
-
-            if isNear then
-                if priceToUse <= limit then
-                    if emeralds >= priceToUse then
-                        if not purchaseRemote then
-                            pcall(function()
-                                local netManaged = Services.ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-                                purchaseRemote = netManaged:WaitForChild("BedwarsPurchaseItem", 5)
-                            end)
-                        end
-                        
-                        if purchaseRemote then
-                            local args = {
-                                {
-                                    shopItem = {
-                                        currency = "emerald",
-                                        itemType = "melon_seeds",
-                                        amount = 1,
-                                        price = priceToUse,
-                                        category = "Combat",
-                                        requiresKit = { "farmer_cletus" }
-                                    },
-                                    shopId = "1_item_shop"
-                                }
-                            }
-                            task.spawn(function()
-                                print(string.format("[Cletus] Buying melon seeds for %d emeralds...", priceToUse))
-                                local success, result = pcall(function() return purchaseRemote:InvokeServer(unpack(args)) end)
-                                if success and result ~= false then
-                                    print("[Cletus] Purchase successful!")
-                                    if Mega.ShowNotification then Mega.ShowNotification("Bought melon seeds!", 1) end
-                                else
-                                    warn("[Cletus] Purchase failed: " .. tostring(result))
+    task.spawn(function()
+        print("[Cletus] Optimized Loop started")
+        while connections.AutoHarvestLoop and States.Cletus.Enabled do
+            if States.Cletus.AutoHarvest then
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if hrp then
+                    local playerPos = hrp.Position
+                    local maxDist = States.Cletus.Range
+                    local remote = GetHarvestRemote()
+                    
+                    if remote then
+                        local crops = CollectionService:GetTagged("Crop")
+                        for i = 1, #crops do
+                            local crop = crops[i]
+                            if crop:IsA("BasePart") then
+                                local stage = crop:GetAttribute("CropStage")
+                                if stage and stage >= 3 then
+                                    local cropPos = crop.Position
+                                    local dist = (playerPos - cropPos).Magnitude
+                                    if dist <= maxDist then
+                                        -- Calculate grid position
+                                        local bx = math.round(cropPos.X / 3)
+                                        local by = math.round(cropPos.Y / 3)
+                                        local bz = math.round(cropPos.Z / 3)
+                                        
+                                        task.spawn(function()
+                                            pcall(function() 
+                                                remote:InvokeServer({
+                                                    ["position"] = vec3(bx, by, bz)
+                                                })
+                                            end)
+                                        end)
+                                    end
                                 end
-                            end)
-                        else
-                            warn("[Cletus] Could not find BedwarsPurchaseItem remote!")
+                            end
+                            -- Yield every few crops if the list is huge
+                            if i % 20 == 0 then task.wait() end
                         end
                     end
                 end
             end
+            task.wait(0.5) -- Check twice per second, plenty for farming
         end
+        print("[Cletus] Loop stopped")
     end)
 end
 
@@ -331,10 +203,7 @@ function Mega.Features.Cletus.SetEnabled(state)
     if state then
         StartHarvestLoop()
     else
-        if connections.AutoHarvestLoop then
-            connections.AutoHarvestLoop:Disconnect()
-            connections.AutoHarvestLoop = nil
-        end
+        connections.AutoHarvestLoop = false
     end
 end
 
