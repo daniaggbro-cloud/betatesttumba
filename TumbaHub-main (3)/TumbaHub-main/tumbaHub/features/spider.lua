@@ -27,11 +27,7 @@ end
 table.clear(connections)
 
 function Mega.Features.Spider.SetEnabled(state)
-    if type(States.Player.Spider) == "table" then
-        States.Player.Spider.Enabled = state
-    else
-        States.Player.Spider = state
-    end
+    States.Player.Spider = state
     
     if connections.SpiderLoop then
         connections.SpiderLoop:Disconnect()
@@ -79,7 +75,6 @@ function Mega.Features.Spider.SetEnabled(state)
 end
 
 -- Инициализация при включении во время запуска
-local isEnabled = type(States.Player.Spider) == "table" and States.Player.Spider.Enabled or States.Player.Spider == true
-if isEnabled then
+if States.Player.Spider then
     Mega.Features.Spider.SetEnabled(true)
 end
