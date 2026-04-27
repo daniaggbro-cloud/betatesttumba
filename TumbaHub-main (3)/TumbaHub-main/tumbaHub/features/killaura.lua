@@ -191,8 +191,14 @@ function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
     if not state then
-        if targetMarkerArrow then targetMarkerArrow.Adornee = nil end
-        if targetMarkerCircle then targetMarkerCircle.Adornee = nil end
+        if targetMarkerArrow then 
+            targetMarkerArrow.Adornee = nil 
+            targetMarkerArrow.Enabled = false
+        end
+        if targetMarkerCircle then 
+            targetMarkerCircle.Adornee = nil 
+            targetMarkerCircle.Visible = false
+        end
     end
     
     if state and not killauraActive then
@@ -261,11 +267,19 @@ function Mega.Features.Killaura.SetEnabled(state)
                     
                     arrow.Adornee = tHrp
                     circle.Adornee = tHrp
+                    arrow.Enabled = true
+                    circle.Visible = true
                     arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
                     circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
                 else
-                    if arrow then arrow.Adornee = nil end
-                    if circle then circle.Adornee = nil end
+                    if arrow then 
+                        arrow.Adornee = nil 
+                        arrow.Enabled = false
+                    end
+                    if circle then 
+                        circle.Adornee = nil 
+                        circle.Visible = false
+                    end
                 end
 
                 -- 3. Attack Logic (Every Heartbeat for max Speed)
