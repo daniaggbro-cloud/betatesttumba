@@ -55,6 +55,8 @@ Mega.Localization = {
         ["slider_cletus_range"] = { ru = "Дистанция сбора", en = "Harvest Range", es = "Rango de Cosecha", pt = "Alcance da Colheita", ko = "수확 범위", ja = "収穫範囲", uk = "Дистанція збору" },
         ["toggle_cletus_esp"] = { ru = "Подсветка урожая", en = "Crop ESP", es = "ESP de Cultivos", pt = "ESP de Colheita", ko = "작물 ESP", ja = "作物ESP", uk = "Підсвічування врожаю" },
         ["slider_cletus_esp_transparency"] = { ru = "Прозрачность ESP", en = "ESP Transparency", es = "Transparencia ESP", pt = "Transparência ESP", ko = "ESP 투명도", ja = "ESP透明度", uk = "Прозорість ESP" },
+        ["toggle_cletus_autobuy"] = { ru = "🍉 Авто-покупка арбузов", en = "🍉 Auto-Buy Melons", es = "🍉 Auto-Comprar Melones", pt = "🍉 Auto-Comprar Melancias", ko = "🍉 수박 자동 구매", ja = "🍉 スイカ自動購入", uk = "🍉 Авто-покупка кавунів" },
+        ["slider_cletus_maxprice"] = { ru = "Макс. цена (Изумруды)", en = "Max Price (Emeralds)", es = "Precio Máximo (Esmeraldas)", pt = "Preço Máximo (Esmeraldas)", ko = "최대 가격 (에메랄드)", ja = "最大価格 (エメラルド)", uk = "Макс. ціна (Емеральди)" },
         ["toggle_eldertree"] = { ru = "Элдертри (Eldertree)", en = "Eldertree", es = "Eldertree", pt = "Eldertree", ko = "엘더트리", ja = "エルダーツリー", uk = "Елдертрі" },
         ["slider_eldertree_range"] = { ru = "Дистанция сбора", en = "Collect Range", es = "Rango de Recolección", pt = "Alcance de Coleta", ko = "수집 범위", ja = "収集範囲", uk = "Дистанція збору" },
         ["toggle_eldertree_esp"] = { ru = "Подсветка сфер", en = "Orb ESP", es = "ESP de Orbes", pt = "ESP de Orbes", ko = "오브 ESP", ja = "オーブESP", uk = "Підсвічування сфер" },
