@@ -106,8 +106,6 @@ Mega.Localization = {
         ["toggle_killaura"] = { ru = "Killaura", en = "Killaura", es = "Killaura", pt = "Killaura", ko = "킬라우라", ja = "キルオーラ", uk = "Killaura" },
         ["slider_killaura_range"] = { ru = "Дистанция", en = "Range", es = "Rango", pt = "Alcance", ko = "범위", ja = "範囲", uk = "Дистанція" },
         ["slider_killaura_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
-        ["toggle_reach"] = { ru = "Дистанция атаки (Reach)", en = "Attack Reach", es = "Alcance de Ataque", pt = "Alcance de Ataque", ko = "공격 범위", ja = "アタックリーチ", uk = "Дистанція атаки (Reach)" },
-        ["slider_reach_distance"] = { ru = "Дальность Reach", en = "Reach Distance", es = "Distancia de Reach", pt = "Distância de Reach", ko = "Reach 거리", ja = "Reach 距離", uk = "Дальність Reach" },
         ["slider_bednuke_min_range"] = { ru = "Мин. дистанция", en = "Min Range", es = "Rango Mínimo", pt = "Alcance Mínimo", ko = "최소 범위", ja = "最小範囲", uk = "Мін. дистанція" },
         ["slider_bednuke_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
         ["section_combat_bednuke"] = { ru = "🛏️ BED NUKE", en = "🛏️ BED NUKE", es = "🛏️ BED NUKE", pt = "🛏️ BED NUKE", ko = "🛏️ BED NUKE", ja = "🛏️ BED NUKE", uk = "🛏️ BED NUKE" },
@@ -380,7 +378,14 @@ Mega.Localization = {
         ["toggle_auto_honor"] = { ru = "Авто-Очки Чести", en = "Auto Match Honor", es = "Auto Honor", pt = "Auto Honra", ko = "자동 명예", ja = "オートオナー", uk = "Авто-Очки Честі" },
         ["dropdown_auto_honor_target"] = { ru = "Цель чести", en = "Honor Target", es = "Objetivo de Honor", pt = "Alvo de Honra", ko = "명예 대상", ja = "オナーターゲット", uk = "Ціль честі" },
         ["Teammate"] = { ru = "Тиммейт (Teammate)", en = "Teammate", es = "Compañero", pt = "Companheiro", ko = "팀원", ja = "チームメイト", uk = "Тіммейт (Teammate)" },
-        ["Enemy"] = { ru = "Противник (Enemy)", en = "Enemy", es = "Enemigo", pt = "Inimigo", ko = "적", ja = "敵", uk = "Супротивник (Enemy)" }
+        ["Enemy"] = { ru = "Противник (Enemy)", en = "Enemy", es = "Enemigo", pt = "Inimigo", ko = "적", ja = "敵", uk = "Супротивник (Enemy)" },
+
+        -- Недостающие ключи
+        ["toggle_use_team_colors"] = { ru = "Использовать цвета команд", en = "Use Native Team Colors", es = "Usar Colores de Equipo", pt = "Usar Cores do Time", ko = "팀 색상 사용", ja = "チーム色を使用", uk = "Використовувати кольори команд" },
+        ["toggle_antivoid_autocalc"] = { ru = "Авто-расчёт высоты", en = "Auto-Calc Height", es = "Calcular Altura Auto", pt = "Calcular Altura Auto", ko = "자동 높이 계산", ja = "自動高度計算", uk = "Авто-розрахунок висоти" },
+        ["slider_autoshoot_delay"] = { ru = "Задержка выстрела (мс)", en = "AutoShoot Delay (ms)", es = "Retraso de Disparo (ms)", pt = "Atraso de Tiro (ms)", ko = "자동 사격 지연 (ms)", ja = "自動射撃遅延 (ms)", uk = "Затримка пострілу (мс)" },
+        ["toggle_bednuke_bypass"] = { ru = "Обход (Без анимации)", en = "Bypass (No Animation)", es = "Omitir (Sin Animación)", pt = "Ignorar (Sem Animação)", ko = "우회 (애니메이션 없음)", ja = "バイパス (アニメーションなし)", uk = "Обхід (Без анімації)" },
+        ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" }
     }
 }
 
