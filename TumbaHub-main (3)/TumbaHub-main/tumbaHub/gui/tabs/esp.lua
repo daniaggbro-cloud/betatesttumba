@@ -148,59 +148,110 @@ end, {
 UI.CreateSection(TabFrame, "section_kit_esp")
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", function(state)
-    if Mega.Features.ESP then
-        Mega.Features.ESP.SetKitEnabled(state)
-    end
-    Mega.ShowNotification(Mega.GetText(state and "notify_kit_esp_on" or "notify_kit_esp_off"))
+    pcall(function()
+        if Mega.Features.ESP and Mega.Features.ESP.SetKitEnabled then
+            Mega.Features.ESP.SetKitEnabled(state)
+        end
+    end)
+    pcall(function()
+        Mega.ShowNotification(Mega.GetText(state and "notify_kit_esp_on" or "notify_kit_esp_off"))
+    end)
 
-    if state and Mega.Objects.Toggles then
+    if state then
         task.spawn(function()
-            -- Убедимся, что вкладка farm прогружена, чтобы переключатели существовали
+            -- Убедимся, что вкладка farm прогружена
             if not Mega.LoadedModules["gui/tabs/farm.lua"] then
                 pcall(function() Mega.LoadModule("gui/tabs/farm.lua") end)
-                task.wait(0.2)
+                task.wait(0.3)
             end
 
-            local enableToggles = {
-                "toggle_beekeeper", "toggle_bee_icons", "toggle_bee_highlight", "toggle_hive_levels",
-                "toggle_cletus", "toggle_cletus_esp",
-                "toggle_eldertree", "toggle_eldertree_esp",
-                "toggle_star_collector", "toggle_star_collector_esp",
-                "toggle_metal", "toggle_metal_esp",
-                "toggle_taliah", "toggle_taliah_esp",
-                "toggle_lucia", "toggle_lucia_esp",
-                "toggle_alchemist", "toggle_alchemist_esp"
-            }
-            local disableToggles = {
-                "toggle_autofarm", "toggle_auto_catch",
-                "toggle_cletus_harvest",
-                "toggle_eldertree_autocollect",
-                "toggle_star_collector_autocollect",
-                "toggle_metal_collect", "toggle_metal_collect_legit",
-                "toggle_taliah_collect", "toggle_taliah_collect_legit",
-                "toggle_lucia_deposit", "toggle_lucia_legit",
-                "toggle_alchemist_autocollect",
-                "toggle_autofish",
-                "toggle_noelle", "toggle_noelle_save_binds",
-                "toggle_lani"
-            }
-            
-            for _, t in ipairs(enableToggles) do
-                pcall(function()
-                    if Mega.Objects.Toggles[t] then 
-                        Mega.Objects.Toggles[t](true) 
-                    end
-                end)
-                task.wait(0.01) -- Небольшая задержка, чтобы UI не завис от спама
+            -- Напрямую ставим нужные стейты (не зависим от UI-тогглов)
+            -- Beekeeper: включаем + ESP-визуал
+            Mega.States.Beekeeper.Enabled = true
+            Mega.States.Beekeeper.ShowIcons = true
+            Mega.States.Beekeeper.ShowHighlight = true
+            Mega.States.Beekeeper.ShowHiveLevels = true
+            Mega.States.Beekeeper.AutoCatch = false
+            pcall(function() if Mega.Features.Beekeeper and Mega.Features.Beekeeper.SetEnabled then Mega.Features.Beekeeper.SetEnabled(true) end end)
+            pcall(function() if Mega.Features.Beekeeper and Mega.Features.Beekeeper.UpdateVisuals then Mega.Features.Beekeeper.UpdateVisuals() end end)
+
+            -- Cletus: включаем + ESP
+            Mega.States.Cletus.Enabled = true
+            Mega.States.Cletus.ESP = true
+            Mega.States.Cletus.AutoHarvest = false
+            pcall(function() if Mega.Features.Cletus and Mega.Features.Cletus.SetEnabled then Mega.Features.Cletus.SetEnabled(true) end end)
+            pcall(function() if Mega.Features.Cletus and Mega.Features.Cletus.RecreateESP then Mega.Features.Cletus.RecreateESP() end end)
+
+            -- Eldertree: включаем + ESP, без автосбора
+            Mega.States.Eldertree.Enabled = true
+            Mega.States.Eldertree.ESP = true
+            Mega.States.Eldertree.AutoCollect = false
+            pcall(function() if Mega.Features.Eldertree and Mega.Features.Eldertree.SetEnabled then Mega.Features.Eldertree.SetEnabled(true) end end)
+            pcall(function() if Mega.Features.Eldertree and Mega.Features.Eldertree.UpdateESP then Mega.Features.Eldertree.UpdateESP() end end)
+
+            -- StarCollector: включаем + ESP, без автосбора
+            Mega.States.StarCollector.Enabled = true
+            Mega.States.StarCollector.ESP = true
+            Mega.States.StarCollector.AutoCollect = false
+            pcall(function() if Mega.Features.StarCollector and Mega.Features.StarCollector.SetEnabled then Mega.Features.StarCollector.SetEnabled(true) end end)
+            pcall(function() if Mega.Features.StarCollector and Mega.Features.StarCollector.UpdateESP then Mega.Features.StarCollector.UpdateESP() end end)
+
+            -- Metal: включаем + ESP, без автосбора
+            Mega.States.Metal.Enabled = true
+            Mega.States.Metal.ESP = true
+            Mega.States.Metal.AutoCollect = false
+            Mega.States.Metal.AutoCollectLegit = false
+            pcall(function() if Mega.Features.Metal and Mega.Features.Metal.SetEnabled then Mega.Features.Metal.SetEnabled(true) end end)
+            pcall(function() if Mega.Features.Metal and Mega.Features.Metal.UpdateESP then Mega.Features.Metal.UpdateESP() end end)
+
+            -- Taliah: включаем + ESP, без автосбора
+            Mega.States.Taliah.Enabled = true
+            Mega.States.Taliah.ESP = true
+            Mega.States.Taliah.AutoCollect = false
+            Mega.States.Taliah.AutoCollectLegit = false
+            pcall(function() if Mega.Features.Taliah and Mega.Features.Taliah.SetEnabled then Mega.Features.Taliah.SetEnabled(true) end end)
+
+            -- Lucia: включаем + ESP, без автодепозита
+            Mega.States.Lucia.Enabled = true
+            Mega.States.Lucia.ESP = true
+            Mega.States.Lucia.AutoDeposit = false
+            Mega.States.Lucia.Legit = false
+            pcall(function() if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(true) end end)
+
+            -- Alchemist: включаем + ESP, без автосбора
+            if Mega.States.Misc and Mega.States.Misc.Alchemist then
+                Mega.States.Misc.Alchemist.Enabled = true
+                Mega.States.Misc.Alchemist.ESP = true
+                Mega.States.Misc.Alchemist.AutoCollect = false
             end
-            
-            for _, t in ipairs(disableToggles) do
+            pcall(function() if Mega.Features.Alchemist and Mega.Features.Alchemist.SetEnabled then Mega.Features.Alchemist.SetEnabled(true) end end)
+
+            -- Отключаем всё лишнее
+            Mega.States.Fisherman.Enabled = false
+            Mega.States.Noelle.Enabled = false
+            pcall(function() if Mega.Features.Noelle and Mega.Features.Noelle.SetEnabled then Mega.Features.Noelle.SetEnabled(false) end end)
+
+            -- Синхронизация UI-тогглов (если вкладка farm прогружена)
+            task.wait(0.1)
+            local allToggles = {
+                {"toggle_beekeeper", true}, {"toggle_bee_icons", true}, {"toggle_bee_highlight", true}, {"toggle_hive_levels", true}, {"toggle_auto_catch", false},
+                {"toggle_cletus", true}, {"toggle_cletus_esp", true}, {"toggle_cletus_harvest", false},
+                {"toggle_eldertree", true}, {"toggle_eldertree_esp", true}, {"toggle_eldertree_autocollect", false},
+                {"toggle_star_collector", true}, {"toggle_star_collector_esp", true}, {"toggle_star_collector_autocollect", false},
+                {"toggle_metal", true}, {"toggle_metal_esp", true}, {"toggle_metal_collect", false}, {"toggle_metal_collect_legit", false},
+                {"toggle_taliah", true}, {"toggle_taliah_esp", true}, {"toggle_taliah_collect", false}, {"toggle_taliah_collect_legit", false},
+                {"toggle_lucia", true}, {"toggle_lucia_esp", true}, {"toggle_lucia_deposit", false}, {"toggle_lucia_legit", false},
+                {"toggle_alchemist", true}, {"toggle_alchemist_esp", true}, {"toggle_alchemist_autocollect", false},
+                {"toggle_autofish", false}, {"toggle_autofarm", false},
+                {"toggle_noelle", false}
+            }
+            for _, info in ipairs(allToggles) do
                 pcall(function()
-                    if Mega.Objects.Toggles[t] then 
-                        Mega.Objects.Toggles[t](false) 
+                    local key, val = info[1], info[2]
+                    if Mega.Objects.Toggles and Mega.Objects.Toggles[key] then
+                        Mega.Objects.Toggles[key](val)
                     end
                 end)
-                task.wait(0.01)
             end
         end)
     end
