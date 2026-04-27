@@ -140,7 +140,7 @@ function Mega.Features.ESP.RecreateKitESP()
 end
 
 function Mega.Features.ESP.SetKitEnabled(state)
-    kitEspFolder.Enabled = state
+    States.KitESP.Enabled = state
     Mega.Features.ESP.RecreateKitESP()
 end
 --#endregion
