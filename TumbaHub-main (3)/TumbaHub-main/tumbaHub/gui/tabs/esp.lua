@@ -254,6 +254,59 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
                 end)
             end
         end)
+    else
+        task.spawn(function()
+            if not Mega.LoadedModules["gui/tabs/farm.lua"] then
+                pcall(function() Mega.LoadModule("gui/tabs/farm.lua") end)
+                task.wait(0.3)
+            end
+
+            Mega.States.Beekeeper.Enabled = false
+            pcall(function() if Mega.Features.Beekeeper and Mega.Features.Beekeeper.SetEnabled then Mega.Features.Beekeeper.SetEnabled(false) end end)
+
+            Mega.States.Cletus.Enabled = false
+            pcall(function() if Mega.Features.Cletus and Mega.Features.Cletus.SetEnabled then Mega.Features.Cletus.SetEnabled(false) end end)
+
+            Mega.States.Eldertree.Enabled = false
+            pcall(function() if Mega.Features.Eldertree and Mega.Features.Eldertree.SetEnabled then Mega.Features.Eldertree.SetEnabled(false) end end)
+
+            Mega.States.StarCollector.Enabled = false
+            pcall(function() if Mega.Features.StarCollector and Mega.Features.StarCollector.SetEnabled then Mega.Features.StarCollector.SetEnabled(false) end end)
+
+            Mega.States.Metal.Enabled = false
+            pcall(function() if Mega.Features.Metal and Mega.Features.Metal.SetEnabled then Mega.Features.Metal.SetEnabled(false) end end)
+
+            Mega.States.Taliah.Enabled = false
+            pcall(function() if Mega.Features.Taliah and Mega.Features.Taliah.SetEnabled then Mega.Features.Taliah.SetEnabled(false) end end)
+
+            Mega.States.Lucia.Enabled = false
+            pcall(function() if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(false) end end)
+
+            if Mega.States.Misc and Mega.States.Misc.Alchemist then
+                Mega.States.Misc.Alchemist.Enabled = false
+            end
+            pcall(function() if Mega.Features.Alchemist and Mega.Features.Alchemist.SetEnabled then Mega.Features.Alchemist.SetEnabled(false) end end)
+
+            task.wait(0.1)
+            local allToggles = {
+                {"toggle_beekeeper", false},
+                {"toggle_cletus", false},
+                {"toggle_eldertree", false},
+                {"toggle_star_collector", false},
+                {"toggle_metal", false},
+                {"toggle_taliah", false},
+                {"toggle_lucia", false},
+                {"toggle_alchemist", false}
+            }
+            for _, info in ipairs(allToggles) do
+                pcall(function()
+                    local key, val = info[1], info[2]
+                    if Mega.Objects.Toggles and Mega.Objects.Toggles[key] then
+                        Mega.Objects.Toggles[key](val)
+                    end
+                end)
+            end
+        end)
     end
 end, {})
 --#endregion
