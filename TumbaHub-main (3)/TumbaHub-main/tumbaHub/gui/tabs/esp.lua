@@ -154,35 +154,55 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
     Mega.ShowNotification(Mega.GetText(state and "notify_kit_esp_on" or "notify_kit_esp_off"))
 
     if state and Mega.Objects.Toggles then
-        local enableToggles = {
-            "toggle_beekeeper", "toggle_bee_icons", "toggle_bee_highlight", "toggle_hive_levels",
-            "toggle_cletus", "toggle_cletus_esp",
-            "toggle_eldertree", "toggle_eldertree_esp",
-            "toggle_star_collector", "toggle_star_collector_esp",
-            "toggle_metal", "toggle_metal_esp",
-            "toggle_taliah", "toggle_taliah_esp",
-            "toggle_lucia", "toggle_lucia_esp",
-            "toggle_alchemist", "toggle_alchemist_esp"
-        }
-        local disableToggles = {
-            "toggle_auto_catch",
-            "toggle_cletus_harvest",
-            "toggle_eldertree_autocollect",
-            "toggle_star_collector_autocollect",
-            "toggle_metal_collect", "toggle_metal_collect_legit",
-            "toggle_taliah_collect", "toggle_taliah_collect_legit",
-            "toggle_lucia_deposit", "toggle_lucia_legit",
-            "toggle_alchemist_autocollect",
-            "toggle_autofish",
-            "toggle_noelle", "toggle_noelle_save_binds",
-            "toggle_lani"
-        }
-        for _, t in ipairs(enableToggles) do
-            if Mega.Objects.Toggles[t] then Mega.Objects.Toggles[t](true) end
-        end
-        for _, t in ipairs(disableToggles) do
-            if Mega.Objects.Toggles[t] then Mega.Objects.Toggles[t](false) end
-        end
+        task.spawn(function()
+            -- Убедимся, что вкладка farm прогружена, чтобы переключатели существовали
+            if not Mega.LoadedModules["gui/tabs/farm.lua"] then
+                pcall(function() Mega.LoadModule("gui/tabs/farm.lua") end)
+                task.wait(0.2)
+            end
+
+            local enableToggles = {
+                "toggle_beekeeper", "toggle_bee_icons", "toggle_bee_highlight", "toggle_hive_levels",
+                "toggle_cletus", "toggle_cletus_esp",
+                "toggle_eldertree", "toggle_eldertree_esp",
+                "toggle_star_collector", "toggle_star_collector_esp",
+                "toggle_metal", "toggle_metal_esp",
+                "toggle_taliah", "toggle_taliah_esp",
+                "toggle_lucia", "toggle_lucia_esp",
+                "toggle_alchemist", "toggle_alchemist_esp"
+            }
+            local disableToggles = {
+                "toggle_autofarm", "toggle_auto_catch",
+                "toggle_cletus_harvest",
+                "toggle_eldertree_autocollect",
+                "toggle_star_collector_autocollect",
+                "toggle_metal_collect", "toggle_metal_collect_legit",
+                "toggle_taliah_collect", "toggle_taliah_collect_legit",
+                "toggle_lucia_deposit", "toggle_lucia_legit",
+                "toggle_alchemist_autocollect",
+                "toggle_autofish",
+                "toggle_noelle", "toggle_noelle_save_binds",
+                "toggle_lani"
+            }
+            
+            for _, t in ipairs(enableToggles) do
+                pcall(function()
+                    if Mega.Objects.Toggles[t] then 
+                        Mega.Objects.Toggles[t](true) 
+                    end
+                end)
+                task.wait(0.01) -- Небольшая задержка, чтобы UI не завис от спама
+            end
+            
+            for _, t in ipairs(disableToggles) do
+                pcall(function()
+                    if Mega.Objects.Toggles[t] then 
+                        Mega.Objects.Toggles[t](false) 
+                    end
+                end)
+                task.wait(0.01)
+            end
+        end)
     end
 end, {
     UI.CreateSection(nil, "section_kit_filters"),
