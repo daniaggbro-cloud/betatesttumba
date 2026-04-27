@@ -199,38 +199,6 @@ local function getClosestItemShop()
     return closestShopId
 end
 
-local function getMelonPriceFromUI()
-    local pg = LocalPlayer:FindFirstChild("PlayerGui")
-    if not pg then return nil end
-    
-    local itemShop = pg:FindFirstChild("ItemShop")
-    if not itemShop then return nil end
-    
-    -- Ищем карточку семян
-    for _, obj in ipairs(itemShop:GetDescendants()) do
-        if obj.Name == "melon_seeds_ShopItemCard" then
-            local priceContainer = obj:FindFirstChild("Price")
-            if priceContainer then
-                -- Проверяем всех потомков внутри Price на наличие текста с цифрой
-                for _, desc in ipairs(priceContainer:GetDescendants()) do
-                    if desc:IsA("TextLabel") and desc.Text then
-                        local num = tonumber(desc.Text:match("%d+"))
-                        if num then return num end
-                    end
-                end
-                
-                -- Если TextLabel не найден, возможно сама папка/объект называется "3" (как ты написал в пути)
-                for _, desc in ipairs(priceContainer:GetChildren()) do
-                    local num = tonumber(desc.Name)
-                    if num then return num end
-                end
-            end
-        end
-    end
-    
-    return nil
-end
-
 local function StartAutoBuyLoop()
     if connections.AutoBuyLoop then connections.AutoBuyLoop:Disconnect() end
     
@@ -244,33 +212,33 @@ local function StartAutoBuyLoop()
             local currentSeeds = getItemCount("melon_seeds")
             if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
             
-            local actualPrice = getMelonPriceFromUI()
             local maxPrice = States.Cletus.MaxMelonPrice or 2
-            
-            -- Если мы не смогли найти UI магазина или цена выше разрешенной - отменяем покупку
-            if not actualPrice then return end
-            if actualPrice > maxPrice then return end
             
             if PurchaseRemote then
                 local shopId = getClosestItemShop()
-                local args = {
-                    {
-                        shopItem = {
-                            currency = "emerald",
-                            itemType = "melon_seeds",
-                            amount = 1,
-                            price = actualPrice,
-                            category = "Combat",
-                            requiresKit = { "farmer_cletus" }
-                        },
-                        shopId = shopId
-                    }
-                }
                 
+                -- "Слепой" прострел цен: мы отправляем серверу запросы на покупку от 1 до MaxPrice.
+                -- Сервер Bedwars сам отклоняет неправильную цену и не снимает деньги.
+                -- Это позволяет нам покупать арбузы "невидимо", без открытого UI магазина!
                 task.spawn(function()
-                    pcall(function()
-                        PurchaseRemote:InvokeServer(unpack(args))
-                    end)
+                    for testPrice = 1, maxPrice do
+                        local args = {
+                            {
+                                shopItem = {
+                                    currency = "emerald",
+                                    itemType = "melon_seeds",
+                                    amount = 1,
+                                    price = testPrice,
+                                    category = "Combat",
+                                    requiresKit = { "farmer_cletus" }
+                                },
+                                shopId = shopId
+                            }
+                        }
+                        pcall(function()
+                            PurchaseRemote:InvokeServer(unpack(args))
+                        end)
+                    end
                 end)
             end
         end
