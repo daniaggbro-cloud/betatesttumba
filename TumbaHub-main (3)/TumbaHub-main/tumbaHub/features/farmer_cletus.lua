@@ -199,6 +199,85 @@ local function getClosestItemShop()
     return closestShopId
 end
 
+local BedwarsStore = nil
+local function getClientStore()
+    if BedwarsStore then return BedwarsStore end
+    for _, obj in ipairs(getloadedmodules()) do
+        if obj.Name == "ClientStore" or obj.Name == "Store" then
+            pcall(function()
+                local req = require(obj)
+                if type(req) == "table" then
+                    if req.getState then BedwarsStore = req end
+                    if req.Store and req.Store.getState then BedwarsStore = req.Store end
+                    if req.clientStore and req.clientStore.getState then BedwarsStore = req.clientStore end
+                end
+            end)
+        end
+    end
+    return BedwarsStore
+end
+
+local function getMelonPriceInvisibly()
+    -- 1. Сначала пробуем найти через UI (самый точный метод, если интерфейс кэширован)
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    if pg then
+        local itemShop = pg:FindFirstChild("ItemShop")
+        if itemShop then
+            for _, obj in ipairs(itemShop:GetDescendants()) do
+                if obj.Name == "melon_seeds_ShopItemCard" then
+                    local priceContainer = obj:FindFirstChild("Price")
+                    if priceContainer then
+                        for _, desc in ipairs(priceContainer:GetDescendants()) do
+                            if desc:IsA("TextLabel") and desc.Text then
+                                local num = tonumber(desc.Text:match("%d+"))
+                                if num then return num end
+                            end
+                        end
+                        for _, desc in ipairs(priceContainer:GetChildren()) do
+                            local num = tonumber(desc.Name)
+                            if num then return num end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- 2. Если UI закрыт/удален, "невидимо" читаем внутреннее состояние игры (Rodux Store)
+    local store = getClientStore()
+    if store then
+        local state = store:getState()
+        if state then
+            -- Рекурсивный безопасный поиск цены арбузов в дереве состояний
+            local function searchPrice(t, depth)
+                if depth > 6 then return nil end
+                if type(t) ~= "table" then return nil end
+                
+                -- Если нашли таблицу семян
+                if rawget(t, "itemType") == "melon_seeds" or rawget(t, "melon_seeds") then
+                    if rawget(t, "price") then return rawget(t, "price") end
+                end
+                
+                for k, v in pairs(t) do
+                    if type(v) == "table" then
+                        if k == "melon_seeds" and rawget(v, "price") then
+                            return rawget(v, "price")
+                        end
+                        local found = searchPrice(v, depth + 1)
+                        if found then return found end
+                    end
+                end
+                return nil
+            end
+            
+            local storePrice = searchPrice(state, 1)
+            if storePrice then return storePrice end
+        end
+    end
+    
+    return nil
+end
+
 local function StartAutoBuyLoop()
     if connections.AutoBuyLoop then connections.AutoBuyLoop:Disconnect() end
     
@@ -209,36 +288,37 @@ local function StartAutoBuyLoop()
         if tick() - lastBuyRun > (States.Cletus.AutoBuySpeed or 1) then
             lastBuyRun = tick()
             
-            local currentSeeds = getItemCount("melon_seeds")
+            -- Подстраховка инвентаря (вдруг они называются melon)
+            local currentSeeds = getItemCount("melon_seeds") + getItemCount("melon")
             if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
             
+            local actualPrice = getMelonPriceInvisibly()
             local maxPrice = States.Cletus.MaxMelonPrice or 2
+            
+            -- Если не удалось узнать цену или она выше лимита - ждем
+            if not actualPrice then return end
+            if actualPrice > maxPrice then return end
             
             if PurchaseRemote then
                 local shopId = getClosestItemShop()
+                local args = {
+                    {
+                        shopItem = {
+                            currency = "emerald",
+                            itemType = "melon_seeds",
+                            amount = 1,
+                            price = actualPrice,
+                            category = "Combat",
+                            requiresKit = { "farmer_cletus" }
+                        },
+                        shopId = shopId
+                    }
+                }
                 
-                -- "Слепой" прострел цен: мы отправляем серверу запросы на покупку от 1 до MaxPrice.
-                -- Сервер Bedwars сам отклоняет неправильную цену и не снимает деньги.
-                -- Это позволяет нам покупать арбузы "невидимо", без открытого UI магазина!
                 task.spawn(function()
-                    for testPrice = 1, maxPrice do
-                        local args = {
-                            {
-                                shopItem = {
-                                    currency = "emerald",
-                                    itemType = "melon_seeds",
-                                    amount = 1,
-                                    price = testPrice,
-                                    category = "Combat",
-                                    requiresKit = { "farmer_cletus" }
-                                },
-                                shopId = shopId
-                            }
-                        }
-                        pcall(function()
-                            PurchaseRemote:InvokeServer(unpack(args))
-                        end)
-                    end
+                    pcall(function()
+                        PurchaseRemote:InvokeServer(unpack(args))
+                    end)
                 end)
             end
         end
