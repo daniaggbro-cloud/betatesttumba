@@ -21,11 +21,17 @@ local espConnections = {}
 
 -- Remote
 local CropHarvestRemote = Mega.GetRemote("HarvestCrop")
+local PurchaseRemote = nil
 -- Periodically re-check the remote
 task.spawn(function()
     while task.wait(5) do
         if not CropHarvestRemote then
             CropHarvestRemote = Mega.GetRemote("HarvestCrop")
+        end
+        if not PurchaseRemote then
+            pcall(function()
+                PurchaseRemote = game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("BedwarsPurchaseItem")
+            end)
         end
     end
 end)
@@ -149,16 +155,83 @@ local function StartHarvestLoop()
     end)
 end
 
+local function getClosestItemShop()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return "1_item_shop" end
+
+    local closestShopId = "1_item_shop"
+    local closestDist = math.huge
+
+    -- In Bedwars, shops are usually in Workspace (e.g. Workspace.Map or similar)
+    -- We'll search for any model that contains "shop" in its name and has a Root part
+    for _, obj in ipairs(Services.Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name:lower():find("item_shop") then
+            local primary = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
+            if primary then
+                local dist = (hrp.Position - primary.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closestShopId = obj.Name -- e.g., "1_item_shop", "2_item_shop_1"
+                end
+            end
+        end
+    end
+    
+    return closestShopId
+end
+
+local function StartAutoBuyLoop()
+    if connections.AutoBuyLoop then connections.AutoBuyLoop:Disconnect() end
+    
+    local lastBuyRun = 0
+    connections.AutoBuyLoop = Services.RunService.Heartbeat:Connect(function()
+        if not States.Cletus.Enabled or not States.Cletus.AutoBuyMelons then return end
+        
+        if tick() - lastBuyRun > 1 then -- 1 attempt per second
+            lastBuyRun = tick()
+            
+            if PurchaseRemote then
+                local shopId = getClosestItemShop()
+                local args = {
+                    {
+                        shopItem = {
+                            currency = "emerald",
+                            itemType = "melon_seeds",
+                            amount = 1,
+                            price = States.Cletus.MaxMelonPrice or 2,
+                            category = "Combat",
+                            requiresKit = { "farmer_cletus" }
+                        },
+                        shopId = shopId
+                    }
+                }
+                
+                task.spawn(function()
+                    pcall(function()
+                        PurchaseRemote:InvokeServer(unpack(args))
+                    end)
+                end)
+            end
+        end
+    end)
+end
+
 -- Public API
 function Mega.Features.Cletus.SetEnabled(state) 
     States.Cletus.Enabled = state 
     EnableCletusESP()
     if state then
         StartHarvestLoop()
+        StartAutoBuyLoop()
     else
         if connections.AutoHarvestLoop then
             connections.AutoHarvestLoop:Disconnect()
             connections.AutoHarvestLoop = nil
+        end
+        if connections.AutoBuyLoop then
+            connections.AutoBuyLoop:Disconnect()
+            connections.AutoBuyLoop = nil
         end
     end
 end
