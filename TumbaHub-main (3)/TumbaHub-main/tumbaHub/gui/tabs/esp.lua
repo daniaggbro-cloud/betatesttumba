@@ -152,6 +152,38 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
         Mega.Features.ESP.SetKitEnabled(state)
     end
     Mega.ShowNotification(Mega.GetText(state and "notify_kit_esp_on" or "notify_kit_esp_off"))
+
+    if state and Mega.Objects.Toggles then
+        local enableToggles = {
+            "toggle_beekeeper", "toggle_bee_icons", "toggle_bee_highlight", "toggle_hive_levels",
+            "toggle_cletus", "toggle_cletus_esp",
+            "toggle_eldertree", "toggle_eldertree_esp",
+            "toggle_star_collector", "toggle_star_collector_esp",
+            "toggle_metal", "toggle_metal_esp",
+            "toggle_taliah", "toggle_taliah_esp",
+            "toggle_lucia", "toggle_lucia_esp",
+            "toggle_alchemist", "toggle_alchemist_esp"
+        }
+        local disableToggles = {
+            "toggle_auto_catch",
+            "toggle_cletus_harvest",
+            "toggle_eldertree_autocollect",
+            "toggle_star_collector_autocollect",
+            "toggle_metal_collect", "toggle_metal_collect_legit",
+            "toggle_taliah_collect", "toggle_taliah_collect_legit",
+            "toggle_lucia_deposit", "toggle_lucia_legit",
+            "toggle_alchemist_autocollect",
+            "toggle_autofish",
+            "toggle_noelle", "toggle_noelle_save_binds",
+            "toggle_lani"
+        }
+        for _, t in ipairs(enableToggles) do
+            if Mega.Objects.Toggles[t] then Mega.Objects.Toggles[t](true) end
+        end
+        for _, t in ipairs(disableToggles) do
+            if Mega.Objects.Toggles[t] then Mega.Objects.Toggles[t](false) end
+        end
+    end
 end, {
     UI.CreateSection(nil, "section_kit_filters"),
     UI.CreateToggle(nil, "toggle_kit_iron", "KitESP.Filters.Iron"),
