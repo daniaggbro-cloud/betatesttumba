@@ -155,6 +155,26 @@ local function StartHarvestLoop()
     end)
 end
 
+local function getItemCount(itemName)
+    local count = 0
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local char = LocalPlayer.Character
+    
+    local function scan(container)
+        if not container then return end
+        for _, item in ipairs(container:GetChildren()) do
+            if item.Name == itemName then
+                local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
+                count = count + (tonumber(amount) or 0)
+            end
+        end
+    end
+    
+    scan(backpack)
+    scan(char)
+    return count
+end
+
 local function getClosestItemShop()
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -163,8 +183,6 @@ local function getClosestItemShop()
     local closestShopId = "1_item_shop"
     local closestDist = math.huge
 
-    -- In Bedwars, shops are usually in Workspace (e.g. Workspace.Map or similar)
-    -- We'll search for any model that contains "shop" in its name and has a Root part
     for _, obj in ipairs(Services.Workspace:GetDescendants()) do
         if obj:IsA("Model") and obj.Name:lower():find("item_shop") then
             local primary = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
@@ -172,13 +190,45 @@ local function getClosestItemShop()
                 local dist = (hrp.Position - primary.Position).Magnitude
                 if dist < closestDist then
                     closestDist = dist
-                    closestShopId = obj.Name -- e.g., "1_item_shop", "2_item_shop_1"
+                    closestShopId = obj.Name
                 end
             end
         end
     end
     
     return closestShopId
+end
+
+local function getMelonPriceFromUI()
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    if not pg then return nil end
+    
+    local itemShop = pg:FindFirstChild("ItemShop")
+    if not itemShop then return nil end
+    
+    -- Ищем карточку семян
+    for _, obj in ipairs(itemShop:GetDescendants()) do
+        if obj.Name == "melon_seeds_ShopItemCard" then
+            local priceContainer = obj:FindFirstChild("Price")
+            if priceContainer then
+                -- Проверяем всех потомков внутри Price на наличие текста с цифрой
+                for _, desc in ipairs(priceContainer:GetDescendants()) do
+                    if desc:IsA("TextLabel") and desc.Text then
+                        local num = tonumber(desc.Text:match("%d+"))
+                        if num then return num end
+                    end
+                end
+                
+                -- Если TextLabel не найден, возможно сама папка/объект называется "3" (как ты написал в пути)
+                for _, desc in ipairs(priceContainer:GetChildren()) do
+                    local num = tonumber(desc.Name)
+                    if num then return num end
+                end
+            end
+        end
+    end
+    
+    return nil
 end
 
 local function StartAutoBuyLoop()
@@ -188,8 +238,18 @@ local function StartAutoBuyLoop()
     connections.AutoBuyLoop = Services.RunService.Heartbeat:Connect(function()
         if not States.Cletus.Enabled or not States.Cletus.AutoBuyMelons then return end
         
-        if tick() - lastBuyRun > 1 then -- 1 attempt per second
+        if tick() - lastBuyRun > (States.Cletus.AutoBuySpeed or 1) then
             lastBuyRun = tick()
+            
+            local currentSeeds = getItemCount("melon_seeds")
+            if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
+            
+            local actualPrice = getMelonPriceFromUI()
+            local maxPrice = States.Cletus.MaxMelonPrice or 2
+            
+            -- Если мы не смогли найти UI магазина или цена выше разрешенной - отменяем покупку
+            if not actualPrice then return end
+            if actualPrice > maxPrice then return end
             
             if PurchaseRemote then
                 local shopId = getClosestItemShop()
@@ -199,7 +259,7 @@ local function StartAutoBuyLoop()
                             currency = "emerald",
                             itemType = "melon_seeds",
                             amount = 1,
-                            price = States.Cletus.MaxMelonPrice or 2,
+                            price = actualPrice,
                             category = "Combat",
                             requiresKit = { "farmer_cletus" }
                         },
