@@ -247,7 +247,9 @@ Mega.States = {
         Range = 20,
         AutoHarvest = false,
         ESP = false,
-        ESPTransparency = 0.75
+        ESPTransparency = 0.75,
+        AutoBuyMelons = false,
+        MaxMelonPrice = 2
     },
     Eldertree = {
         Enabled = false,
