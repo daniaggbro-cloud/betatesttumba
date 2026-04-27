@@ -90,8 +90,12 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/spider.lua") end)
 end)
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_spider", "Player.Spider", function(state)
-    Mega.States.Player.Spider = state
+if type(Mega.States.Player.Spider) ~= "table" then
+    Mega.States.Player.Spider = { Enabled = (Mega.States.Player.Spider == true) }
+end
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_spider", "Player.Spider.Enabled", function(state)
+    Mega.States.Player.Spider.Enabled = state
     if Mega.Features.Spider and Mega.Features.Spider.SetEnabled then Mega.Features.Spider.SetEnabled(state) end
 end, {
     UI.CreateDropdown(nil, "dropdown_spider_mode", "Player.SpiderMode", {"Velocity", "CFrame"}),

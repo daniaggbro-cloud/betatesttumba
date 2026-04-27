@@ -15,8 +15,15 @@ local LocalPlayer = Services.Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local States = Mega.States
 
+-- Защита от старых конфигов, где значения были boolean
 if not States.Combat then States.Combat = {} end
+if type(States.Combat.Aimbot) ~= "table" then
+    States.Combat.Aimbot = { Enabled = (States.Combat.Aimbot == true), FOV = 250 }
+end
 if not States.Combat.Aimbot then States.Combat.Aimbot = { Enabled = false, FOV = 250 } end
+if type(States.Combat.AutoShoot) ~= "table" then
+    States.Combat.AutoShoot = { Enabled = (States.Combat.AutoShoot == true), Delay = 500 }
+end
 if not States.Combat.AutoShoot then States.Combat.AutoShoot = { Enabled = false, Delay = 500 } end
 
 if not Mega.Objects.Connections then Mega.Objects.Connections = {} end

@@ -385,7 +385,9 @@ Mega.Localization = {
         ["toggle_antivoid_autocalc"] = { ru = "Авто-расчёт высоты", en = "Auto-Calc Height", es = "Calcular Altura Auto", pt = "Calcular Altura Auto", ko = "자동 높이 계산", ja = "自動高度計算", uk = "Авто-розрахунок висоти" },
         ["slider_autoshoot_delay"] = { ru = "Задержка выстрела (мс)", en = "AutoShoot Delay (ms)", es = "Retraso de Disparo (ms)", pt = "Atraso de Tiro (ms)", ko = "자동 사격 지연 (ms)", ja = "自動射撃遅延 (ms)", uk = "Затримка пострілу (мс)" },
         ["toggle_bednuke_bypass"] = { ru = "Обход (Без анимации)", en = "Bypass (No Animation)", es = "Omitir (Sin Animación)", pt = "Ignorar (Sem Animação)", ko = "우회 (애니메이션 없음)", ja = "バイパス (アニメーションなし)", uk = "Обхід (Без анімації)" },
-        ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" }
+        ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" },
+        ["toggle_killaura_wallcheck"] = { ru = "🧱 Проверка препятствий", en = "🧱 Wall Check", es = "🧱 Chequeo de Paredes", pt = "🧱 Checagem de Parede", ko = "🧱 벽 관통 방지", ja = "🧱 壁チェック", uk = "🧱 Перевірка перешкод" },
+        ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" }
     }
 }
 

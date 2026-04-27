@@ -13,10 +13,10 @@ if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true,
 if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
-if not Mega.States.Misc then Mega.States.Misc = {} end
-if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 100000, Duration = 5, Keybind = "None" } end
-if not Mega.States.Misc.Alchemist then Mega.States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true, ESPTransparency = 0, Range = 5 } end
 if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false } end
+if not Mega.States.Misc then Mega.States.Misc = {} end
+if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 50, Delay = 0, TargetESP = true, Keybind = "None" } end
+if not Mega.States.Misc.Alchemist then Mega.States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true } end
 
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
@@ -63,22 +63,6 @@ end, {
     UI.CreateToggle(nil, "toggle_bee_highlight", "Beekeeper.ShowHighlight", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_hive_levels", "Beekeeper.ShowHiveLevels", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_auto_catch", "Beekeeper.AutoCatch")
-})
---#endregion
-
---#region -- Alchemist
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/alchemist.lua") end)
-end)
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_alchemist", "Misc.Alchemist.Enabled", function(state)
-    if Mega.Features.Alchemist then Mega.Features.Alchemist.SetEnabled(state) end
-    notifyFeature("toggle_alchemist", state)
-end, {
-    UI.CreateToggle(nil, "toggle_alchemist_collect", "Misc.Alchemist.AutoCollect"),
-    UI.CreateToggle(nil, "toggle_alchemist_esp", "Misc.Alchemist.ESP"),
-    UI.CreateSlider(nil, "slider_alchemist_range", "Misc.Alchemist.Range", 0, 5),
-    UI.CreateSlider(nil, "slider_alchemist_esp_transparency", "Misc.Alchemist.ESPTransparency", 0, 100, function(v) Mega.States.Misc.Alchemist.ESPTransparency = v/100; if Mega.Features.Alchemist and Mega.Features.Alchemist.UpdateVisuals then Mega.Features.Alchemist.UpdateVisuals() end end)
 })
 --#endregion
 
@@ -178,23 +162,6 @@ end, {
 })
 --#endregion
 
---#region -- Lucia
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/lucia.lua") end)
-end)
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_lucia", "Lucia.Enabled", function(state)
-    Mega.States.Lucia.Enabled = state
-    if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(state) end
-    notifyFeature("toggle_lucia", state)
-end, {
-    UI.CreateToggle(nil, "toggle_lucia_autodeposit", "Lucia.AutoDeposit"),
-    UI.CreateToggle(nil, "toggle_lucia_legit", "Lucia.Legit"),
-    UI.CreateToggle(nil, "toggle_lucia_esp", "Lucia.ESP"),
-    UI.CreateSlider(nil, "slider_lucia_range", "Lucia.Range", 5, 100)
-})
---#endregion
-
 --#region -- Fisherman
 UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
 --#endregion
@@ -204,16 +171,36 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/adetunde.lua") end)
 end)
 
+-- Жесткий сброс значения перед отрисовкой интерфейса, если кэш подвел
+if Mega.States.Misc.Adetunde and type(Mega.States.Misc.Adetunde.Range) == "number" and Mega.States.Misc.Adetunde.Range > 50 then
+    Mega.States.Misc.Adetunde.Range = 50
+end
+
 UI.CreateToggleWithSettings(TabFrame, "toggle_adetunde", "Misc.Adetunde.Enabled", function(state)
     Mega.States.Misc.Adetunde.Enabled = state
     if Mega.Features.Adetunde and Mega.Features.Adetunde.SetEnabled then Mega.Features.Adetunde.SetEnabled(state) end
     notifyFeature("toggle_adetunde", state)
 end, {
     UI.CreateKeybindButton(nil, "keybind_adetunde", "Misc.Adetunde.Keybind", function(key) Mega.States.Misc.Adetunde.Keybind = key end),
-    UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 10, 100000),
-    UI.CreateSlider(nil, "slider_adetunde_duration", "Misc.Adetunde.Duration", 1, 600, function(val)
-        Mega.States.Misc.Adetunde.Duration = val
-    end)
+    UI.CreateToggle(nil, "toggle_adetunde_target_esp", "Misc.Adetunde.TargetESP"),
+    UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 5, 50),
+    UI.CreateSlider(nil, "slider_adetunde_delay", "Misc.Adetunde.Delay", 0, 1000)
+})
+--#endregion
+
+--#region -- Alchemist
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/alchemist.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_alchemist", "Misc.Alchemist.Enabled", function(state)
+    if Mega.Features.Alchemist and Mega.Features.Alchemist.SetEnabled then
+        Mega.Features.Alchemist.SetEnabled(state)
+    end
+    notifyFeature("toggle_alchemist", state)
+end, {
+    UI.CreateToggle(nil, "toggle_alchemist_esp", "Misc.Alchemist.ESP"),
+    UI.CreateToggle(nil, "toggle_alchemist_autocollect", "Misc.Alchemist.AutoCollect")
 })
 --#endregion
 
@@ -257,5 +244,22 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_lani", "Misc.Lani.Enabled", functi
 end, {
     UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind", function(key) Mega.States.Misc.Lani.Keybind = key end),
     laniContainer
+})
+--#endregion
+
+--#region -- Lucia (Pinata)
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/lucia.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_lucia", "Lucia.Enabled", function(state)
+    Mega.States.Lucia.Enabled = state
+    if Mega.Features.Lucia and Mega.Features.Lucia.SetEnabled then Mega.Features.Lucia.SetEnabled(state) end
+    notifyFeature("toggle_lucia", state)
+end, {
+    UI.CreateToggle(nil, "toggle_lucia_esp", "Lucia.ESP"),
+    UI.CreateToggle(nil, "toggle_lucia_deposit", "Lucia.AutoDeposit"),
+    UI.CreateToggle(nil, "toggle_lucia_legit", "Lucia.Legit"),
+    UI.CreateSlider(nil, "slider_lucia_range", "Lucia.Range", 5, 50)
 })
 --#endregion

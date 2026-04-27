@@ -109,11 +109,23 @@ MainStroke.Thickness = 1.5
 MainStroke.Transparency = 0.6
 
 local MainGradient = Instance.new("UIGradient", MainFrame)
-MainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Settings.Menu.SectionGradient1),
-    ColorSequenceKeypoint.new(1, Settings.Menu.SectionGradient2)
-}
 MainGradient.Rotation = 90
+
+local success = pcall(function()
+    local grad1 = typeof(Settings.Menu.SectionGradient1) == "Color3" and Settings.Menu.SectionGradient1 or typeof(Settings.Menu.BackgroundColor) == "Color3" and Settings.Menu.BackgroundColor or Color3.fromRGB(30, 30, 45)
+    local grad2 = typeof(Settings.Menu.SectionGradient2) == "Color3" and Settings.Menu.SectionGradient2 or typeof(Settings.Menu.BackgroundColor) == "Color3" and Settings.Menu.BackgroundColor or Color3.fromRGB(20, 20, 30)
+    MainGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, grad1),
+        ColorSequenceKeypoint.new(1, grad2)
+    }
+end)
+
+if not success then
+    MainGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+    }
+end
 
 -- Shadow
 local Shadow = Instance.new("ImageLabel")
@@ -301,6 +313,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
         end
     end)
 end)
+-- CloseButton logic removed as requested
 
 -- Tab Icons Mapping (GitHub Paths)
 Mega.Icons = {
@@ -450,12 +463,13 @@ task.wait(0.1)
 SelectTab("tab_home", TabButtons["tab_home"])
 
 -- === ФОНОВАЯ ПРОГРУЗКА ВСЕХ ВКЛАДОК ===
+-- Прогружаем модули с небольшим КД, чтобы функции из конфига активировались автоматически
 task.spawn(function()
     for _, tabKey in ipairs(TabKeys) do
         local modulePath = "gui/tabs/" .. tabKey:gsub("^tab_", "") .. ".lua"
         if not Mega.LoadedModules[modulePath] then
             pcall(function() Mega.LoadModule(modulePath) end)
-            task.wait(0.15)
+            task.wait(0.15) -- КД 150мс между прогрузкой вкладок, чтобы избежать фризов игры
         end
     end
 end)
@@ -505,7 +519,7 @@ StatusGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 local StatusIndicator = Instance.new("Frame", StatusGUI)
 StatusIndicator.Name = "StatusList"
 StatusIndicator.Size = UDim2.new(0, 200, 1, 0)
-StatusIndicator.Position = UDim2.new(1, -210, 0, 70)
+StatusIndicator.Position = UDim2.new(1, -210, 0, 70) -- Moved down to avoid overlap with menu icon
 StatusIndicator.BackgroundTransparency = 1
 local StatusLayout = Instance.new("UIListLayout", StatusIndicator)
 StatusLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
@@ -524,6 +538,7 @@ Watermark.TextXAlignment = Enum.TextXAlignment.Right
 Watermark.LayoutOrder = -1
 Instance.new("UIStroke", Watermark).Thickness = 2
 
+-- Function to update the status list (will be called by features)
 function Mega.UpdateStatus()
     if not Settings.System.ShowStatusIndicator then
         StatusIndicator.Visible = false
@@ -576,13 +591,16 @@ function Mega.UpdateStatus()
     if States.Player.NoClip then AddStatus("NoClip", Color3.fromRGB(150, 255, 150)) end
 end
 
+-- Auto-update status and apply UIScale
 Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
     if TumbaGUI.Enabled then
         Mega.UpdateStatus()
     end
     
+    -- Smart UI Scaling for Main Menu
     if workspace.CurrentCamera then
         local vp = workspace.CurrentCamera.ViewportSize
+        -- If width < 1200 or height < 700 we need to scale down
         if vp.X > 0 and vp.Y > 0 then
             local scaleX = (vp.X * 0.95) / 1100
             local scaleY = (vp.Y * 0.90) / 650
@@ -596,6 +614,7 @@ if Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
     Services.CoreGui.TumbaMobileToggle:Destroy()
 end
 
+-- Premium Mobile Button GUI
 local MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
 MobileGUI.Name = "TumbaMobileToggle"
 MobileGUI.ResetOnSpawn = false
@@ -603,22 +622,24 @@ MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
 local ToggleButton = Instance.new("ImageButton", MobileGUI)
 ToggleButton.Name = "TumbaMenuIcon"
-ToggleButton.Size = UDim2.new(0, 42, 0, 42)
+ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- Slightly larger for accessibility
 ToggleButton.AnchorPoint = Vector2.new(1, 0)
-ToggleButton.Position = UDim2.new(1, -15, 0, 15)
+ToggleButton.Position = UDim2.new(1, -15, 0, 15) -- Pushed bit from edges
 ToggleButton.BackgroundTransparency = 1 
 ToggleButton.Image = Mega.GetImageFromURL(iconBaseUrl .. "minimize.png", "minimize.png")
 ToggleButton.ImageColor3 = Settings.Menu.AccentColor
 ToggleButton.Active = true
 
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
 
 local btnStroke = Instance.new("UIStroke", ToggleButton)
 btnStroke.Color = Settings.Menu.AccentColor
-btnStroke.Thickness = 1.5
+btnStroke.Thickness = 1.5 -- Slightly thicker for premium feel
 btnStroke.Transparency = 0.6
 btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
+-- Custom Smooth Drag Logic (Replaces deprecated Draggable)
+-- Custom Smooth Drag Logic with Click Detection
 local dragging = false
 local dragStart = nil
 local startPos = nil
@@ -650,22 +671,26 @@ Services.UserInputService.InputEnded:Connect(function(input)
         if dragging then
             dragging = false
             if not hasDragged then
+                -- Register as a click if we didn't drag it!
                 ToggleMenu()
             end
         end
     end
 end)
 
+-- Dynamic Updater
 Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
     btnStroke.Color = Settings.Menu.AccentColor
     ToggleButton.ImageColor3 = Settings.Menu.AccentColor
     
+    -- Sync visibility with Settings
     local showBtn = Settings.Menu.ShowMenuIcon
-    if showBtn == nil then showBtn = false end
+    if showBtn == nil then showBtn = false end -- Default to false
     MobileGUI.Enabled = showBtn
     
+    -- Visual feedback based on open state
     if TumbaGUI.Enabled then
-        btnStroke.Transparency = 0.4
+        btnStroke.Transparency = 0.4 -- Glow bit more when open
         Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 180, ImageTransparency = 0 }):Play()
     else
         btnStroke.Transparency = 0.7 
@@ -685,6 +710,7 @@ local function LoadStartupConfig()
             end
         end
     end)
+    -- Загружаем autosave поверх, чтобы восстановить точное состояние до телепорта
     Mega.ConfigSystem.Load("autosave")
 end
 
@@ -741,7 +767,10 @@ if not Mega.HasSavedLanguage() then
         Mega.Localization.CurrentLanguage = lang
         Mega.SaveLanguage(lang)
         LoadStartupConfig()
+        
+        -- Clean up scale loop
         pcall(function() LangScaleUpdate:Disconnect() end)
+        
         LanguagePrompt:Destroy()
         if Mega.ShowNotification then
             Mega.ShowNotification("Меню открывается на RightShift", 5)

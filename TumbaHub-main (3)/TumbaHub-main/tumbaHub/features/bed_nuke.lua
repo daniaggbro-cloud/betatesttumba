@@ -16,6 +16,9 @@ local States = Mega.States
 
 -- Гарантируем, что настройки существуют
 if not States.Combat then States.Combat = {} end
+if type(States.Combat.BedNuke) ~= "table" then
+    States.Combat.BedNuke = { Enabled = (States.Combat.BedNuke == true), Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0, Bypass = false }
+end
 if not States.Combat.BedNuke then
     States.Combat.BedNuke = { Enabled = false, Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0, Bypass = false }
 elseif States.Combat.BedNuke.Bypass == nil then

@@ -26,10 +26,21 @@ function Mega.UI.CreateSection(parent, titleKey)
     SectionStroke.Transparency = 0.7
     
     local SectionGradient = Instance.new("UIGradient")
-    SectionGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Mega.Settings.Menu.SectionGradient1),
-        ColorSequenceKeypoint.new(1, Mega.Settings.Menu.SectionGradient2)
-    }
+    
+    local success = pcall(function()
+        local grad1 = typeof(Mega.Settings.Menu.SectionGradient1) == "Color3" and Mega.Settings.Menu.SectionGradient1 or Color3.fromRGB(15, 15, 25)
+        local grad2 = typeof(Mega.Settings.Menu.SectionGradient2) == "Color3" and Mega.Settings.Menu.SectionGradient2 or Color3.fromRGB(10, 10, 20)
+        SectionGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, grad1),
+            ColorSequenceKeypoint.new(1, grad2)
+        }
+    end)
+    if not success then
+        SectionGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+        }
+    end
     SectionGradient.Rotation = 45
     SectionGradient.Parent = Section
 

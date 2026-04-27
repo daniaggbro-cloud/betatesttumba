@@ -405,11 +405,12 @@ function Mega.Features.Bot.SetEnabled(state)
         stuckTimer = 0; strafeAngle = 0
         currentPath = nil; waypointIndex = 1
 
-        prevModuleStates.Killaura = States.Combat and States.Combat.Killaura and States.Combat.Killaura.Enabled
-        prevModuleStates.Scaffold = States.Player and States.Player.Scaffold and States.Player.Scaffold.Enabled
-        prevModuleStates.BedNuke  = States.Combat and States.Combat.BedNuke and States.Combat.BedNuke.Enabled
+        -- Безопасное чтение состояний, чтобы избежать ошибок с типами данных из старых конфигов
+        prevModuleStates.Killaura = States.Combat and States.Combat.Killaura and (type(States.Combat.Killaura) == "table" and States.Combat.Killaura.Enabled or States.Combat.Killaura)
+        prevModuleStates.Scaffold = States.Player and States.Player.Scaffold and (type(States.Player.Scaffold) == "table" and States.Player.Scaffold.Enabled or States.Player.Scaffold)
+        prevModuleStates.BedNuke  = States.Combat and States.Combat.BedNuke and (type(States.Combat.BedNuke) == "table" and States.Combat.BedNuke.Enabled or States.Combat.BedNuke)
         prevModuleStates.AntiVoid = States.Player and States.Player.AntiVoid and (type(States.Player.AntiVoid) == "table" and States.Player.AntiVoid.Enabled or States.Player.AntiVoid)
-        prevModuleStates.Spider   = States.Player and States.Player.Spider
+        prevModuleStates.Spider   = States.Player and States.Player.Spider and (type(States.Player.Spider) == "table" and States.Player.Spider.Enabled or States.Player.Spider)
 
         if States.Bot.AutoKillaura and Mega.Features.Killaura and not prevModuleStates.Killaura then Mega.Features.Killaura.SetEnabled(true) end
         if States.Bot.AutoScaffold and Mega.Features.Scaffold and not prevModuleStates.Scaffold then Mega.Features.Scaffold.SetEnabled(true) end

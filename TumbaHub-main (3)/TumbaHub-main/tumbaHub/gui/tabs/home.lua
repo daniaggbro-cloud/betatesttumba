@@ -28,9 +28,9 @@ Mega.Objects.TabFrames[tabKey] = TabFrame
 UI.CreateSection(TabFrame, "section_updates_list")
 
 local UpdateText = Instance.new("TextLabel")
-UpdateText.Size = UDim2.new(0.9, 0, 0, 110)
+UpdateText.Size = UDim2.new(0.9, 0, 0, 80)
 UpdateText.BackgroundTransparency = 1
-UpdateText.Text = GetText("update_text_v5_1")
+UpdateText.Text = GetText("update_text_v5_1") .. "\n• [Система] Код полностью реструктурирован для обхода лимита переменных."
 UpdateText.TextColor3 = Mega.Settings.Menu.TextColor
 UpdateText.TextSize = 13
 UpdateText.Font = Enum.Font.Gotham

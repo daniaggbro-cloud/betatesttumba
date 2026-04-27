@@ -62,17 +62,6 @@ UI.CreateSection(TabFrame, "section_combat_accuracy")
 
 UI.CreateToggle(TabFrame, "toggle_norecoil", "Combat.NoRecoil")
 UI.CreateToggle(TabFrame, "toggle_nospread", "Combat.NoSpread")
-
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/reach.lua") end)
-end)
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_reach", "Combat.Reach.Enabled", function(state)
-    Mega.States.Combat.Reach.Enabled = state
-    if Mega.Features.Reach and Mega.Features.Reach.SetEnabled then Mega.Features.Reach.SetEnabled(state) end
-end, {
-    UI.CreateSlider(nil, "slider_reach_distance", "Combat.Reach.Distance", 10, 25)
-})
 --#endregion
 
 --#region -- Killaura
@@ -97,6 +86,8 @@ end, {
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
     UI.CreateToggle(nil, "toggle_killaura_use_fov", "Combat.Killaura.UseFOV"),
     UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
+    UI.CreateToggle(nil, "toggle_killaura_wallcheck", "Combat.Killaura.WallCheck"),
+    UI.CreateToggle(nil, "toggle_killaura_require_aim", "Combat.Killaura.RequireAim"),
     UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
     UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 22),
