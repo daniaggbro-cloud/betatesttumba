@@ -27,7 +27,16 @@ end
 table.clear(connections)
 
 function Mega.Features.Spider.SetEnabled(state)
-    States.Player.Spider = state
+    if type(States.Player.Spider) == "table" then
+        States.Player.Spider.Enabled = state
+    else
+        States.Player.Spider = state
+    end
+    
+    if connections.SpiderLoop then
+        connections.SpiderLoop:Disconnect()
+        connections.SpiderLoop = nil
+    end
     
     if state then
         local rayCheck = RaycastParams.new()
@@ -70,6 +79,7 @@ function Mega.Features.Spider.SetEnabled(state)
 end
 
 -- Инициализация при включении во время запуска
-if States.Player.Spider then
+local isEnabled = type(States.Player.Spider) == "table" and States.Player.Spider.Enabled or States.Player.Spider == true
+if isEnabled then
     Mega.Features.Spider.SetEnabled(true)
 end
