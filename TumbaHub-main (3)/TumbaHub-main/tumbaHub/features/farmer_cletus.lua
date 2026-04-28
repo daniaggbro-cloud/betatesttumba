@@ -199,26 +199,216 @@ local function getClosestItemShop()
     return closestShopId
 end
 
+-- =====================================================
+-- Кэш для модуля магазина и функции расчёта цен
+-- =====================================================
+local BedwarsShopData = nil     -- Результат require(bedwars-shop) ModuleScript
+local BedwarsShopItems = nil    -- Массив ShopItems
+local BedwarsGetAdjusted = nil  -- Функция getAdjustedShopPrice
+local BedwarsGetShopItem = nil  -- Функция getShopItem
+local melonSeedsEntry = nil     -- Закэшированная запись melon_seeds
+
+-- ====================================================================
+-- МЕТОД A: Прямой require() модуля по известному пути в ReplicatedStorage
+-- Путь: ReplicatedStorage → TS → games → bedwars → shop → bedwars-shop
+-- ====================================================================
+local function tryDirectRequire()
+    if BedwarsShopData then return true end
+    
+    local success = pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local TS = RS:FindFirstChild("TS")
+        if not TS then return end
+        
+        local games = TS:FindFirstChild("games")
+        if not games then return end
+        
+        local bedwars = games:FindFirstChild("bedwars")
+        if not bedwars then return end
+        
+        local shopFolder = bedwars:FindFirstChild("shop")
+        if not shopFolder then return end
+        
+        local shopModule = shopFolder:FindFirstChild("bedwars-shop")
+        if not shopModule or not shopModule:IsA("ModuleScript") then return end
+        
+        local data = require(shopModule)
+        if type(data) ~= "table" then return end
+        
+        -- Модуль возвращает таблицу с BedwarsShop внутри
+        local shop = data.BedwarsShop or data
+        if shop and shop.ShopItems then
+            BedwarsShopData = shop
+            BedwarsShopItems = shop.ShopItems
+            
+            if type(shop.getAdjustedShopPrice) == "function" then
+                BedwarsGetAdjusted = shop.getAdjustedShopPrice
+            end
+            if type(shop.getShopItem) == "function" then
+                BedwarsGetShopItem = shop.getShopItem
+            end
+            
+            -- Кэшируем melon_seeds
+            for _, item in ipairs(BedwarsShopItems) do
+                if type(item) == "table" and item.itemType == "melon_seeds" then
+                    melonSeedsEntry = item
+                    break
+                end
+            end
+        end
+    end)
+    
+    return BedwarsShopData ~= nil
+end
+
+-- ====================================================================
+-- МЕТОД B: Поиск через getloadedmodules() (если прямой путь не сработал)
+-- ====================================================================
+local function tryLoadedModules()
+    if BedwarsShopData then return true end
+    if not getloadedmodules then return false end
+    
+    pcall(function()
+        for _, obj in ipairs(getloadedmodules()) do
+            -- Ищем по имени или по полному пути
+            local name = obj.Name
+            if name == "bedwars-shop" or name:find("bedwars%-shop") then
+                local data = require(obj)
+                if type(data) == "table" then
+                    local shop = data.BedwarsShop or data
+                    if shop and shop.ShopItems then
+                        BedwarsShopData = shop
+                        BedwarsShopItems = shop.ShopItems
+                        if type(shop.getAdjustedShopPrice) == "function" then
+                            BedwarsGetAdjusted = shop.getAdjustedShopPrice
+                        end
+                        if type(shop.getShopItem) == "function" then
+                            BedwarsGetShopItem = shop.getShopItem
+                        end
+                        for _, item in ipairs(BedwarsShopItems) do
+                            if type(item) == "table" and item.itemType == "melon_seeds" then
+                                melonSeedsEntry = item
+                                break
+                            end
+                        end
+                        return
+                    end
+                end
+            end
+        end
+    end)
+    
+    return BedwarsShopData ~= nil
+end
+
+-- Инициализация кэша - вызывается один раз
+local function ensureShopData()
+    if BedwarsShopData then return true end
+    if tryDirectRequire() then return true end
+    if tryLoadedModules() then return true end
+    return false
+end
+
+-- Пробуем инициализировать сразу при загрузке модуля
+task.spawn(function()
+    task.wait(2) -- Даём игре загрузить все модули
+    ensureShopData()
+end)
+
+-- Rodux Store (доп. резерв)
 local BedwarsStore = nil
 local function getClientStore()
     if BedwarsStore then return BedwarsStore end
-    for _, obj in ipairs(getloadedmodules()) do
-        if obj.Name == "ClientStore" or obj.Name == "Store" then
-            pcall(function()
-                local req = require(obj)
-                if type(req) == "table" then
-                    if req.getState then BedwarsStore = req end
-                    if req.Store and req.Store.getState then BedwarsStore = req.Store end
-                    if req.clientStore and req.clientStore.getState then BedwarsStore = req.clientStore end
-                end
-            end)
+    if not getloadedmodules then return nil end
+    pcall(function()
+        for _, obj in ipairs(getloadedmodules()) do
+            if obj.Name == "ClientStore" or obj.Name == "Store" then
+                pcall(function()
+                    local req = require(obj)
+                    if type(req) == "table" then
+                        if req.getState then BedwarsStore = req end
+                        if req.Store and req.Store.getState then BedwarsStore = req.Store end
+                        if req.clientStore and req.clientStore.getState then BedwarsStore = req.clientStore end
+                    end
+                end)
+            end
         end
-    end
+    end)
     return BedwarsStore
 end
 
 local function getMelonPriceInvisibly()
-    -- 1. Сначала пробуем найти через UI (самый точный метод, если интерфейс кэширован)
+    -- ============================================================
+    -- 1. МОДУЛЬ МАГАЗИНА (основной метод, работает ВСЕГДА)
+    -- ============================================================
+    ensureShopData()
+    
+    if melonSeedsEntry then
+        -- Сначала пробуем динамическую цену через getAdjustedShopPrice
+        if BedwarsGetAdjusted then
+            local ok, adjusted = pcall(BedwarsGetAdjusted, melonSeedsEntry)
+            if ok and type(adjusted) == "number" then
+                return adjusted
+            end
+        end
+        
+        -- Или через getShopItem (может вернуть актуальный объект с ценой)
+        if BedwarsGetShopItem then
+            local ok, shopItem = pcall(BedwarsGetShopItem, "melon_seeds")
+            if ok and type(shopItem) == "table" and shopItem.price then
+                return shopItem.price
+            end
+        end
+        
+        -- Базовая цена из модуля (статическая, но точная)
+        if melonSeedsEntry.price then
+            return melonSeedsEntry.price
+        end
+    end
+    
+    -- ============================================================
+    -- 2. RODUX STORE (резервный)
+    -- ============================================================
+    local store = getClientStore()
+    if store then
+        local storePrice = nil
+        pcall(function()
+            local state = store:getState()
+            if state then
+                local function searchPrice(t, depth)
+                    if depth > 6 or type(t) ~= "table" then return nil end
+                    
+                    if rawget(t, "itemType") == "melon_seeds" then
+                        if rawget(t, "price") then return rawget(t, "price") end
+                    end
+                    if rawget(t, "melon_seeds") and type(rawget(t, "melon_seeds")) == "table" then
+                        local ms = rawget(t, "melon_seeds")
+                        if ms.price then return ms.price end
+                    end
+                    
+                    for k, v in pairs(t) do
+                        if type(v) == "table" then
+                            local found = searchPrice(v, depth + 1)
+                            if found then return found end
+                        end
+                    end
+                    return nil
+                end
+                storePrice = searchPrice(state, 1)
+            end
+        end)
+        if storePrice then return storePrice end
+    end
+    
+    -- ============================================================
+    -- 3. ХАРДКОД ИЗ PACKAGES.JSON (если вообще ничего не сработало)
+    -- Базовая цена melon_seeds = 2 emerald (из дампа игры)
+    -- ============================================================
+    -- Не возвращаем сразу — сначала проверим UI
+    
+    -- ============================================================
+    -- 4. UI SCAN (если магазин открыт)
+    -- ============================================================
     local pg = LocalPlayer:FindFirstChild("PlayerGui")
     if pg then
         local itemShop = pg:FindFirstChild("ItemShop")
@@ -233,49 +423,17 @@ local function getMelonPriceInvisibly()
                                 if num then return num end
                             end
                         end
-                        for _, desc in ipairs(priceContainer:GetChildren()) do
-                            local num = tonumber(desc.Name)
-                            if num then return num end
-                        end
                     end
                 end
             end
         end
     end
     
-    -- 2. Если UI закрыт/удален, "невидимо" читаем внутреннее состояние игры (Rodux Store)
-    local store = getClientStore()
-    if store then
-        local state = store:getState()
-        if state then
-            -- Рекурсивный безопасный поиск цены арбузов в дереве состояний
-            local function searchPrice(t, depth)
-                if depth > 6 then return nil end
-                if type(t) ~= "table" then return nil end
-                
-                -- Если нашли таблицу семян
-                if rawget(t, "itemType") == "melon_seeds" or rawget(t, "melon_seeds") then
-                    if rawget(t, "price") then return rawget(t, "price") end
-                end
-                
-                for k, v in pairs(t) do
-                    if type(v) == "table" then
-                        if k == "melon_seeds" and rawget(v, "price") then
-                            return rawget(v, "price")
-                        end
-                        local found = searchPrice(v, depth + 1)
-                        if found then return found end
-                    end
-                end
-                return nil
-            end
-            
-            local storePrice = searchPrice(state, 1)
-            if storePrice then return storePrice end
-        end
-    end
-    
-    return nil
+    -- ============================================================
+    -- 5. ХАРДКОД FALLBACK: если ВСЕ методы не сработали
+    -- Возвращаем базовую цену из дампа (2 emerald)
+    -- ============================================================
+    return 2
 end
 
 local function StartAutoBuyLoop()
