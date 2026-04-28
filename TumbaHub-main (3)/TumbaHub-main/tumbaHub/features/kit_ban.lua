@@ -161,7 +161,33 @@ local function banKit(kitId)
     return success
 end
 
-connections.KitBanInput = nil -- Removed keybind logic
+function Mega.Features.KitBan.ExecuteBan()
+    if not States.Misc.KitBan.TargetKits then return end
+    
+    local count = 0
+    local successCount = 0
+    
+    for kitId, isSelected in pairs(States.Misc.KitBan.TargetKits) do
+        if isSelected then
+            count = count + 1
+            if banKit(kitId) then
+                successCount = successCount + 1
+            end
+        end
+    end
+    
+    if Mega.ShowNotification then
+        if count > 0 then
+            if successCount > 0 then
+                Mega.ShowNotification(Mega.GetText("banned_kit_success") or ("ЗАБАНЕНЫ! Успешно: " .. successCount .. "/" .. count), 3)
+            else
+                Mega.ShowNotification(Mega.GetText("banned_kit_fail") or "ОШИБКА! Ни один кит не забанен.", 3)
+            end
+        else
+            Mega.ShowNotification("Нет выбранных китов для бана!", 2)
+        end
+    end
+end
 
 local function InitializeKitBanUI()
     local container = Mega.Objects.KitBanContainer
@@ -214,9 +240,9 @@ local function InitializeKitBanUI()
                 continue
             end
 
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(0.95, 0, 0, 35)
-            btn.BackgroundColor3 = elemColor
+            if type(States.Misc.KitBan.TargetKits) ~= "table" then States.Misc.KitBan.TargetKits = {} end
+            local isSelected = States.Misc.KitBan.TargetKits[kitData.id] or false
+            btn.BackgroundColor3 = isSelected and Color3.fromRGB(0, 200, 100) or elemColor
             
             btn.Text = kitData.name
             btn.TextColor3 = textColor
@@ -238,27 +264,13 @@ local function InitializeKitBanUI()
             KitIcon.Image = kitData.icon or ""
             
             btn.MouseButton1Click:Connect(function()
-                local originalText = btn.Text
-                btn.Text = (Mega.GetText("banning_kit") or "БАН: ") .. originalText .. "..."
-                btn.BackgroundColor3 = accentColor
-                
-                local isSuccess = banKit(kitData.id)
-                
-                if isSuccess then
-                    btn.Text = Mega.GetText("banned_kit_success") or "ЗАБАНЕН!"
-                    btn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+                if States.Misc.KitBan.TargetKits[kitData.id] then
+                    States.Misc.KitBan.TargetKits[kitData.id] = nil
+                    btn.BackgroundColor3 = elemColor
                 else
-                    btn.Text = Mega.GetText("banned_kit_fail") or "ОШИБКА!"
-                    btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+                    States.Misc.KitBan.TargetKits[kitData.id] = true
+                    btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
                 end
-                
-                task.spawn(function()
-                    task.wait(1.5)
-                    if btn and btn.Parent then
-                        btn.Text = originalText
-                        btn.BackgroundColor3 = elemColor
-                    end
-                end)
             end)
         end
         
