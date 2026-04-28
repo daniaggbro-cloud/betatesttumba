@@ -1,12 +1,22 @@
 -- features/kit_ban.lua
--- Encapsulated script from message.txt for Kit Ban functionality
+-- Logic for Kit Ban functionality (Ranked)
 
-Mega.Features = Mega.Features or {}
+if not Mega.Features then Mega.Features = {} end
 Mega.Features.KitBan = {}
 
-local CoreGui = game:GetService("CoreGui")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
+local Services = Mega.Services or {
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    UserInputService = game:GetService("UserInputService")
+}
+local States = Mega.States
+
+if not Mega.Objects.KitBanConnections then Mega.Objects.KitBanConnections = {} end
+local connections = Mega.Objects.KitBanConnections
+
+for k, conn in pairs(connections) do
+    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+end
+table.clear(connections)
 
 local allKits = {
     {id = "aery", name = "Aery", icon = "rbxassetid://9155463221"},
@@ -60,11 +70,6 @@ local allKits = {
     {id = "hatter", name = "Umbra", icon = "rbxassetid://12509388633"},
     {id = "ice_queen", name = "Freiya", icon = "rbxassetid://9155466204"},
     {id = "ignis", name = "Ignis", icon = "rbxassetid://13835258938"},
-    {id = "infected", name = "Infected", icon = "rbxassetid://11104063651"},
-    {id = "infected_disruptor", name = "Infected Disruptor", icon = "rbxassetid://11104063651"},
-    {id = "infected_prowler", name = "Infected Prowler", icon = "rbxassetid://11104063651"},
-    {id = "infected_rush", name = "Infected Rush", icon = "rbxassetid://11104063651"},
-    {id = "infected_tank", name = "Infected Tank", icon = "rbxassetid://11104063651"},
     {id = "jade", name = "Jade", icon = "rbxassetid://9166306816"},
     {id = "jailor", name = "Warden", icon = "rbxassetid://11664116980"},
     {id = "jellyfish", name = "Marina", icon = "rbxassetid://18129974852"},
@@ -111,7 +116,6 @@ local allKits = {
     {id = "steam_engineer", name = "Cogsworth", icon = "rbxassetid://15380413567"},
     {id = "styx", name = "Styx", icon = "rbxassetid://17014536631"},
     {id = "summoner", name = "Kaida", icon = "rbxassetid://18922378956"},
-    {id = "super_infected", name = "Super Infected", icon = "rbxassetid://11527394782"},
     {id = "sword_shield", name = "Isabel", icon = "rbxassetid://131690429591874"},
     {id = "taliyah", name = "Taliyah", icon = "rbxassetid://13989437601"},
     {id = "tinker", name = "Hephaestus", icon = "rbxassetid://17025762404"},
@@ -136,7 +140,7 @@ end)
 
 local function getBanKitRemote()
     local success, netManaged = pcall(function()
-        return ReplicatedStorage:WaitForChild("rbxts_include", 2)
+        return Services.ReplicatedStorage:WaitForChild("rbxts_include", 2)
             :WaitForChild("node_modules", 2)
             :WaitForChild("@rbxts", 2)
             :WaitForChild("net", 2)
@@ -150,182 +154,146 @@ local function getBanKitRemote()
     return nil
 end
 
-local function banKit(kitName)
+local function banKit(kitId)
     local banKitRemote = getBanKitRemote()
     if not banKitRemote then return false end
     
     local success, err = pcall(function()
-        banKitRemote:InvokeServer(kitName, 0)
-        banKitRemote:InvokeServer(kitName, 1)
+        banKitRemote:InvokeServer(kitId, 0)
+        banKitRemote:InvokeServer(kitId, 1)
     end)
     return success
 end
 
-function Mega.Features.KitBan.OpenMenu()
-    if CoreGui:FindFirstChild("TumbaKitBanMenu") then
-        CoreGui.TumbaKitBanMenu:Destroy()
+connections.KitBanInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode.Name == States.Misc.KitBan.Keybind and States.Misc.KitBan.Enabled then
+        local targetKit = States.Misc.KitBan.TargetKit
+        if targetKit then
+            local isSuccess = banKit(targetKit)
+            if Mega.ShowNotification then
+                if isSuccess then
+                    Mega.ShowNotification(Mega.GetText("banned_kit_success") or "ЗАБАНЕН!", 2)
+                else
+                    Mega.ShowNotification(Mega.GetText("banned_kit_fail") or "ОШИБКА!", 2)
+                end
+            end
+        end
+    end
+end)
+
+local function InitializeKitBanUI()
+    local container = Mega.Objects.KitBanContainer
+    if not container then return end
+    
+    container:ClearAllChildren()
+
+    local elemColor = Mega.Settings.Menu.ElementColor or Color3.fromRGB(40, 40, 45)
+    local textColor = Mega.Settings.Menu.TextColor or Color3.fromRGB(255, 255, 255)
+    local accentColor = Mega.Settings.Menu.AccentColor or Color3.fromRGB(200, 150, 50)
+
+    -- Target Label
+    local TargetLabel = Instance.new("TextLabel")
+    TargetLabel.Size = UDim2.new(1, 0, 0, 25)
+    TargetLabel.BackgroundTransparency = 1
+    TargetLabel.TextColor3 = accentColor
+    TargetLabel.Font = Enum.Font.GothamBold
+    TargetLabel.TextSize = 14
+    TargetLabel.Text = Mega.GetText("kit_ban_target", "None") or "Target: None"
+    TargetLabel.Parent = container
+
+    -- Search Box
+    local SearchBox = Instance.new("TextBox")
+    SearchBox.Size = UDim2.new(0.95, 0, 0, 30)
+    SearchBox.Position = UDim2.new(0.025, 0, 0, 30)
+    SearchBox.BackgroundColor3 = elemColor
+    SearchBox.TextColor3 = textColor
+    SearchBox.PlaceholderText = Mega.GetText("search_kit_ban") or "🔍 Поиск кита..."
+    SearchBox.Font = Enum.Font.Gotham
+    SearchBox.TextSize = 13
+    SearchBox.Text = ""
+    Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 6)
+    SearchBox.Parent = container
+
+    -- Scroll List
+    local KitList = Instance.new("ScrollingFrame")
+    KitList.Size = UDim2.new(1, 0, 1, -70)
+    KitList.Position = UDim2.new(0, 0, 0, 70)
+    KitList.BackgroundTransparency = 1
+    KitList.BorderSizePixel = 0
+    KitList.ScrollBarThickness = 4
+    KitList.Parent = container
+    
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = KitList
+    ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 5)
+
+    local function getKitNameById(id)
+        for _, k in ipairs(allKits) do
+            if k.id == id then return k.name end
+        end
+        return id
     end
 
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "TumbaKitBanMenu"
-    ScreenGui.Parent = CoreGui
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    local function UpdateTargetLabel()
+        local kitId = States.Misc.KitBan.TargetKit
+        local niceName = kitId and getKitNameById(kitId) or "None"
+        TargetLabel.Text = Mega.GetText("kit_ban_target", niceName) or ("Target: " .. niceName)
+    end
 
-    -- Получаем цвета из текущей темы Mega.Settings.Menu
-    local bgColor = Mega.Settings.Menu.BackgroundColor or Color3.fromRGB(25, 25, 30)
-    local elemColor = Mega.Settings.Menu.ElementColor or Color3.fromRGB(40, 40, 45)
-    local accentColor = Mega.Settings.Menu.AccentColor or Color3.fromRGB(200, 150, 50)
-    local textColor = Mega.Settings.Menu.TextColor or Color3.fromRGB(255, 255, 255)
-    
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = bgColor
-    MainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
-    MainFrame.Size = UDim2.new(0, 250, 0, 350)
-    MainFrame.Active = true
-    MainFrame.Draggable = true
-
-    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
-    
-    local MainStroke = Instance.new("UIStroke")
-    MainStroke.Parent = MainFrame
-    MainStroke.Color = accentColor
-    MainStroke.Thickness = 1.5
-    MainStroke.Transparency = 0.5
-
-    local Title = Instance.new("TextLabel")
-    Title.Parent = MainFrame
-    Title.BackgroundTransparency = 1
-    Title.Size = UDim2.new(1, 0, 0, 35)
-    Title.Font = Enum.Font.GothamBold
-    Title.Text = " " .. (Mega.GetText("title_kit_ban") or "ВЫБЕРИТЕ КИТ ДЛЯ БАНА")
-    Title.TextColor3 = textColor
-    Title.TextSize = 13
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-
-    local CloseBtn = Instance.new("TextButton")
-    CloseBtn.Parent = MainFrame
-    CloseBtn.BackgroundTransparency = 1
-    CloseBtn.Position = UDim2.new(1, -35, 0, 0)
-    CloseBtn.Size = UDim2.new(0, 35, 0, 35)
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.Text = "X"
-    CloseBtn.TextColor3 = textColor
-    CloseBtn.TextSize = 14
-
-    local SearchBox = Instance.new("TextBox")
-    SearchBox.Parent = MainFrame
-    SearchBox.BackgroundColor3 = elemColor
-    SearchBox.Position = UDim2.new(0.05, 0, 0, 40)
-    SearchBox.Size = UDim2.new(0.9, 0, 0, 30)
-    SearchBox.Font = Enum.Font.Gotham
-    SearchBox.PlaceholderText = Mega.GetText("search_kit_ban") or "🔍 Поиск кита..."
-    SearchBox.Text = ""
-    SearchBox.TextColor3 = textColor
-    SearchBox.TextSize = 13
-    Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 6)
-    
-    local SearchStroke = Instance.new("UIStroke")
-    SearchStroke.Parent = SearchBox
-    SearchStroke.Color = accentColor
-    SearchStroke.Thickness = 1
-    SearchStroke.Transparency = 0.7
-
-    local ScrollList = Instance.new("ScrollingFrame")
-    ScrollList.Parent = MainFrame
-    ScrollList.BackgroundColor3 = bgColor
-    ScrollList.BackgroundTransparency = 1
-    ScrollList.Position = UDim2.new(0.05, 0, 0, 80)
-    ScrollList.Size = UDim2.new(0.9, 0, 1, -90)
-    ScrollList.ScrollBarThickness = 4
-    ScrollList.ScrollBarImageColor3 = accentColor
-    ScrollList.BorderSizePixel = 0
-
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Parent = ScrollList
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 5)
-
-    local buttonPool = {}
-
-    local function loadKits(filter)
-        for _, btn in pairs(buttonPool) do
-            btn:Destroy()
-        end
-        table.clear(buttonPool)
+    local function RefreshKitList(filter)
+        for _, v in pairs(KitList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
         
-        local ySize = 0
         filter = string.lower(filter or "")
         
         for _, kitData in ipairs(allKits) do
-            local kitId = kitData.id
-            local niceName = kitData.name
-            local iconId = kitData.icon
-            
-            if filter ~= "" and not string.find(string.lower(niceName), filter) and not string.find(string.lower(kitId), filter) then
+            if filter ~= "" and not string.find(string.lower(kitData.name), filter) and not string.find(string.lower(kitData.id), filter) then
                 continue
             end
 
-            local KitBtn = Instance.new("TextButton")
-            KitBtn.Parent = ScrollList
-            KitBtn.BackgroundColor3 = elemColor
-            KitBtn.Size = UDim2.new(1, -10, 0, 36)
-            KitBtn.Font = Enum.Font.GothamSemibold
-            KitBtn.Text = niceName
-            KitBtn.TextColor3 = textColor
-            KitBtn.TextSize = 13
-            KitBtn.TextXAlignment = Enum.TextXAlignment.Left
-            Instance.new("UICorner", KitBtn).CornerRadius = UDim.new(0, 6)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(0.95, 0, 0, 35)
             
-            local Padding = Instance.new("UIPadding")
-            Padding.Parent = KitBtn
-            Padding.PaddingLeft = UDim.new(0, 36)
+            local isTarget = (States.Misc.KitBan.TargetKit == kitData.id)
+            btn.BackgroundColor3 = isTarget and Color3.fromRGB(0, 200, 100) or elemColor
             
-            local KitIcon = Instance.new("ImageLabel")
-            KitIcon.Parent = KitBtn
-            KitIcon.BackgroundTransparency = 1
-            KitIcon.Position = UDim2.new(0, -30, 0.5, -12)
-            KitIcon.Size = UDim2.new(0, 24, 0, 24)
-            KitIcon.Image = iconId or ""
+            btn.Text = "   " .. kitData.name
+            btn.TextColor3 = textColor
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Font = Enum.Font.GothamBold
+            btn.TextSize = 13
+            btn.Parent = KitList
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
             
-            KitBtn.MouseButton1Click:Connect(function()
-                local originalText = KitBtn.Text
-                KitBtn.Text = (Mega.GetText("banning_kit") or "БАН: ") .. originalText .. "..."
-                KitBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
-                
-                local isSuccess = banKit(kitId)
-                
-                if isSuccess then
-                    KitBtn.Text = Mega.GetText("banned_kit_success") or "ЗАБАНЕН!"
-                    KitBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+            btn.MouseButton1Click:Connect(function()
+                if States.Misc.KitBan.TargetKit == kitData.id then
+                    States.Misc.KitBan.TargetKit = nil
                 else
-                    KitBtn.Text = Mega.GetText("banned_kit_fail") or "ОШИБКА!"
-                    KitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+                    States.Misc.KitBan.TargetKit = kitData.id
                 end
-                
-                task.spawn(function()
-                    task.wait(1.5)
-                    if KitBtn and KitBtn.Parent then
-                        KitBtn.Text = originalText
-                        KitBtn.BackgroundColor3 = elemColor
-                    end
-                end)
+                UpdateTargetLabel()
+                RefreshKitList(SearchBox.Text)
             end)
-            
-            table.insert(buttonPool, KitBtn)
-            ySize = ySize + 41
         end
         
-        ScrollList.CanvasSize = UDim2.new(0, 0, 0, ySize)
+        task.spawn(function()
+            task.wait()
+            if KitList and ListLayout then
+                KitList.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
+            end
+        end)
     end
 
-    CloseBtn.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-    end)
+    UpdateTargetLabel()
+    RefreshKitList("")
 
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-        loadKits(SearchBox.Text)
+        RefreshKitList(SearchBox.Text)
     end)
-
-    loadKits("")
 end
+
+task.spawn(function()
+    while not Mega.Objects.KitBanContainer do task.wait(0.1) end
+    InitializeKitBanUI()
+end)
