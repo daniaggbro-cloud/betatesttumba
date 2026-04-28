@@ -41,11 +41,27 @@ kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
 kitBanContainer.BackgroundTransparency = 1
 Mega.Objects.KitBanContainer = kitBanContainer
 
+Mega.States.Misc.KitBan.Enabled = false
+
 UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", function(state)
     Mega.States.Misc.KitBan.Enabled = state
-    notifyFeature("toggle_kit_ban", state)
+    if state then
+        if Mega.Features.KitBan and Mega.Features.KitBan.ExecuteBan then
+            Mega.Features.KitBan.ExecuteBan()
+        end
+        
+        task.spawn(function()
+            task.wait(0.2)
+            Mega.States.Misc.KitBan.Enabled = false
+            if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_kit_ban"] then
+                Mega.Objects.Toggles["toggle_kit_ban"](false)
+            end
+            notifyFeature("toggle_kit_ban", false)
+        end)
+    else
+        notifyFeature("toggle_kit_ban", false)
+    end
 end, {
-    UI.CreateKeybindButton(nil, "keybind_kit_ban", "Misc.KitBan.Keybind", function(key) Mega.States.Misc.KitBan.Keybind = key end),
     kitBanContainer
 })
 
