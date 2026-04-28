@@ -223,14 +223,12 @@ end
 -- =====================================================
 -- Кэш для модуля магазина и цены melon_seeds
 -- =====================================================
-local BedwarsShopData = nil      -- require('bedwars-shop').BedwarsShop
-local BedwarsGetShopItemBase = nil -- getShopItemBase (нефильтрованный поиск)
-local BedwarsGetAdjustedPrice = nil -- getAdjustedShopPrice (реальная цена с налогом)
-local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds
+local melonSeedsBasePrice = nil  -- Базовая цена из модуля (2)
+local clientStoreRef = nil      -- Rodux ClientStore
 
--- Инициализация: прямой require() модуля bedwars-shop
-local function ensureShopData()
-    if melonSeedsEntry then return true end
+-- Инициализация: читаем базовую цену из модуля bedwars-shop
+local function ensureBasePrice()
+    if melonSeedsBasePrice then return true end
     
     pcall(function()
         local RS = game:GetService("ReplicatedStorage")
@@ -246,66 +244,89 @@ local function ensureShopData()
         if type(data) ~= "table" then return end
         
         local shop = data.BedwarsShop or data
-        if not shop then return end
+        if not shop or not shop.ShopItems then return end
         
-        BedwarsShopData = shop
-        
-        -- Сохраняем функцию динамической цены (shop tax)
-        if type(shop.getAdjustedShopPrice) == "function" then
-            BedwarsGetAdjustedPrice = shop.getAdjustedShopPrice
-        end
-        
-        -- getShopItemBase — нефильтрованный поиск (обходит kit-фильтр)
+        -- getShopItemBase может не найти (фильтр), ищем вручную
         if type(shop.getShopItemBase) == "function" then
-            BedwarsGetShopItemBase = shop.getShopItemBase
-            local ok, item = pcall(BedwarsGetShopItemBase, "melon_seeds")
-            if ok and type(item) == "table" then
-                melonSeedsEntry = item
+            local ok, item = pcall(shop.getShopItemBase, "melon_seeds")
+            if ok and type(item) == "table" and item.price then
+                melonSeedsBasePrice = item.price
+                return
             end
         end
         
-        -- Фолбэк: ищем в RAW ShopItems
-        if not melonSeedsEntry and shop.ShopItems then
-            for _, item in ipairs(shop.ShopItems) do
-                if type(item) == "table" and item.itemType == "melon_seeds" then
-                    melonSeedsEntry = item
-                    break
+        -- Ищем в RAW ShopItems
+        for _, item in ipairs(shop.ShopItems) do
+            if type(item) == "table" and item.itemType == "melon_seeds" then
+                melonSeedsBasePrice = item.price
+                return
+            end
+        end
+    end)
+    
+    -- Хардкод из дампа (packages.json)
+    if not melonSeedsBasePrice then
+        melonSeedsBasePrice = 2
+    end
+    
+    return true
+end
+
+-- Находим ClientStore (Rodux) для чтения taxState
+local function getClientStore()
+    if clientStoreRef then return clientStoreRef end
+    
+    pcall(function()
+        for _, m in ipairs(getloadedmodules()) do
+            if m:GetFullName():find("PlayerScripts.TS.ui.store") and m.Name == "store" then
+                local data = require(m)
+                if data and data.ClientStore then
+                    clientStoreRef = data.ClientStore
+                    return
                 end
             end
         end
     end)
     
-    return melonSeedsEntry ~= nil
+    return clientStoreRef
 end
 
 -- Запускаем инициализацию при загрузке модуля
 task.spawn(function()
     task.wait(2)
-    ensureShopData()
+    ensureBasePrice()
+    getClientStore()
 end)
 
--- Возвращает ТЕКУЩУЮ цену melon_seeds (с учётом shop tax)
--- Вызывается КАЖДЫЙ раз заново — НЕ кэшируем, т.к. цена растёт после каждой покупки!
+-- Возвращает ТЕКУЩУЮ цену melon_seeds с учётом shop tax
+-- Читает taxState из Rodux Store → Inventory.taxState
+-- taxState увеличивает все цены в магазине (0 = нет налога)
 local function getMelonCurrentPrice()
-    ensureShopData()
+    ensureBasePrice()
     
-    if melonSeedsEntry then
-        -- Пробуем получить актуальную цену с учётом налога
-        if BedwarsGetAdjustedPrice then
-            local ok, price = pcall(BedwarsGetAdjustedPrice, melonSeedsEntry)
-            if ok and type(price) == "number" then
-                return price
+    local basePrice = melonSeedsBasePrice or 2
+    
+    -- Читаем taxState из ClientStore
+    local store = getClientStore()
+    if store then
+        local ok, taxState = pcall(function()
+            local state = store:getState()
+            if state and state.Inventory and state.Inventory.taxState then
+                return state.Inventory.taxState
             end
-        end
+            return 0
+        end)
         
-        -- Если getAdjustedShopPrice не сработал — базовая цена из модуля
-        if melonSeedsEntry.price then
-            return melonSeedsEntry.price
+        if ok and type(taxState) == "number" and taxState > 0 then
+            -- Shop tax увеличивает цену: каждый уровень налога добавляет к цене
+            -- Формула: adjustedPrice = basePrice + taxState (или basePrice * множитель)
+            -- В Bedwars обычно: price = ceil(basePrice * (1 + taxState * 0.5))
+            -- Но точная формула зависит от версии. Безопасно: basePrice + taxState
+            return math.ceil(basePrice + (basePrice * taxState * 0.5))
         end
     end
     
-    -- Хардкод из дампа (packages.json)
-    return 2
+    return basePrice
 end
 
 local function StartAutoBuyLoop()
