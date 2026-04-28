@@ -225,10 +225,10 @@ end
 -- =====================================================
 local BedwarsShopData = nil      -- require('bedwars-shop').BedwarsShop
 local BedwarsGetShopItemBase = nil -- getShopItemBase (нефильтрованный поиск)
-local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds (из getShopItemBase)
+local BedwarsGetAdjustedPrice = nil -- getAdjustedShopPrice (реальная цена с налогом)
+local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds
 
 -- Инициализация: прямой require() модуля bedwars-shop
--- Путь: ReplicatedStorage.TS.games.bedwars.shop.bedwars-shop
 local function ensureShopData()
     if melonSeedsEntry then return true end
     
@@ -250,8 +250,12 @@ local function ensureShopData()
         
         BedwarsShopData = shop
         
-        -- getShopItemBase — возвращает НЕФИЛЬТРОВАННЫЙ предмет
-        -- getShopItem('melon_seeds') возвращает nil из-за kit-фильтра!
+        -- Сохраняем функцию динамической цены (shop tax)
+        if type(shop.getAdjustedShopPrice) == "function" then
+            BedwarsGetAdjustedPrice = shop.getAdjustedShopPrice
+        end
+        
+        -- getShopItemBase — нефильтрованный поиск (обходит kit-фильтр)
         if type(shop.getShopItemBase) == "function" then
             BedwarsGetShopItemBase = shop.getShopItemBase
             local ok, item = pcall(BedwarsGetShopItemBase, "melon_seeds")
@@ -260,7 +264,7 @@ local function ensureShopData()
             end
         end
         
-        -- Если getShopItemBase не помог, ищем в RAW ShopItems
+        -- Фолбэк: ищем в RAW ShopItems
         if not melonSeedsEntry and shop.ShopItems then
             for _, item in ipairs(shop.ShopItems) do
                 if type(item) == "table" and item.itemType == "melon_seeds" then
@@ -280,17 +284,27 @@ task.spawn(function()
     ensureShopData()
 end)
 
--- Возвращает БАЗОВУЮ цену melon_seeds (без shop tax)
--- Базовая цена — это то, что показано в магазине и что ожидает пользователь
--- НЕ кэшируем динамическую цену, т.к. shop tax меняет её после каждой покупки
-local function getMelonBasePrice()
+-- Возвращает ТЕКУЩУЮ цену melon_seeds (с учётом shop tax)
+-- Вызывается КАЖДЫЙ раз заново — НЕ кэшируем, т.к. цена растёт после каждой покупки!
+local function getMelonCurrentPrice()
     ensureShopData()
     
-    if melonSeedsEntry and melonSeedsEntry.price then
-        return melonSeedsEntry.price -- 2 emerald (из модуля)
+    if melonSeedsEntry then
+        -- Пробуем получить актуальную цену с учётом налога
+        if BedwarsGetAdjustedPrice then
+            local ok, price = pcall(BedwarsGetAdjustedPrice, melonSeedsEntry)
+            if ok and type(price) == "number" then
+                return price
+            end
+        end
+        
+        -- Если getAdjustedShopPrice не сработал — базовая цена из модуля
+        if melonSeedsEntry.price then
+            return melonSeedsEntry.price
+        end
     end
     
-    -- Хардкод из дампа игры (packages.json)
+    -- Хардкод из дампа (packages.json)
     return 2
 end
 
@@ -308,7 +322,7 @@ local function StartAutoBuyLoop()
             local currentSeeds = getItemCount("melon_seeds") + getItemCount("melon")
             if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
             
-            local actualPrice = getMelonBasePrice()
+            local actualPrice = getMelonCurrentPrice()
             local maxPrice = States.Cletus.MaxMelonPrice or 2
             
             -- Если базовая цена выше лимита - не покупаем
