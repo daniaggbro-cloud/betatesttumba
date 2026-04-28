@@ -140,24 +140,61 @@ Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
 Shadow.ZIndex = 0
 Shadow.Parent = MainFrame
 
--- Title Bar
+-- ✨ НОВОЕ: Стеклянный Title Bar
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, -220, 0, 50) -- Adjusted for new sidebar
+TitleBar.Size = UDim2.new(1, -220, 0, 50)
 TitleBar.Position = UDim2.new(0, 220, 0, 5)
-TitleBar.BackgroundTransparency = 1
+TitleBar.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+TitleBar.BackgroundTransparency = 0.6  -- Полупрозрачный стеклянный фон
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
+
+-- Gradient на title bar
+local TitleGrad = Instance.new("UIGradient", TitleBar)
+TitleGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 35)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 22))
+}
+TitleGrad.Rotation = 90
+
+-- Тонкая separator-линия снизу title bar
+local TitleSep = Instance.new("Frame", TitleBar)
+TitleSep.Size = UDim2.new(0.9, 0, 0, 1)
+TitleSep.Position = UDim2.new(0.05, 0, 1, -1)
+TitleSep.BackgroundColor3 = Settings.Menu.AccentColor
+TitleSep.BackgroundTransparency = 0.6
+TitleSep.BorderSizePixel = 0
+local TitleSepGrad = Instance.new("UIGradient", TitleSep)
+TitleSepGrad.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.3, 0.3),
+    NumberSequenceKeypoint.new(0.7, 0.3),
+    NumberSequenceKeypoint.new(1, 1)
+}
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -120, 1, 0)
-Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Size = UDim2.new(1, -140, 1, 0)
+Title.Position = UDim2.new(0, 14, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = GetText("title_bar", Settings.System.Version)
 Title.TextColor3 = Settings.Menu.TextColor
-Title.TextSize = 18
+Title.TextSize = 16
 Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
+
+-- ✨ НОВОЕ: Версия хаба справа от кнопки
+local VersionLabel = Instance.new("TextLabel", TitleBar)
+VersionLabel.Size = UDim2.new(0, 80, 1, 0)
+VersionLabel.Position = UDim2.new(1, -120, 0, 0)
+VersionLabel.BackgroundTransparency = 1
+VersionLabel.Text = "v" .. (Mega.VERSION or "5.0")
+VersionLabel.TextColor3 = Settings.Menu.TextMutedColor
+VersionLabel.TextSize = 11
+VersionLabel.Font = Enum.Font.GothamBold
+VersionLabel.TextXAlignment = Enum.TextXAlignment.Right
+VersionLabel.TextTransparency = 0.3
 
 -- Canvas Group for smooth fade/minimize (Linux Style)
 local WindowCanvas = Instance.new("CanvasGroup", MainFrame)
@@ -389,13 +426,18 @@ Mega.Objects.TabFrames = {}
 local function SelectTab(tabKey, tabButton)
     local indicator = tabButton:FindFirstChild("Indicator")
     
-    -- De-select all other buttons
+    -- Сброс всех остальных
     for k, btn in pairs(TabButtons) do
         local otherInd = btn:FindFirstChild("Indicator")
         local tabText = btn:FindFirstChild("TabText")
         local icon = btn:FindFirstChild("Icon")
         if otherInd then
-            Services.TweenService:Create(otherInd, TweenInfo.new(0.3), { Size = UDim2.new(0, 0, 0.6, 0), BackgroundTransparency = 1 }):Play()
+            Services.TweenService:Create(otherInd, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { Size = UDim2.new(0, 0, 0.55, 0), BackgroundTransparency = 1 }):Play()
+            -- Убираем glow у неактивного
+            local otherGlow = otherInd:FindFirstChildOfClass("UIStroke")
+            if otherGlow then
+                Services.TweenService:Create(otherGlow, TweenInfo.new(0.25), { Transparency = 1 }):Play()
+            end
         end
         if icon then
             Services.TweenService:Create(icon, TweenInfo.new(0.3), { ImageColor3 = Settings.Menu.IconColor, ImageTransparency = 0.3 }):Play()
@@ -409,9 +451,17 @@ local function SelectTab(tabKey, tabButton)
         }):Play()
     end
     
-    -- Select the current button
+    -- ✨ Активирование текущей кнопки — Bounce easing + glow
     if indicator then
-        Services.TweenService:Create(indicator, TweenInfo.new(0.3), { Size = UDim2.new(0, 4, 0.6, 0), BackgroundTransparency = 0 }):Play()
+        Services.TweenService:Create(indicator, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 5, 0.6, 0),
+            BackgroundTransparency = 0
+        }):Play()
+        -- Glow stroke на indicator
+        local indGlow = indicator:FindFirstChildOfClass("UIStroke")
+        if indGlow then
+            Services.TweenService:Create(indGlow, TweenInfo.new(0.3), { Transparency = 0.0 }):Play()
+        end
     end
     local currentIcon = tabButton:FindFirstChild("Icon")
     if currentIcon then
@@ -485,11 +535,17 @@ for _, tabKey in ipairs(TabKeys) do
     
     local Indicator = Instance.new("Frame", TabButton)
     Indicator.Name = "Indicator"
-    Indicator.Size = UDim2.new(0, 0, 0.6, 0)
-    Indicator.Position = UDim2.new(0, -15, 0.2, 0)
+    Indicator.Size = UDim2.new(0, 0, 0.55, 0)
+    Indicator.Position = UDim2.new(0, 0, 0.225, 0)
     Indicator.BackgroundColor3 = Settings.Menu.AccentColor
     Indicator.BackgroundTransparency = 1
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+    -- ✨ Glow stroke на indicator
+    local IndicatorGlow = Instance.new("UIStroke", Indicator)
+    IndicatorGlow.Color = Settings.Menu.AccentColor
+    IndicatorGlow.Thickness = 2.5
+    IndicatorGlow.Transparency = 1
+    IndicatorGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     
     TabButton.MouseEnter:Connect(function()
         if Title.Text:find(GetText(tabKey)) then return end

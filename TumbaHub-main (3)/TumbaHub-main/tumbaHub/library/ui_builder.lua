@@ -269,57 +269,143 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, de
     SliderFrame.BackgroundTransparency = 1
     SliderFrame.Parent = parent
 
+    -- Заголовок: название слева, значение справа (в цвете акцента)
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Name = "Label"
-    SliderLabel.Size = UDim2.new(1, 0, 0, 20)
+    SliderLabel.Size = UDim2.new(0.65, 0, 0, 20)
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Text = GetText("slider_label", translatedText, currentValue)
+    SliderLabel.Text = translatedText
     SliderLabel.TextColor3 = Mega.Settings.Menu.TextColor
     SliderLabel.TextSize = 12
-    SliderLabel.Font = Enum.Font.Gotham
+    SliderLabel.Font = Enum.Font.GothamSemibold
     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     SliderLabel.Parent = SliderFrame
 
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Name = "ValueLabel"
+    ValueLabel.Size = UDim2.new(0.35, 0, 0, 20)
+    ValueLabel.Position = UDim2.new(0.65, 0, 0, 0)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Text = tostring(currentValue)
+    ValueLabel.TextColor3 = Mega.Settings.Menu.AccentColor
+    ValueLabel.TextSize = 12
+    ValueLabel.Font = Enum.Font.GothamBold
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.Parent = SliderFrame
+
+    -- Трек слайдера
     local SliderTrack = Instance.new("Frame")
     SliderTrack.Name = "Track"
-    SliderTrack.Size = UDim2.new(1, 0, 0, 6)
-    SliderTrack.Position = UDim2.new(0, 0, 0, 35)
+    SliderTrack.Size = UDim2.new(1, 0, 0, 8)
+    SliderTrack.Position = UDim2.new(0, 0, 0, 33)
     SliderTrack.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
     SliderTrack.BorderSizePixel = 0
     SliderTrack.Parent = SliderFrame
+    Instance.new("UICorner", SliderTrack).CornerRadius = UDim.new(1, 0)
 
-    local TrackCorner = Instance.new("UICorner")
-    TrackCorner.CornerRadius = UDim.new(0, 3)
-    TrackCorner.Parent = SliderTrack
-
+    -- ✨ Заполнение с gradient (AccentColor → светлее)
     local SliderFill = Instance.new("Frame")
     SliderFill.Name = "Fill"
     SliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
     SliderFill.BackgroundColor3 = Mega.Settings.Menu.AccentColor
     SliderFill.BorderSizePixel = 0
     SliderFill.Parent = SliderTrack
+    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+    
+    local FillGrad = Instance.new("UIGradient", SliderFill)
+    FillGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Mega.Settings.Menu.AccentColor),
+        ColorSequenceKeypoint.new(1, Mega.Settings.Menu.AccentColor:Lerp(Color3.new(1,1,1), 0.35))
+    }
 
-    local FillCorner = Instance.new("UICorner")
-    FillCorner.CornerRadius = UDim.new(0, 3)
-    FillCorner.Parent = SliderFill
-
+    -- ✨ Thumb (18px) с hover и drag glow
     local SliderButton = Instance.new("TextButton")
     SliderButton.Name = "Button"
-    SliderButton.Size = UDim2.new(0, 16, 0, 16)
-    SliderButton.Position = UDim2.new(SliderFill.Size.X.Scale, -8, 0.5, -8)
-    SliderButton.BackgroundColor3 = Mega.Settings.Menu.AccentColor
+    SliderButton.Size = UDim2.new(0, 18, 0, 18)
+    SliderButton.Position = UDim2.new(SliderFill.Size.X.Scale, -9, 0.5, -9)
+    SliderButton.BackgroundColor3 = Color3.new(1, 1, 1)
     SliderButton.BorderSizePixel = 0
     SliderButton.Text = ""
     SliderButton.AutoButtonColor = false
+    SliderButton.ZIndex = 3
     SliderButton.Parent = SliderTrack
+    Instance.new("UICorner", SliderButton).CornerRadius = UDim.new(1, 0)
+    
+    -- Glow stroke на thumb
+    local ThumbGlow = Instance.new("UIStroke", SliderButton)
+    ThumbGlow.Color = Mega.Settings.Menu.AccentColor
+    ThumbGlow.Thickness = 2
+    ThumbGlow.Transparency = 1
+    ThumbGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    
+    -- ✨ Laser на конце fill
+    local FillLaser = Instance.new("Frame", SliderFill)
+    FillLaser.Size = UDim2.new(0, 30, 3, 0)
+    FillLaser.Position = UDim2.new(1, -10, 0.5, 0)
+    FillLaser.AnchorPoint = Vector2.new(0.5, 0.5)
+    FillLaser.BackgroundColor3 = Color3.new(1, 1, 1)
+    FillLaser.BorderSizePixel = 0
+    FillLaser.ZIndex = 2
+    local LaserGrad = Instance.new("UIGradient", FillLaser)
+    LaserGrad.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.3), NumberSequenceKeypoint.new(1, 1)
+    }
 
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(1, 0)
-    ButtonCorner.Parent = SliderButton
+    -- Hover эффекты
+    SliderButton.MouseEnter:Connect(function()
+        TweenService:Create(SliderButton, TweenInfo.new(0.2), { Size = UDim2.new(0, 22, 0, 22), Position = UDim2.new(SliderFill.Size.X.Scale, -11, 0.5, -11) }):Play()
+        TweenService:Create(ThumbGlow, TweenInfo.new(0.2), { Transparency = 0.2 }):Play()
+    end)
+    SliderButton.MouseLeave:Connect(function()
+        if not SliderButton:IsA("TextButton") then return end
+        TweenService:Create(SliderButton, TweenInfo.new(0.2), { Size = UDim2.new(0, 18, 0, 18), Position = UDim2.new(SliderFill.Size.X.Scale, -9, 0.5, -9) }):Play()
+        TweenService:Create(ThumbGlow, TweenInfo.new(0.2), { Transparency = 1 }):Play()
+    end)
 
     local dragging = false
-    SliderButton.MouseButton1Down:Connect(function() dragging = true end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+    
+    SliderButton.MouseButton1Down:Connect(function()
+        dragging = true
+        TweenService:Create(SliderButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 20, 0, 20) }):Play()
+        TweenService:Create(ThumbGlow, TweenInfo.new(0.15), { Transparency = 0.0, Thickness = 3 }):Play()
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+            TweenService:Create(SliderButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 18, 0, 18) }):Play()
+            TweenService:Create(ThumbGlow, TweenInfo.new(0.2), { Transparency = 0.2, Thickness = 2 }):Play()
+        end
+    end)
+
+    -- ✨ Клик по треку = прыжок к позиции
+    SliderTrack.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = UserInputService:GetMouseLocation()
+            local framePos = SliderTrack.AbsolutePosition
+            local frameSize = SliderTrack.AbsoluteSize
+            local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
+            local newValue = min + relativeX * (max - min)
+            if decimals and type(decimals) == "number" then
+                local mult = 10 ^ decimals
+                newValue = math.floor(newValue * mult + 0.5) / mult
+            else
+                newValue = math.floor(newValue + 0.5)
+            end
+            local path = statePath
+            local tbl = Mega.States
+            local key
+            for part in path:gmatch("[^%.]+") do
+                key = part
+                if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
+            end
+            tbl[key] = newValue
+            TweenService:Create(SliderFill, TweenInfo.new(0.15, Enum.EasingStyle.Quart), { Size = UDim2.new(relativeX, 0, 1, 0) }):Play()
+            TweenService:Create(SliderButton, TweenInfo.new(0.15, Enum.EasingStyle.Quart), { Position = UDim2.new(relativeX, -9, 0.5, -9) }):Play()
+            ValueLabel.Text = tostring(newValue)
+            if callback then pcall(callback, newValue) end
+            dragging = true
+        end
+    end)
 
     Mega.Services.RunService.RenderStepped:Connect(function()
         if dragging then
@@ -345,8 +431,8 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, de
             tbl[key] = newValue
 
             SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-            SliderButton.Position = UDim2.new(relativeX, -8, 0.5, -8)
-            SliderLabel.Text = GetText("slider_label", translatedText, newValue)
+            SliderButton.Position = UDim2.new(relativeX, -9, 0.5, -9)
+            ValueLabel.Text = tostring(newValue)
             if callback then pcall(callback, newValue) end
         end
     end)
