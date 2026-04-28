@@ -35,17 +35,23 @@ end)
 UI.CreateButton(TabFrame, "button_screenshot", function() Mega.ShowNotification("Not implemented yet", 2) end)
 UI.CreateButton(TabFrame, "button_server_info", function() Mega.ShowNotification("Not implemented yet", 2) end)
 
+local kitBanContainer = Instance.new("Frame")
+kitBanContainer.Name = "KitBanContainer"
+kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
+kitBanContainer.BackgroundTransparency = 1
+Mega.Objects.KitBanContainer = kitBanContainer
+
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/kit_ban.lua") end)
 end)
 
-UI.CreateButton(TabFrame, "button_open_kit_ban", function()
-    if Mega.Features.KitBan and Mega.Features.KitBan.OpenMenu then
-        Mega.Features.KitBan.OpenMenu()
-    else
-        Mega.ShowNotification("Kit Ban feature not loaded!", 2)
-    end
-end)
+UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", function(state)
+    Mega.States.Misc.KitBan.Enabled = state
+    notifyFeature("toggle_kit_ban", state)
+end, {
+    UI.CreateKeybindButton(nil, "keybind_kit_ban", "Misc.KitBan.Keybind", function(key) Mega.States.Misc.KitBan.Keybind = key end),
+    kitBanContainer
+})
 
 UI.CreateButton(TabFrame, "button_reload_script", function()
     Mega.ShowNotification(Mega.GetText("notify_reload"), 2)
