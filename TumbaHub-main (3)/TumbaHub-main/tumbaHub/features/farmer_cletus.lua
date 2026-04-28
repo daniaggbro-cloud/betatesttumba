@@ -225,25 +225,27 @@ end
 -- Путь: PlayerGui.ItemShop...melon_seeds_ShopItemCard.Price → TextLabel.ContentText
 -- =====================================================
 
--- Возвращает ТЕКУЩУЮ цену melon_seeds из UI магазина
--- Это единственный надёжный источник цены с учётом shop tax
+-- Возвращает ТЕКУЩУЮ цену melon_seeds
+-- Использует 3 метода по убыванию приоритета:
+-- 1. UI (если открыто)
+-- 2. Внутренняя функция getAdjustedShopPrice (с передачей LocalPlayer)
+-- 3. Математический расчёт через taxState из Rodux
 local function getMelonCurrentPrice()
+    -- 1. Попытка прочитать из UI (самый точный метод, если магазин открыт)
     local pg = LocalPlayer:FindFirstChild("PlayerGui")
-    if not pg then return 2 end
-    
-    -- Ищем melon_seeds_ShopItemCard через GetDescendants (надёжнее чем хардкод пути)
-    for _, obj in ipairs(pg:GetDescendants()) do
-        if obj.Name == "melon_seeds_ShopItemCard" then
-            local priceFrame = obj:FindFirstChild("Price")
-            if priceFrame then
-                for _, child in ipairs(priceFrame:GetDescendants()) do
-                    if child:IsA("TextLabel") then
-                        -- Читаем ContentText (содержит только текст цены без форматирования)
-                        local text = child.ContentText or child.Text
-                        if text then
-                            local num = tonumber(text:match("%d+"))
-                            if num and num > 0 then
-                                return num
+    if pg then
+        for _, obj in ipairs(pg:GetDescendants()) do
+            if obj.Name == "melon_seeds_ShopItemCard" then
+                local priceFrame = obj:FindFirstChild("Price")
+                if priceFrame then
+                    for _, child in ipairs(priceFrame:GetDescendants()) do
+                        if child:IsA("TextLabel") then
+                            local text = child.ContentText or child.Text
+                            if text then
+                                local num = tonumber(text:match("%d+"))
+                                if num and num > 0 then
+                                    return num
+                                end
                             end
                         end
                     end
@@ -252,8 +254,47 @@ local function getMelonCurrentPrice()
         end
     end
     
-    -- Магазин не открыт — используем базовую цену
-    return 2
+    -- 2. Попытка получить через внутреннюю функцию (исправляем ошибку GetAttribute)
+    -- Функция падала, потому что ожидала объект LocalPlayer для проверки скидок/налогов
+    if BedwarsShopData and type(BedwarsShopData.getAdjustedShopPrice) == "function" and melonSeedsBasePrice then
+        -- Создаем мок-объект предмета, чтобы функция могла его прочитать
+        local mockItem = {
+            itemType = "melon_seeds",
+            price = melonSeedsBasePrice,
+            currency = "emerald"
+        }
+        
+        -- Пробуем разные сигнатуры вызова
+        local ok, price = pcall(BedwarsShopData.getAdjustedShopPrice, BedwarsShopData, LocalPlayer, mockItem)
+        if ok and type(price) == "number" and price > 0 then return price end
+        
+        ok, price = pcall(BedwarsShopData.getAdjustedShopPrice, BedwarsShopData, mockItem, LocalPlayer)
+        if ok and type(price) == "number" and price > 0 then return price end
+        
+        ok, price = pcall(BedwarsShopData.getAdjustedShopPrice, LocalPlayer, mockItem)
+        if ok and type(price) == "number" and price > 0 then return price end
+    end
+    
+    -- 3. Математический расчёт через taxState (Родукс)
+    local basePrice = melonSeedsBasePrice or 2
+    local store = getClientStore()
+    if store then
+        local ok, taxState = pcall(function()
+            local state = store:getState()
+            if state and state.Inventory and state.Inventory.taxState then
+                return state.Inventory.taxState
+            end
+            return 0
+        end)
+        
+        if ok and type(taxState) == "number" and taxState > 0 then
+            -- Налог увеличивает цену. При taxState = 1, цена становится 3 (при базе 2)
+            -- При taxState = 2, цена становится 4 и т.д.
+            return basePrice + taxState
+        end
+    end
+    
+    return basePrice
 end
 
 local function StartAutoBuyLoop()
