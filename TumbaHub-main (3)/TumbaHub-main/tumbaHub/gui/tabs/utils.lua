@@ -41,10 +41,6 @@ kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
 kitBanContainer.BackgroundTransparency = 1
 Mega.Objects.KitBanContainer = kitBanContainer
 
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/kit_ban.lua") end)
-end)
-
 UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", function(state)
     Mega.States.Misc.KitBan.Enabled = state
     notifyFeature("toggle_kit_ban", state)

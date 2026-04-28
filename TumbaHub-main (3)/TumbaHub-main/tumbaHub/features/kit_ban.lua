@@ -138,24 +138,20 @@ table.sort(allKits, function(a, b)
     return a.name < b.name
 end)
 
-local function getBanKitRemote()
-    local success, netManaged = pcall(function()
-        return Services.ReplicatedStorage:WaitForChild("rbxts_include", 2)
-            :WaitForChild("node_modules", 2)
-            :WaitForChild("@rbxts", 2)
-            :WaitForChild("net", 2)
-            :WaitForChild("out", 2)
-            :WaitForChild("_NetManaged", 2)
+local banKitRemote
+task.spawn(function()
+    pcall(function()
+        local netManaged = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10)
+            :WaitForChild("node_modules")
+            :WaitForChild("@rbxts")
+            :WaitForChild("net")
+            :WaitForChild("out")
+            :WaitForChild("_NetManaged")
+        banKitRemote = netManaged:WaitForChild("BanKit")
     end)
-    
-    if success and netManaged then
-        return netManaged:WaitForChild("BanKit", 2)
-    end
-    return nil
-end
+end)
 
 local function banKit(kitId)
-    local banKitRemote = getBanKitRemote()
     if not banKitRemote then return false end
     
     local success, err = pcall(function()
@@ -166,15 +162,17 @@ local function banKit(kitId)
 end
 
 connections.KitBanInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode.Name == States.Misc.KitBan.Keybind and States.Misc.KitBan.Enabled then
-        local targetKit = States.Misc.KitBan.TargetKit
-        if targetKit then
-            local isSuccess = banKit(targetKit)
-            if Mega.ShowNotification then
-                if isSuccess then
-                    Mega.ShowNotification(Mega.GetText("banned_kit_success") or "ЗАБАНЕН!", 2)
-                else
-                    Mega.ShowNotification(Mega.GetText("banned_kit_fail") or "ОШИБКА!", 2)
+    if not gameProcessed and States.Misc and States.Misc.KitBan then
+        if input.KeyCode.Name == States.Misc.KitBan.Keybind and States.Misc.KitBan.Enabled then
+            local targetKit = States.Misc.KitBan.TargetKit
+            if targetKit then
+                local isSuccess = banKit(targetKit)
+                if Mega.ShowNotification then
+                    if isSuccess then
+                        Mega.ShowNotification(Mega.GetText("banned_kit_success") or "ЗАБАНЕН!", 2)
+                    else
+                        Mega.ShowNotification(Mega.GetText("banned_kit_fail") or "ОШИБКА!", 2)
+                    end
                 end
             end
         end

@@ -173,7 +173,8 @@ InitPhase("features", {
     "features/killaura.lua",
     "features/bed_nuke.lua",
     "features/bot.lua",
-    "features/ai_chat.lua"
+    "features/ai_chat.lua",
+    "features/kit_ban.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE
