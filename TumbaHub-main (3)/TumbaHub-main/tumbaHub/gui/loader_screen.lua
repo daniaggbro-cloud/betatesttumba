@@ -174,19 +174,6 @@ function Loader.Create()
     Logo.BackgroundTransparency = 1
     Logo.Image = "rbxassetid://13388222306"
     Logo.ImageColor3 = Color3.fromRGB(0, 160, 255)
-    -- ✨ НОВОЕ: Pulse glow анимация на logo
-    local LogoGlow = Instance.new("UIStroke", Logo)
-    LogoGlow.Color = Color3.fromRGB(0, 160, 255)
-    LogoGlow.Thickness = 2
-    LogoGlow.Transparency = 0.3
-    task.spawn(function()
-        while LogoGlow.Parent do
-            TweenService:Create(LogoGlow, TweenInfo.new(1.0, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Thickness = 4, Transparency = 0.0 }):Play()
-            task.wait(1.0)
-            TweenService:Create(LogoGlow, TweenInfo.new(1.0, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Thickness = 1, Transparency = 0.6 }):Play()
-            task.wait(1.0)
-        end
-    end)
     local PhaseLabel = Instance.new("TextLabel", Titan)
     PhaseLabel.Size = UDim2.new(0, 300, 0, 30)
     PhaseLabel.Position = UDim2.new(0, 110, 0, 85)
@@ -261,31 +248,6 @@ function Loader.Create()
     function self.Update(percent, status)
         TweenService:Create(BarFill, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = UDim2.new(percent / 100, 0, 1, 0)}):Play()
         Percent.Text = math.floor(percent) .. "%"
-        
-        -- ✨ НОВОЕ: Rainbow gradient при 100%
-        if percent >= 99.9 and not BarFill:FindFirstChildOfClass("UIGradient") then
-            local rainbowGrad = Instance.new("UIGradient")
-            rainbowGrad.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0,    Color3.fromRGB(255, 80,  80)),
-                ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 165, 0)),
-                ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)),
-                ColorSequenceKeypoint.new(0.5,  Color3.fromRGB(80,  255, 80)),
-                ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0,   200, 255)),
-                ColorSequenceKeypoint.new(0.83, Color3.fromRGB(140, 80,  255)),
-                ColorSequenceKeypoint.new(1,    Color3.fromRGB(255, 80,  180))
-            }
-            rainbowGrad.Parent = BarFill
-            task.spawn(function()
-                local offset = 0
-                while rainbowGrad.Parent do
-                    offset = offset + 0.008
-                    if offset > 1 then offset = 0 end
-                    rainbowGrad.Offset = Vector2.new(offset, 0)
-                    RunService.RenderStepped:Wait()
-                end
-            end)
-        end
-        
         if status then
             StatusLabel.Text = status:upper()
             AddLog(status)

@@ -182,25 +182,9 @@ end
 
 local function isAimingAt(targetChar)
     if not States.Combat.Killaura.RequireAim then return true end
-    local camera = workspace.CurrentCamera
-    if not camera then return false end
-    
-    local tHrp = targetChar:FindFirstChild("HumanoidRootPart") or targetChar:FindFirstChild("Head")
-    if not tHrp then return false end
-    
-    -- Project target position to screen
-    local screenPos, onScreen = camera:WorldToScreenPoint(tHrp.Position)
-    if not onScreen then return false end
-    
-    -- Get current mouse position
     local mouse = LocalPlayer:GetMouse()
-    local mouseX, mouseY = mouse.X, mouse.Y
-    
-    -- Allow a configurable pixel radius around the target (default 80px)
-    local aimRadius = States.Combat.Killaura.AimRadius or 80
-    local dx = screenPos.X - mouseX
-    local dy = screenPos.Y - mouseY
-    return (dx * dx + dy * dy) <= (aimRadius * aimRadius)
+    if not mouse.Target then return false end
+    return mouse.Target:IsDescendantOf(targetChar)
 end
 
 function Mega.Features.Killaura.SetEnabled(state)

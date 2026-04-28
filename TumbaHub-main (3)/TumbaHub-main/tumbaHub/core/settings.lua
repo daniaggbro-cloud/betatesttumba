@@ -218,11 +218,6 @@ Mega.States = {
             Enabled = false,
             Keybind = "X",
             Target = nil
-        },
-        KitBan = {
-            Enabled = false,
-            TargetKits = {},
-            Keybind = "None"
         }
     },
     Beekeeper = {

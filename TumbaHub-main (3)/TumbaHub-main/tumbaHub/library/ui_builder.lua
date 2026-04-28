@@ -11,45 +11,50 @@ local UserInputService = Mega.Services.UserInputService
 function Mega.UI.CreateSection(parent, titleKey)
     local Section = Instance.new("Frame")
     Section.Name = titleKey .. "Section"
-    Section.Size = UDim2.new(0.95, 0, 0, 38)
-    Section.BackgroundTransparency = 1 -- Без фона — только типографика и линия
+    Section.Size = UDim2.new(0.95, 0, 0, 45)
+    Section.BackgroundColor3 = Mega.Settings.Menu.ElementColor
+    Section.BackgroundTransparency = 0.5 -- Sleeker glass look
     Section.BorderSizePixel = 0
 
-    -- Декоративная левая полоска (короткая, перед текстом)
-    local AccentDot = Instance.new("Frame", Section)
-    AccentDot.Name = "AccentDot"
-    AccentDot.Size = UDim2.new(0, 3, 0, 12)
-    AccentDot.Position = UDim2.new(0, 0, 0.5, -6)
-    AccentDot.BackgroundColor3 = Mega.Settings.Menu.AccentColor
-    AccentDot.BorderSizePixel = 0
-    -- Нет круглых углов, резкий штрих
+    local SectionCorner = Instance.new("UICorner")
+    SectionCorner.CornerRadius = UDim.new(0, 10)
+    SectionCorner.Parent = Section
+    
+    local SectionStroke = Instance.new("UIStroke", Section)
+    SectionStroke.Color = Mega.Settings.Menu.AccentColor
+    SectionStroke.Thickness = 1.2
+    SectionStroke.Transparency = 0.7
+    
+    local SectionGradient = Instance.new("UIGradient")
+    
+    local success = pcall(function()
+        local grad1 = typeof(Mega.Settings.Menu.SectionGradient1) == "Color3" and Mega.Settings.Menu.SectionGradient1 or Color3.fromRGB(15, 15, 25)
+        local grad2 = typeof(Mega.Settings.Menu.SectionGradient2) == "Color3" and Mega.Settings.Menu.SectionGradient2 or Color3.fromRGB(10, 10, 20)
+        SectionGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, grad1),
+            ColorSequenceKeypoint.new(1, grad2)
+        }
+    end)
+    if not success then
+        SectionGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 25)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
+        }
+    end
+    SectionGradient.Rotation = 45
+    SectionGradient.Parent = Section
 
     local SectionTitle = Instance.new("TextLabel")
     SectionTitle.Name = "SectionTitle"
-    SectionTitle.Size = UDim2.new(1, -16, 1, 0)
-    SectionTitle.Position = UDim2.new(0, 12, 0, 0)
+    SectionTitle.Size = UDim2.new(1, -20, 1, 0)
+    SectionTitle.Position = UDim2.new(0, 15, 0, 0)
     SectionTitle.BackgroundTransparency = 1
-    SectionTitle.Text = GetText(titleKey):upper()  -- ЗАГЛАВНЫЕ — элегантно
-    SectionTitle.TextColor3 = Mega.Settings.Menu.TextMutedColor
-    SectionTitle.TextSize = 11
-    SectionTitle.Font = Enum.Font.GothamBlack
+    SectionTitle.Text = GetText(titleKey)
+    SectionTitle.TextColor3 = Mega.Settings.Menu.TextColor
+    SectionTitle.TextSize = 14
+    SectionTitle.Font = Enum.Font.GothamBold
     SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
     SectionTitle.Parent = Section
-    
-    -- Горизонтальная линия-разделитель под текстом
-    local HLine = Instance.new("Frame", Section)
-    HLine.Size = UDim2.new(1, 0, 0, 1)
-    HLine.Position = UDim2.new(0, 0, 1, -1)
-    HLine.BackgroundColor3 = Mega.Settings.Menu.AccentColor
-    HLine.BackgroundTransparency = 0.85
-    HLine.BorderSizePixel = 0
-    -- Gradient: слева от акцента прозрачнее
-    local HLineGrad = Instance.new("UIGradient", HLine)
-    HLineGrad.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 0.3),
-        NumberSequenceKeypoint.new(0.5, 0.7),
-        NumberSequenceKeypoint.new(1, 1)
-    }
     
     Section.Parent = parent
     return Section
@@ -60,22 +65,18 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = textKey .. "Toggle"
-    ToggleFrame.Size = UDim2.new(0.95, 0, 0, 36)
-    ToggleFrame.BackgroundColor3 = Mega.Settings.Menu.ElementColor
-    ToggleFrame.BackgroundTransparency = 0.7
-    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    ToggleFrame.BackgroundTransparency = 1
     ToggleFrame.Parent = parent
-    Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 4)
 
     local ToggleLabel = Instance.new("TextLabel")
     ToggleLabel.Name = "Label"
-    ToggleLabel.Size = UDim2.new(0.65, 0, 1, 0)
-    ToggleLabel.Position = UDim2.new(0, 12, 0, 0)
+    ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
     ToggleLabel.BackgroundTransparency = 1
-    ToggleLabel.Text = translatedText
-    ToggleLabel.TextColor3 = Mega.Settings.Menu.TextMutedColor
-    ToggleLabel.TextSize = 12
-    ToggleLabel.Font = Enum.Font.GothamSemibold
+    ToggleLabel.Text = " " .. translatedText
+    ToggleLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    ToggleLabel.TextSize = 13
+    ToggleLabel.Font = Enum.Font.Gotham
     ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
     ToggleLabel.Parent = ToggleFrame
 
@@ -90,79 +91,62 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
 
     local initialState = getState()
 
-    -- Компактный toggle, резкие углы
     local ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "Toggle"
-    ToggleButton.Size = UDim2.new(0, 46, 0, 24)
-    ToggleButton.Position = UDim2.new(1, -56, 0.5, -12)
-    ToggleButton.BackgroundColor3 = initialState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(30, 30, 42)
+    ToggleButton.Size = UDim2.new(0, 44, 0, 22)
+    ToggleButton.Position = UDim2.new(1, -54, 0.5, -11)
+    ToggleButton.BackgroundColor3 = initialState and Mega.Settings.Menu.AccentColor or Mega.Settings.Menu.ToggleOffColor
     ToggleButton.BorderSizePixel = 0
     ToggleButton.Text = ""
     ToggleButton.AutoButtonColor = false
     ToggleButton.Parent = ToggleFrame
-    Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
-    
-    -- Тонкий border на toggle
-    local ToggleBorder = Instance.new("UIStroke", ToggleButton)
-    ToggleBorder.Color = initialState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(50, 50, 65)
-    ToggleBorder.Thickness = 1
-    ToggleBorder.Transparency = initialState and 0.5 or 0
-    ToggleBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(1, 0)
+    ToggleCorner.Parent = ToggleButton
 
     local ToggleCircle = Instance.new("Frame")
     ToggleCircle.Name = "Circle"
     ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
-    ToggleCircle.Position = initialState and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
-    ToggleCircle.BackgroundColor3 = initialState and Color3.new(1,1,1) or Color3.fromRGB(80, 80, 100)
+    ToggleCircle.Position = initialState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+    ToggleCircle.BackgroundColor3 = Mega.Settings.Menu.BackgroundColor
     ToggleCircle.Parent = ToggleButton
-    Instance.new("UICorner", ToggleCircle).CornerRadius = UDim.new(1, 0)
+    
+    local CircleCorner = Instance.new("UICorner")
+    CircleCorner.CornerRadius = UDim.new(1, 0)
+    CircleCorner.Parent = ToggleCircle
 
     local function SetState(newState)
         local path = statePath
         local tbl = Mega.States
         local key
         for part in path:gmatch("[^%.]+") do
-            if tbl[part] == nil and part ~= path:match("([^%.]+)$") then tbl[part] = {} end
+            if tbl[part] == nil and part ~= path:match("([^%.]+)$") then
+                tbl[part] = {}
+            end
             key = part
-            if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
+            if part ~= path:match("([^%.]+)$") then
+                tbl = tbl[part]
+            end
         end
         tbl[key] = newState
 
-        local accentCol = Mega.Settings.Menu.AccentColor
-        local offCol = Color3.fromRGB(30, 30, 42)
-        TweenService:Create(ToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
-            BackgroundColor3 = newState and accentCol or offCol
-        }):Play()
-        TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
-            Position = newState and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9),
-            BackgroundColor3 = newState and Color3.new(1,1,1) or Color3.fromRGB(80, 80, 100)
-        }):Play()
-        TweenService:Create(ToggleBorder, TweenInfo.new(0.2), {
-            Color = newState and accentCol or Color3.fromRGB(50, 50, 65),
-            Transparency = newState and 0.5 or 0
-        }):Play()
-        -- Метка ToggleLabel светлее при ON
-        TweenService:Create(ToggleLabel, TweenInfo.new(0.2), {
-            TextColor3 = newState and Mega.Settings.Menu.TextColor or Mega.Settings.Menu.TextMutedColor
-        }):Play()
+        TweenService:Create(ToggleButton, TweenInfo.new(0.2), { BackgroundColor3 = newState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80) }):Play()
+        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = newState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9) }):Play()
         
         if callback then pcall(callback, newState) end
+        
         local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
         ShowNotification(translatedText .. ": " .. statusText, 2)
     end
     
-    -- Hover — очень субтильный (без детского scale)
-    ToggleFrame.MouseEnter:Connect(function()
-        TweenService:Create(ToggleFrame, TweenInfo.new(0.15), { BackgroundTransparency = 0.5 }):Play()
-    end)
-    ToggleFrame.MouseLeave:Connect(function()
-        TweenService:Create(ToggleFrame, TweenInfo.new(0.15), { BackgroundTransparency = 0.7 }):Play()
-    end)
-    
     Mega.Objects.Toggles[textKey] = SetState
     ToggleButton.MouseButton1Click:Connect(function() SetState(not getState()) end)
 
-    if initialState and callback then task.spawn(callback, true) end
+    if initialState and callback then
+        task.spawn(callback, true)
+    end
+
     return ToggleFrame
 end
 
@@ -215,7 +199,7 @@ function Mega.UI.CreateButton(parent, textKey, callback)
     return Button
 end
 
-function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, decimals)
+function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
     local translatedText = GetText(textKey)
     
     local function getState()
@@ -235,143 +219,57 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, de
     SliderFrame.BackgroundTransparency = 1
     SliderFrame.Parent = parent
 
-    -- Заголовок: название слева, значение справа (в цвете акцента)
     local SliderLabel = Instance.new("TextLabel")
     SliderLabel.Name = "Label"
-    SliderLabel.Size = UDim2.new(0.65, 0, 0, 20)
+    SliderLabel.Size = UDim2.new(1, 0, 0, 20)
     SliderLabel.BackgroundTransparency = 1
-    SliderLabel.Text = translatedText
+    SliderLabel.Text = GetText("slider_label", translatedText, currentValue)
     SliderLabel.TextColor3 = Mega.Settings.Menu.TextColor
     SliderLabel.TextSize = 12
-    SliderLabel.Font = Enum.Font.GothamSemibold
+    SliderLabel.Font = Enum.Font.Gotham
     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
     SliderLabel.Parent = SliderFrame
 
-    local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Name = "ValueLabel"
-    ValueLabel.Size = UDim2.new(0.35, 0, 0, 20)
-    ValueLabel.Position = UDim2.new(0.65, 0, 0, 0)
-    ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Text = tostring(currentValue)
-    ValueLabel.TextColor3 = Mega.Settings.Menu.AccentColor
-    ValueLabel.TextSize = 12
-    ValueLabel.Font = Enum.Font.GothamBold
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    ValueLabel.Parent = SliderFrame
-
-    -- Трек слайдера
     local SliderTrack = Instance.new("Frame")
     SliderTrack.Name = "Track"
-    SliderTrack.Size = UDim2.new(1, 0, 0, 8)
-    SliderTrack.Position = UDim2.new(0, 0, 0, 33)
+    SliderTrack.Size = UDim2.new(1, 0, 0, 6)
+    SliderTrack.Position = UDim2.new(0, 0, 0, 35)
     SliderTrack.BackgroundColor3 = Mega.Settings.Menu.ToggleOffColor
     SliderTrack.BorderSizePixel = 0
     SliderTrack.Parent = SliderFrame
-    Instance.new("UICorner", SliderTrack).CornerRadius = UDim.new(1, 0)
 
-    -- ✨ Заполнение с gradient (AccentColor → светлее)
+    local TrackCorner = Instance.new("UICorner")
+    TrackCorner.CornerRadius = UDim.new(0, 3)
+    TrackCorner.Parent = SliderTrack
+
     local SliderFill = Instance.new("Frame")
     SliderFill.Name = "Fill"
     SliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
     SliderFill.BackgroundColor3 = Mega.Settings.Menu.AccentColor
     SliderFill.BorderSizePixel = 0
     SliderFill.Parent = SliderTrack
-    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
-    
-    local FillGrad = Instance.new("UIGradient", SliderFill)
-    FillGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Mega.Settings.Menu.AccentColor),
-        ColorSequenceKeypoint.new(1, Mega.Settings.Menu.AccentColor:Lerp(Color3.new(1,1,1), 0.35))
-    }
 
-    -- ✨ Thumb (18px) с hover и drag glow
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(0, 3)
+    FillCorner.Parent = SliderFill
+
     local SliderButton = Instance.new("TextButton")
     SliderButton.Name = "Button"
-    SliderButton.Size = UDim2.new(0, 18, 0, 18)
-    SliderButton.Position = UDim2.new(SliderFill.Size.X.Scale, -9, 0.5, -9)
-    SliderButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    SliderButton.Size = UDim2.new(0, 16, 0, 16)
+    SliderButton.Position = UDim2.new(SliderFill.Size.X.Scale, -8, 0.5, -8)
+    SliderButton.BackgroundColor3 = Mega.Settings.Menu.AccentColor
     SliderButton.BorderSizePixel = 0
     SliderButton.Text = ""
     SliderButton.AutoButtonColor = false
-    SliderButton.ZIndex = 3
     SliderButton.Parent = SliderTrack
-    Instance.new("UICorner", SliderButton).CornerRadius = UDim.new(1, 0)
-    
-    -- Glow stroke на thumb
-    local ThumbGlow = Instance.new("UIStroke", SliderButton)
-    ThumbGlow.Color = Mega.Settings.Menu.AccentColor
-    ThumbGlow.Thickness = 2
-    ThumbGlow.Transparency = 1
-    ThumbGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    
-    -- ✨ Laser на конце fill
-    local FillLaser = Instance.new("Frame", SliderFill)
-    FillLaser.Size = UDim2.new(0, 30, 3, 0)
-    FillLaser.Position = UDim2.new(1, -10, 0.5, 0)
-    FillLaser.AnchorPoint = Vector2.new(0.5, 0.5)
-    FillLaser.BackgroundColor3 = Color3.new(1, 1, 1)
-    FillLaser.BorderSizePixel = 0
-    FillLaser.ZIndex = 2
-    local LaserGrad = Instance.new("UIGradient", FillLaser)
-    LaserGrad.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.3), NumberSequenceKeypoint.new(1, 1)
-    }
 
-    -- Hover эффекты
-    SliderButton.MouseEnter:Connect(function()
-        TweenService:Create(SliderButton, TweenInfo.new(0.2), { Size = UDim2.new(0, 22, 0, 22), Position = UDim2.new(SliderFill.Size.X.Scale, -11, 0.5, -11) }):Play()
-        TweenService:Create(ThumbGlow, TweenInfo.new(0.2), { Transparency = 0.2 }):Play()
-    end)
-    SliderButton.MouseLeave:Connect(function()
-        if not SliderButton:IsA("TextButton") then return end
-        TweenService:Create(SliderButton, TweenInfo.new(0.2), { Size = UDim2.new(0, 18, 0, 18), Position = UDim2.new(SliderFill.Size.X.Scale, -9, 0.5, -9) }):Play()
-        TweenService:Create(ThumbGlow, TweenInfo.new(0.2), { Transparency = 1 }):Play()
-    end)
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(1, 0)
+    ButtonCorner.Parent = SliderButton
 
     local dragging = false
-    
-    SliderButton.MouseButton1Down:Connect(function()
-        dragging = true
-        TweenService:Create(SliderButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 20, 0, 20) }):Play()
-        TweenService:Create(ThumbGlow, TweenInfo.new(0.15), { Transparency = 0.0, Thickness = 3 }):Play()
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-            TweenService:Create(SliderButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 18, 0, 18) }):Play()
-            TweenService:Create(ThumbGlow, TweenInfo.new(0.2), { Transparency = 0.2, Thickness = 2 }):Play()
-        end
-    end)
-
-    -- ✨ Клик по треку = прыжок к позиции
-    SliderTrack.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mousePos = UserInputService:GetMouseLocation()
-            local framePos = SliderTrack.AbsolutePosition
-            local frameSize = SliderTrack.AbsoluteSize
-            local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
-            local newValue = min + relativeX * (max - min)
-            if decimals and type(decimals) == "number" then
-                local mult = 10 ^ decimals
-                newValue = math.floor(newValue * mult + 0.5) / mult
-            else
-                newValue = math.floor(newValue + 0.5)
-            end
-            local path = statePath
-            local tbl = Mega.States
-            local key
-            for part in path:gmatch("[^%.]+") do
-                key = part
-                if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
-            end
-            tbl[key] = newValue
-            TweenService:Create(SliderFill, TweenInfo.new(0.15, Enum.EasingStyle.Quart), { Size = UDim2.new(relativeX, 0, 1, 0) }):Play()
-            TweenService:Create(SliderButton, TweenInfo.new(0.15, Enum.EasingStyle.Quart), { Position = UDim2.new(relativeX, -9, 0.5, -9) }):Play()
-            ValueLabel.Text = tostring(newValue)
-            if callback then pcall(callback, newValue) end
-            dragging = true
-        end
-    end)
+    SliderButton.MouseButton1Down:Connect(function() dragging = true end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
     Mega.Services.RunService.RenderStepped:Connect(function()
         if dragging then
@@ -379,13 +277,7 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, de
             local framePos = SliderTrack.AbsolutePosition
             local frameSize = SliderTrack.AbsoluteSize
             local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
-            local newValue = min + relativeX * (max - min)
-            if decimals and type(decimals) == "number" then
-                local mult = 10 ^ decimals
-                newValue = math.floor(newValue * mult + 0.5) / mult
-            else
-                newValue = math.floor(newValue + 0.5)
-            end
+            local newValue = math.floor(min + relativeX * (max - min) + 0.5)
 
             local path = statePath
             local tbl = Mega.States
@@ -397,8 +289,8 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, de
             tbl[key] = newValue
 
             SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-            SliderButton.Position = UDim2.new(relativeX, -9, 0.5, -9)
-            ValueLabel.Text = tostring(newValue)
+            SliderButton.Position = UDim2.new(relativeX, -8, 0.5, -8)
+            SliderLabel.Text = GetText("slider_label", translatedText, newValue)
             if callback then pcall(callback, newValue) end
         end
     end)

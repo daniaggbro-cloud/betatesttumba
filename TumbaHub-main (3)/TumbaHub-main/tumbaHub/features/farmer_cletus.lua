@@ -221,11 +221,134 @@ local function getClosestItemShop()
 end
 
 -- =====================================================
--- Цена melon_seeds: читаем из UI (ItemShop)
--- Путь: PlayerGui.ItemShop...melon_seeds_ShopItemCard.Price → TextLabel.ContentText
+-- Кэш для модуля магазина и цены melon_seeds
 -- =====================================================
+local BedwarsShopData = nil      -- require('bedwars-shop').BedwarsShop
+local BedwarsGetAdjusted = nil   -- getAdjustedShopPrice (если есть)
+local BedwarsGetShopItemBase = nil -- getShopItemBase (нефильтрованный поиск)
+local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds (из getShopItemBase)
+local cachedMelonPrice = nil     -- Кэшированная цена
 
-local currentPriceGuess = 2
+-- Инициализация: прямой require() модуля bedwars-shop
+-- Путь: ReplicatedStorage.TS.games.bedwars.shop.bedwars-shop
+local function ensureShopData()
+    if BedwarsShopData then return true end
+    
+    pcall(function()
+        local RS = game:GetService("ReplicatedStorage")
+        local shopModule = RS:FindFirstChild("TS")
+            and RS.TS:FindFirstChild("games")
+            and RS.TS.games:FindFirstChild("bedwars")
+            and RS.TS.games.bedwars:FindFirstChild("shop")
+            and RS.TS.games.bedwars.shop:FindFirstChild("bedwars-shop")
+        
+        if not shopModule or not shopModule:IsA("ModuleScript") then return end
+        
+        local data = require(shopModule)
+        if type(data) ~= "table" then return end
+        
+        local shop = data.BedwarsShop or data
+        if not shop then return end
+        
+        BedwarsShopData = shop
+        
+        if type(shop.getAdjustedShopPrice) == "function" then
+            BedwarsGetAdjusted = shop.getAdjustedShopPrice
+        end
+        -- getShopItemBase — возвращает НЕФИЛЬТРОВАННЫЙ предмет (в отличие от getShopItem)
+        -- getShopItem('melon_seeds') возвращает nil, т.к. kit-фильтр убирает его
+        if type(shop.getShopItemBase) == "function" then
+            BedwarsGetShopItemBase = shop.getShopItemBase
+        end
+        
+        -- Получаем melon_seeds через getShopItemBase (обходим фильтр)
+        if BedwarsGetShopItemBase then
+            local ok, item = pcall(BedwarsGetShopItemBase, "melon_seeds")
+            if ok and type(item) == "table" then
+                melonSeedsEntry = item
+            end
+        end
+        
+        -- Если getShopItemBase не помог, ищем в RAW ShopItems
+        if not melonSeedsEntry and shop.ShopItems then
+            for _, item in ipairs(shop.ShopItems) do
+                if type(item) == "table" and item.itemType == "melon_seeds" then
+                    melonSeedsEntry = item
+                    break
+                end
+            end
+        end
+    end)
+    
+    return BedwarsShopData ~= nil
+end
+
+-- Запускаем инициализацию при загрузке модуля
+task.spawn(function()
+    task.wait(2)
+    ensureShopData()
+end)
+
+local function getMelonPriceInvisibly()
+    -- ============================================================
+    -- 1. КЭШИРОВАННАЯ ЦЕНА (самый быстрый путь)
+    -- ============================================================
+    if cachedMelonPrice then return cachedMelonPrice end
+    
+    -- ============================================================
+    -- 2. МОДУЛЬ МАГАЗИНА (работает ВСЕГДА, даже без UI)
+    -- ============================================================
+    ensureShopData()
+    
+    if melonSeedsEntry then
+        -- Пробуем динамическую цену
+        if BedwarsGetAdjusted then
+            local ok, adjusted = pcall(BedwarsGetAdjusted, melonSeedsEntry)
+            if ok and type(adjusted) == "number" then
+                cachedMelonPrice = adjusted
+                return adjusted
+            end
+        end
+        
+        -- Базовая цена из модуля
+        if melonSeedsEntry.price then
+            cachedMelonPrice = melonSeedsEntry.price
+            return melonSeedsEntry.price
+        end
+    end
+    
+    -- ============================================================
+    -- 3. UI SCAN (если магазин открыт — дополнительная проверка)
+    -- ============================================================
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    if pg then
+        local itemShop = pg:FindFirstChild("ItemShop")
+        if itemShop then
+            for _, obj in ipairs(itemShop:GetDescendants()) do
+                if obj.Name == "melon_seeds_ShopItemCard" then
+                    local priceContainer = obj:FindFirstChild("Price")
+                    if priceContainer then
+                        for _, desc in ipairs(priceContainer:GetDescendants()) do
+                            if desc:IsA("TextLabel") and desc.Text then
+                                local num = tonumber(desc.Text:match("%d+"))
+                                if num then
+                                    cachedMelonPrice = num
+                                    return num
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- ============================================================
+    -- 4. ХАРДКОД: базовая цена из дампа игры (packages.json)
+    -- melon_seeds: currency=emerald, price=2
+    -- ============================================================
+    return 2
+end
 
 local function StartAutoBuyLoop()
     if connections.AutoBuyLoop then connections.AutoBuyLoop:Disconnect() end
@@ -237,29 +360,26 @@ local function StartAutoBuyLoop()
         if tick() - lastBuyRun > (States.Cletus.AutoBuySpeed or 1) then
             lastBuyRun = tick()
             
+            -- Подстраховка инвентаря (вдруг они называются melon)
             local currentSeeds = getItemCount("melon_seeds") + getItemCount("melon")
             if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
             
+            local actualPrice = getMelonPriceInvisibly()
             local maxPrice = States.Cletus.MaxMelonPrice or 2
             
-            -- Если наша предполагаемая цена стала выше лимита - ждем
-            if currentPriceGuess > maxPrice then return end
-            
-            -- Проверяем, хватает ли изумрудов на нашу предполагаемую цену
-            local emeralds = getItemCount("emerald")
-            if emeralds < currentPriceGuess then return end
+            -- Если не удалось узнать цену или она выше лимита - ждем
+            if not actualPrice then return end
+            if actualPrice > maxPrice then return end
             
             if PurchaseRemote then
                 local shopId = getClosestItemShop()
-                if not shopId then return end -- Магазина нет рядом
-                
                 local args = {
                     {
                         shopItem = {
                             currency = "emerald",
                             itemType = "melon_seeds",
                             amount = 1,
-                            price = currentPriceGuess,
+                            price = actualPrice,
                             category = "Combat",
                             requiresKit = { "farmer_cletus" }
                         },
@@ -268,26 +388,9 @@ local function StartAutoBuyLoop()
                 }
                 
                 task.spawn(function()
-                    local seedsBefore = getItemCount("melon_seeds")
-                    
-                    -- Отправляем запрос на покупку с нашей текущей ценой
                     pcall(function()
                         PurchaseRemote:InvokeServer(unpack(args))
                     end)
-                    
-                    task.wait(0.2) -- Ждем долю секунды для обновления инвентаря
-                    
-                    local seedsAfter = getItemCount("melon_seeds")
-                    if seedsAfter <= seedsBefore then
-                        -- Покупка не удалась! Значит, игра отвергла нашу цену (она выросла из-за налога)
-                        -- или мы слишком далеко от магазина.
-                        -- Увеличиваем предполагаемую цену на 1, чтобы в следующий раз отправить правильную
-                        currentPriceGuess = currentPriceGuess + 1
-                    else
-                        -- Покупка успешна! В Bedwars цена арбузов обычно растет после каждой покупки,
-                        -- так что мы сразу готовим цену к следующей покупке.
-                        currentPriceGuess = currentPriceGuess + 1
-                    end
                 end)
             end
         end
