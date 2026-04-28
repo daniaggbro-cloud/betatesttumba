@@ -221,7 +221,7 @@ Mega.States = {
         },
         KitBan = {
             Enabled = false,
-            TargetKit = nil,
+            TargetKits = {},
             Keybind = "None"
         }
     },
