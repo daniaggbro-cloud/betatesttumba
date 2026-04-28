@@ -1,38 +1,28 @@
 -- library/notifications.lua
--- ✨ Полностью переработанная система уведомлений v2.0
--- Поддержка иконок, прогресс-бара исчезновения, типов уведомлений
+-- TUMBA HUB — Elite Notification System
+-- Минимализм. Точность. Без лишнего.
 
 local CoreGui = Mega.Services.CoreGui
 local Debris = Mega.Services.Debris
 local TweenService = Mega.Services.TweenService
-local RunService = Mega.Services.RunService
 
--- Определяем иконку и цвет по типу сообщения автоматически
-local function DetectNotifType(message)
+-- Авто-определение статуса по тексту
+local function DetectStatus(message)
     local msg = message:lower()
-    -- Включение/выключение фич
     if msg:find("enabled") or msg:find("включено") or msg:find("увімкнено") or msg:find("activado") then
-        return "success", Color3.fromRGB(80, 220, 120)
+        return "ON",  Color3.fromRGB(100, 220, 140)
     elseif msg:find("disabled") or msg:find("выключено") or msg:find("вимкнено") or msg:find("desactivado") then
-        return "error", Color3.fromRGB(220, 80, 80)
+        return "OFF", Color3.fromRGB(200, 75, 75)
     elseif msg:find("warning") or msg:find("осторожно") or msg:find("внимание") then
-        return "warning", Color3.fromRGB(255, 180, 50)
+        return "WARN", Color3.fromRGB(210, 160, 50)
     end
-    return "info", nil -- nil = использовать accent color
-end
-
-local function GetNotifIcon(notifType)
-    if notifType == "success" then return "✅"
-    elseif notifType == "error" then return "❌"
-    elseif notifType == "warning" then return "⚠️"
-    else return "💡" end
+    return "SYS", nil
 end
 
 function Mega.ShowNotification(message, duration, colorOverride)
     duration = duration or 3
 
-    -- Авто-определение типа и цвета
-    local notifType, autoColor = DetectNotifType(message)
+    local statusTag, autoColor = DetectStatus(message)
     local accentCol = colorOverride or autoColor or Mega.Settings.Menu.AccentColor
 
     local NotifGui = Instance.new("ScreenGui")
@@ -41,7 +31,6 @@ function Mega.ShowNotification(message, duration, colorOverride)
     NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     NotifGui.DisplayOrder = 999
 
-    -- Позиция с учётом других уведомлений
     local existingNotifs = 0
     for _, child in pairs(CoreGui:GetChildren()) do
         if child.Name == "TumbaGlobalNotification" and child ~= NotifGui then
@@ -49,137 +38,103 @@ function Mega.ShowNotification(message, duration, colorOverride)
         end
     end
 
-    -- Основной контейнер (280px, чуть шире)
+    -- Контейнер: ультра-тёмный, острые углы (4px), элитный вид
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(0, 280, 0, 54)
-    container.Position = UDim2.new(1, 20, 1, -70 - (existingNotifs * 64)) -- Начинаем за экраном справа
-    container.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-    container.BackgroundTransparency = 0.08
+    container.Size = UDim2.new(0, 290, 0, 52)
+    container.Position = UDim2.new(1, 16, 1, -68 - (existingNotifs * 60))
+    container.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
+    container.BackgroundTransparency = 0
     container.BorderSizePixel = 0
     container.ClipsDescendants = true
     container.Parent = NotifGui
+    Instance.new("UICorner", container).CornerRadius = UDim.new(0, 4)
 
-    local ContCorner = Instance.new("UICorner", container)
-    ContCorner.CornerRadius = UDim.new(0, 10)
+    -- Левая accent-полоска: тонкая (3px), на всю высоту, без скруглений
+    local SideBar = Instance.new("Frame", container)
+    SideBar.Size = UDim2.new(0, 3, 1, 0)
+    SideBar.BackgroundColor3 = accentCol
+    SideBar.BorderSizePixel = 0
 
-    -- Внешний stroke с цветом типа
-    local ContStroke = Instance.new("UIStroke", container)
-    ContStroke.Color = accentCol
-    ContStroke.Thickness = 1.2
-    ContStroke.Transparency = 0.4
+    -- Тонкий border вокруг контейнера
+    local Border = Instance.new("UIStroke", container)
+    Border.Color = Color3.fromRGB(35, 35, 50)
+    Border.Thickness = 1
+    Border.Transparency = 0
 
-    -- Левая цветная полоска (как в Section headers)
-    local SideAccent = Instance.new("Frame", container)
-    SideAccent.Size = UDim2.new(0, 4, 0.7, 0)
-    SideAccent.Position = UDim2.new(0, 0, 0.15, 0)
-    SideAccent.BackgroundColor3 = accentCol
-    SideAccent.BorderSizePixel = 0
-    Instance.new("UICorner", SideAccent).CornerRadius = UDim.new(1, 0)
+    -- Статус-тег: [ ON ] / [ OFF ] / [ SYS ] — строгий моноширинный
+    local TagBg = Instance.new("Frame", container)
+    TagBg.Size = UDim2.new(0, 44, 0, 20)
+    TagBg.Position = UDim2.new(0, 12, 0, 8)
+    TagBg.BackgroundColor3 = accentCol
+    TagBg.BackgroundTransparency = 0.82
+    TagBg.BorderSizePixel = 0
+    Instance.new("UICorner", TagBg).CornerRadius = UDim.new(0, 3)
 
-    -- Иконка типа уведомления
-    local IconLabel = Instance.new("TextLabel", container)
-    IconLabel.Size = UDim2.new(0, 28, 0, 28)
-    IconLabel.Position = UDim2.new(0, 12, 0.5, -14)
-    IconLabel.BackgroundTransparency = 1
-    IconLabel.Text = GetNotifIcon(notifType)
-    IconLabel.TextSize = 18
-    IconLabel.Font = Enum.Font.GothamBold
-    IconLabel.TextXAlignment = Enum.TextXAlignment.Center
-    IconLabel.TextYAlignment = Enum.TextYAlignment.Center
+    local TagLabel = Instance.new("TextLabel", TagBg)
+    TagLabel.Size = UDim2.new(1, 0, 1, 0)
+    TagLabel.BackgroundTransparency = 1
+    TagLabel.Text = statusTag
+    TagLabel.TextColor3 = accentCol
+    TagLabel.TextSize = 10
+    TagLabel.Font = Enum.Font.GothamBlack
+    TagLabel.TextXAlignment = Enum.TextXAlignment.Center
 
-    -- Текст сообщения
+    -- Основное сообщение: чистое, белое
     local MsgLabel = Instance.new("TextLabel", container)
-    MsgLabel.Size = UDim2.new(1, -56, 0.75, 0)
-    MsgLabel.Position = UDim2.new(0, 46, 0, 8)
+    MsgLabel.Size = UDim2.new(1, -20, 0, 18)
+    MsgLabel.Position = UDim2.new(0, 12, 0, 30)
     MsgLabel.BackgroundTransparency = 1
-    MsgLabel.TextColor3 = Color3.new(1, 1, 1)
+    MsgLabel.TextColor3 = Color3.fromRGB(200, 200, 215)
     MsgLabel.Font = Enum.Font.GothamSemibold
-    MsgLabel.TextSize = 13
+    MsgLabel.TextSize = 12
     MsgLabel.Text = message
     MsgLabel.TextXAlignment = Enum.TextXAlignment.Left
-    MsgLabel.TextYAlignment = Enum.TextYAlignment.Center
-    MsgLabel.TextWrapped = true
+    MsgLabel.TextTruncate = Enum.TextTruncate.AtEnd
 
-    -- Тип уведомления (маленький subtext)
-    local TypeLabel = Instance.new("TextLabel", container)
-    TypeLabel.Size = UDim2.new(1, -56, 0, 14)
-    TypeLabel.Position = UDim2.new(0, 46, 1, -17)
-    TypeLabel.BackgroundTransparency = 1
-    TypeLabel.TextColor3 = accentCol
-    TypeLabel.Font = Enum.Font.GothamBold
-    TypeLabel.TextSize = 10
-    TypeLabel.Text = notifType:upper()
-    TypeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    -- Временной маркер
+    local TimeLabel = Instance.new("TextLabel", container)
+    TimeLabel.Size = UDim2.new(0, 60, 0, 20)
+    TimeLabel.Position = UDim2.new(1, -68, 0, 8)
+    TimeLabel.BackgroundTransparency = 1
+    TimeLabel.TextColor3 = Color3.fromRGB(60, 60, 80)
+    TimeLabel.Font = Enum.Font.Code
+    TimeLabel.TextSize = 10
+    TimeLabel.Text = "TUMBA HUB"
+    TimeLabel.TextXAlignment = Enum.TextXAlignment.Right
 
-    -- ✨ Прогресс-бар исчезновения (снизу контейнера)
-    local ProgressTrack = Instance.new("Frame", container)
-    ProgressTrack.Size = UDim2.new(1, 0, 0, 2)
-    ProgressTrack.Position = UDim2.new(0, 0, 1, -2)
-    ProgressTrack.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-    ProgressTrack.BorderSizePixel = 0
+    -- Прогресс-бар исчезновения: 1px линия снизу, строгая
+    local ProgFill = Instance.new("Frame", container)
+    ProgFill.Size = UDim2.new(1, 0, 0, 1)
+    ProgFill.Position = UDim2.new(0, 0, 1, -1)
+    ProgFill.BackgroundColor3 = accentCol
+    ProgFill.BackgroundTransparency = 0.4
+    ProgFill.BorderSizePixel = 0
 
-    local ProgressFill = Instance.new("Frame", ProgressTrack)
-    ProgressFill.Size = UDim2.new(1, 0, 1, 0)
-    ProgressFill.BackgroundColor3 = accentCol
-    ProgressFill.BorderSizePixel = 0
-    -- Gradient на прогресс-баре
-    local ProgGrad = Instance.new("UIGradient", ProgressFill)
-    ProgGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, accentCol),
-        ColorSequenceKeypoint.new(1, accentCol:Lerp(Color3.new(1,1,1), 0.4))
-    }
-
-    -- Лазерный эффект на конце прогресс-бара
-    local ProgLaser = Instance.new("Frame", ProgressFill)
-    ProgLaser.Size = UDim2.new(0, 20, 3, 0)
-    ProgLaser.Position = UDim2.new(1, -10, 0.5, 0)
-    ProgLaser.AnchorPoint = Vector2.new(0.5, 0.5)
-    ProgLaser.BackgroundColor3 = Color3.new(1, 1, 1)
-    ProgLaser.BorderSizePixel = 0
-    local LaserGrad = Instance.new("UIGradient", ProgLaser)
-    LaserGrad.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }
-
-    -- Subtle background gradient
-    local BgGrad = Instance.new("UIGradient", container)
-    BgGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 22, 35)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
-    }
-    BgGrad.Rotation = 90
-
-    -- ✨ АНИМАЦИЯ: вылет справа с bounce
-    local targetPos = UDim2.new(1, -295, 1, -70 - (existingNotifs * 64))
-    TweenService:Create(container, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    -- Анимация: слайд справа, быстрая, линейная (без bounce — строго)
+    local targetPos = UDim2.new(1, -306, 1, -68 - (existingNotifs * 60))
+    TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         Position = targetPos
     }):Play()
 
-    -- Анимация появления stroke (glow flash при появлении)
-    TweenService:Create(ContStroke, TweenInfo.new(0.15), { Transparency = 0.0, Thickness = 2 }):Play()
-    task.delay(0.4, function()
-        if ContStroke.Parent then
-            TweenService:Create(ContStroke, TweenInfo.new(0.4), { Transparency = 0.4, Thickness = 1.2 }):Play()
-        end
-    end)
+    -- Accent bar появляется с лёгким fade-in
+    SideBar.BackgroundTransparency = 1
+    TweenService:Create(SideBar, TweenInfo.new(0.4), { BackgroundTransparency = 0 }):Play()
 
-    -- ✨ Прогресс-бар убывает за duration секунд
-    TweenService:Create(ProgressFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
-        Size = UDim2.new(0, 0, 1, 0)
+    -- Прогресс-бар убывает линейно
+    TweenService:Create(ProgFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(0, 0, 0, 1)
     }):Play()
 
-    -- Исчезновение
+    -- Исчезновение: слайд вправо, быстрое
     task.delay(duration, function()
         if container and container.Parent then
-            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-                Position = UDim2.new(1, 20, container.Position.Y.Scale, container.Position.Y.Offset),
+            TweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                Position = UDim2.new(1, 16, container.Position.Y.Scale, container.Position.Y.Offset),
                 BackgroundTransparency = 1
             }):Play()
-            TweenService:Create(ContStroke, TweenInfo.new(0.3), { Transparency = 1 }):Play()
-            Debris:AddItem(NotifGui, 0.5)
+            TweenService:Create(Border, TweenInfo.new(0.2), { Transparency = 1 }):Play()
+            TweenService:Create(SideBar, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+            Debris:AddItem(NotifGui, 0.4)
         end
     end)
 end
-
