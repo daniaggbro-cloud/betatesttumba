@@ -34,6 +34,37 @@ end)
 
 UI.CreateButton(TabFrame, "button_screenshot", function() Mega.ShowNotification("Not implemented yet", 2) end)
 UI.CreateButton(TabFrame, "button_server_info", function() Mega.ShowNotification("Not implemented yet", 2) end)
+
+local kitBanContainer = Instance.new("Frame")
+kitBanContainer.Name = "KitBanContainer"
+kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
+kitBanContainer.BackgroundTransparency = 1
+Mega.Objects.KitBanContainer = kitBanContainer
+
+Mega.States.Misc.KitBan.Enabled = false
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", function(state)
+    Mega.States.Misc.KitBan.Enabled = state
+    if state then
+        if Mega.Features.KitBan and Mega.Features.KitBan.ExecuteBan then
+            Mega.Features.KitBan.ExecuteBan()
+        end
+        
+        task.spawn(function()
+            task.wait(0.2)
+            Mega.States.Misc.KitBan.Enabled = false
+            if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_kit_ban"] then
+                Mega.Objects.Toggles["toggle_kit_ban"](false)
+            end
+            notifyFeature("toggle_kit_ban", false)
+        end)
+    else
+        notifyFeature("toggle_kit_ban", false)
+    end
+end, {
+    kitBanContainer
+})
+
 UI.CreateButton(TabFrame, "button_reload_script", function()
     Mega.ShowNotification(Mega.GetText("notify_reload"), 2)
     if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
