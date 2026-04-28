@@ -34,6 +34,19 @@ end)
 
 UI.CreateButton(TabFrame, "button_screenshot", function() Mega.ShowNotification("Not implemented yet", 2) end)
 UI.CreateButton(TabFrame, "button_server_info", function() Mega.ShowNotification("Not implemented yet", 2) end)
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/kit_ban.lua") end)
+end)
+
+UI.CreateButton(TabFrame, "button_open_kit_ban", function()
+    if Mega.Features.KitBan and Mega.Features.KitBan.OpenMenu then
+        Mega.Features.KitBan.OpenMenu()
+    else
+        Mega.ShowNotification("Kit Ban feature not loaded!", 2)
+    end
+end)
+
 UI.CreateButton(TabFrame, "button_reload_script", function()
     Mega.ShowNotification(Mega.GetText("notify_reload"), 2)
     if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
