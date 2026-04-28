@@ -199,7 +199,7 @@ function Mega.UI.CreateButton(parent, textKey, callback)
     return Button
 end
 
-function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
+function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback, decimals)
     local translatedText = GetText(textKey)
     
     local function getState()
@@ -277,7 +277,13 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
             local framePos = SliderTrack.AbsolutePosition
             local frameSize = SliderTrack.AbsoluteSize
             local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
-            local newValue = math.floor(min + relativeX * (max - min) + 0.5)
+            local newValue = min + relativeX * (max - min)
+            if decimals and type(decimals) == "number" then
+                local mult = 10 ^ decimals
+                newValue = math.floor(newValue * mult + 0.5) / mult
+            else
+                newValue = math.floor(newValue + 0.5)
+            end
 
             local path = statePath
             local tbl = Mega.States
