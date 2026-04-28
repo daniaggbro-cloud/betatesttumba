@@ -302,6 +302,8 @@ function Mega.Features.Killaura.SetEnabled(state)
                 if closestTarget and weapon and SwordHitRemote then
                     local currentTime = tick()
                     local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
+                    local jitter = math.random(-20, 20) / 1000
+                    local effectiveDelay = math.max(0, userDelay + jitter)
                     
                     -- Check "Only on Click" condition
                     local canAttack = true
@@ -314,7 +316,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                     end
 
                     -- Если задержка 0 и проверка пройдена, бьем без остановки на каждом кадре
-                    if canAttack and (currentTime - lastAttackTime) >= userDelay then
+                    if canAttack and (currentTime - lastAttackTime) >= effectiveDelay then
                         lastAttackTime = currentTime
                         
                         local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
