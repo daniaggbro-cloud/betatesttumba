@@ -242,6 +242,9 @@ local function InitializeKitBanUI()
 
             if type(States.Misc.KitBan.TargetKits) ~= "table" then States.Misc.KitBan.TargetKits = {} end
             local isSelected = States.Misc.KitBan.TargetKits[kitData.id] or false
+            
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(0.95, 0, 0, 35)
             btn.BackgroundColor3 = isSelected and Color3.fromRGB(0, 200, 100) or elemColor
             
             btn.Text = kitData.name
