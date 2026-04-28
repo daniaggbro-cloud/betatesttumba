@@ -161,23 +161,7 @@ local function banKit(kitId)
     return success
 end
 
-connections.KitBanInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and States.Misc and States.Misc.KitBan then
-        if input.KeyCode.Name == States.Misc.KitBan.Keybind and States.Misc.KitBan.Enabled then
-            local targetKit = States.Misc.KitBan.TargetKit
-            if targetKit then
-                local isSuccess = banKit(targetKit)
-                if Mega.ShowNotification then
-                    if isSuccess then
-                        Mega.ShowNotification(Mega.GetText("banned_kit_success") or "ЗАБАНЕН!", 2)
-                    else
-                        Mega.ShowNotification(Mega.GetText("banned_kit_fail") or "ОШИБКА!", 2)
-                    end
-                end
-            end
-        end
-    end
-end)
+connections.KitBanInput = nil -- Removed keybind logic
 
 local function InitializeKitBanUI()
     local container = Mega.Objects.KitBanContainer
@@ -189,20 +173,13 @@ local function InitializeKitBanUI()
     local textColor = Mega.Settings.Menu.TextColor or Color3.fromRGB(255, 255, 255)
     local accentColor = Mega.Settings.Menu.AccentColor or Color3.fromRGB(200, 150, 50)
 
-    -- Target Label
-    local TargetLabel = Instance.new("TextLabel")
-    TargetLabel.Size = UDim2.new(1, 0, 0, 25)
-    TargetLabel.BackgroundTransparency = 1
-    TargetLabel.TextColor3 = accentColor
-    TargetLabel.Font = Enum.Font.GothamBold
-    TargetLabel.TextSize = 14
-    TargetLabel.Text = Mega.GetText("kit_ban_target", "None") or "Target: None"
-    TargetLabel.Parent = container
+    -- Remove target label completely
+    -- Target Label code removed
 
     -- Search Box
     local SearchBox = Instance.new("TextBox")
     SearchBox.Size = UDim2.new(0.95, 0, 0, 30)
-    SearchBox.Position = UDim2.new(0.025, 0, 0, 30)
+    SearchBox.Position = UDim2.new(0.025, 0, 0, 10)
     SearchBox.BackgroundColor3 = elemColor
     SearchBox.TextColor3 = textColor
     SearchBox.PlaceholderText = Mega.GetText("search_kit_ban") or "🔍 Поиск кита..."
@@ -214,8 +191,8 @@ local function InitializeKitBanUI()
 
     -- Scroll List
     local KitList = Instance.new("ScrollingFrame")
-    KitList.Size = UDim2.new(1, 0, 1, -70)
-    KitList.Position = UDim2.new(0, 0, 0, 70)
+    KitList.Size = UDim2.new(1, 0, 1, -50)
+    KitList.Position = UDim2.new(0, 0, 0, 50)
     KitList.BackgroundTransparency = 1
     KitList.BorderSizePixel = 0
     KitList.ScrollBarThickness = 4
@@ -226,19 +203,6 @@ local function InitializeKitBanUI()
     ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ListLayout.Padding = UDim.new(0, 5)
-
-    local function getKitNameById(id)
-        for _, k in ipairs(allKits) do
-            if k.id == id then return k.name end
-        end
-        return id
-    end
-
-    local function UpdateTargetLabel()
-        local kitId = States.Misc.KitBan.TargetKit
-        local niceName = kitId and getKitNameById(kitId) or "None"
-        TargetLabel.Text = Mega.GetText("kit_ban_target", niceName) or ("Target: " .. niceName)
-    end
 
     local function RefreshKitList(filter)
         for _, v in pairs(KitList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
@@ -252,11 +216,9 @@ local function InitializeKitBanUI()
 
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(0.95, 0, 0, 35)
+            btn.BackgroundColor3 = elemColor
             
-            local isTarget = (States.Misc.KitBan.TargetKit == kitData.id)
-            btn.BackgroundColor3 = isTarget and Color3.fromRGB(0, 200, 100) or elemColor
-            
-            btn.Text = "   " .. kitData.name
+            btn.Text = kitData.name
             btn.TextColor3 = textColor
             btn.TextXAlignment = Enum.TextXAlignment.Left
             btn.Font = Enum.Font.GothamBold
@@ -264,14 +226,39 @@ local function InitializeKitBanUI()
             btn.Parent = KitList
             Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
             
+            local Padding = Instance.new("UIPadding")
+            Padding.Parent = btn
+            Padding.PaddingLeft = UDim.new(0, 36)
+            
+            local KitIcon = Instance.new("ImageLabel")
+            KitIcon.Parent = btn
+            KitIcon.BackgroundTransparency = 1
+            KitIcon.Position = UDim2.new(0, -30, 0.5, -12)
+            KitIcon.Size = UDim2.new(0, 24, 0, 24)
+            KitIcon.Image = kitData.icon or ""
+            
             btn.MouseButton1Click:Connect(function()
-                if States.Misc.KitBan.TargetKit == kitData.id then
-                    States.Misc.KitBan.TargetKit = nil
+                local originalText = btn.Text
+                btn.Text = (Mega.GetText("banning_kit") or "БАН: ") .. originalText .. "..."
+                btn.BackgroundColor3 = accentColor
+                
+                local isSuccess = banKit(kitData.id)
+                
+                if isSuccess then
+                    btn.Text = Mega.GetText("banned_kit_success") or "ЗАБАНЕН!"
+                    btn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
                 else
-                    States.Misc.KitBan.TargetKit = kitData.id
+                    btn.Text = Mega.GetText("banned_kit_fail") or "ОШИБКА!"
+                    btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
                 end
-                UpdateTargetLabel()
-                RefreshKitList(SearchBox.Text)
+                
+                task.spawn(function()
+                    task.wait(1.5)
+                    if btn and btn.Parent then
+                        btn.Text = originalText
+                        btn.BackgroundColor3 = elemColor
+                    end
+                end)
             end)
         end
         
@@ -283,7 +270,6 @@ local function InitializeKitBanUI()
         end)
     end
 
-    UpdateTargetLabel()
     RefreshKitList("")
 
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
