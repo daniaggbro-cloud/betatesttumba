@@ -207,6 +207,29 @@ Sidebar.BorderSizePixel = 0
 Sidebar.Parent = WindowCanvas
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
 
+-- ✨ НОВОЕ: Правый край сайдбара с accent glow (слегкое просвечивание)
+local SidebarEdgeGlow = Instance.new("Frame", Sidebar)
+SidebarEdgeGlow.Name = "EdgeGlow"
+SidebarEdgeGlow.Size = UDim2.new(0, 2, 1, -20)
+SidebarEdgeGlow.Position = UDim2.new(1, -2, 0, 10)
+SidebarEdgeGlow.BackgroundColor3 = Settings.Menu.AccentColor
+SidebarEdgeGlow.BackgroundTransparency = 0.7
+SidebarEdgeGlow.BorderSizePixel = 0
+Instance.new("UICorner", SidebarEdgeGlow).CornerRadius = UDim.new(1, 0)
+-- Soft gradient на edge glow
+local EdgeGlowGradient = Instance.new("UIGradient", SidebarEdgeGlow)
+EdgeGlowGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+    ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)),
+    ColorSequenceKeypoint.new(1, Color3.new(1,1,1))
+}
+EdgeGlowGradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0),
+    NumberSequenceKeypoint.new(1, 1)
+}
+EdgeGlowGradient.Rotation = 90
+
 -- User Profile Widget
 local UserProfile = Instance.new("Frame", Sidebar)
 UserProfile.Name = "UserProfile"
@@ -220,7 +243,20 @@ AvatarImage.Position = UDim2.new(0, 5, 0.5, -22)
 AvatarImage.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 AvatarImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. Services.Players.LocalPlayer.UserId .. "&w=150&h=150"
 Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", AvatarImage).Color = Settings.Menu.AccentColor
+
+-- ✨ НОВОЕ: Pulse-анимация на ринге аватара
+local AvatarStroke = Instance.new("UIStroke", AvatarImage)
+AvatarStroke.Color = Settings.Menu.AccentColor
+AvatarStroke.Thickness = 2
+AvatarStroke.Transparency = 0.3
+task.spawn(function()
+    while AvatarStroke.Parent do
+        Services.TweenService:Create(AvatarStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Thickness = 3.5, Transparency = 0.0 }):Play()
+        task.wait(1.5)
+        Services.TweenService:Create(AvatarStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Thickness = 1.5, Transparency = 0.5 }):Play()
+        task.wait(1.5)
+    end
+end)
 
 local UserName = Instance.new("TextLabel", UserProfile)
 UserName.Size = UDim2.new(1, -60, 0, 20)
@@ -242,12 +278,26 @@ UserStatus.TextSize = 10
 UserStatus.Font = Enum.Font.GothamSemibold
 UserStatus.TextXAlignment = Enum.TextXAlignment.Left
 
+-- ✨ НОВОЕ: Separator с gradient от AccentColor → прозрачный
 local Separator = Instance.new("Frame", Sidebar)
-Separator.Size = UDim2.new(1, -30, 0, 1)
-Separator.Position = UDim2.new(0, 15, 0, 75)
-Separator.BackgroundColor3 = Color3.new(1, 1, 1)
-Separator.BackgroundTransparency = 0.8
+Separator.Size = UDim2.new(1, -20, 0, 1)
+Separator.Position = UDim2.new(0, 10, 0, 75)
+Separator.BackgroundColor3 = Settings.Menu.AccentColor
+Separator.BackgroundTransparency = 0.3
 Separator.BorderSizePixel = 0
+local SepGradient = Instance.new("UIGradient", Separator)
+SepGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+    ColorSequenceKeypoint.new(0.5, Color3.new(1,1,1)),
+    ColorSequenceKeypoint.new(1, Color3.new(1,1,1))
+}
+SepGradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.4, 0.2),
+    NumberSequenceKeypoint.new(0.6, 0.2),
+    NumberSequenceKeypoint.new(1, 1)
+}
+SepGradient.Rotation = 0
 
 local TabContainer = Instance.new("ScrollingFrame")
 TabContainer.Size = UDim2.new(1, -10, 1, -90)
@@ -788,11 +838,27 @@ if not Mega.HasSavedLanguage() then
     for _, lang in ipairs(languages) do
         local btn = Instance.new("TextButton", ButtonContainer)
         btn.Size = UDim2.new(0, 250, 0, 40)
-        btn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+        -- ✨ НОВОЕ: Используем AccentColor темы вместо хардкодного синего
+        btn.BackgroundColor3 = Settings.Menu.AccentColor
+        btn.BackgroundTransparency = 0.3
         btn.TextColor3 = Color3.new(1, 1, 1)
         btn.Font = Enum.Font.GothamSemibold
         btn.Text = lang.Name
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        btn.AutoButtonColor = false
+        btn.BorderSizePixel = 0
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        local btnStrokeL = Instance.new("UIStroke", btn)
+        btnStrokeL.Color = Settings.Menu.AccentColor
+        btnStrokeL.Thickness = 1
+        btnStrokeL.Transparency = 0.5
+        btn.MouseEnter:Connect(function()
+            Services.TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundTransparency = 0.0 }):Play()
+            Services.TweenService:Create(btnStrokeL, TweenInfo.new(0.2), { Transparency = 0.1 }):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            Services.TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundTransparency = 0.3 }):Play()
+            Services.TweenService:Create(btnStrokeL, TweenInfo.new(0.2), { Transparency = 0.5 }):Play()
+        end)
         btn.MouseButton1Click:Connect(function() OnLanguageSelected(lang.Code) end)
     end
 else

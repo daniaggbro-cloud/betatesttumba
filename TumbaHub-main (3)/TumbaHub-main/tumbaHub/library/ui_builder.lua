@@ -13,7 +13,7 @@ function Mega.UI.CreateSection(parent, titleKey)
     Section.Name = titleKey .. "Section"
     Section.Size = UDim2.new(0.95, 0, 0, 45)
     Section.BackgroundColor3 = Mega.Settings.Menu.ElementColor
-    Section.BackgroundTransparency = 0.5 -- Sleeker glass look
+    Section.BackgroundTransparency = 0.45
     Section.BorderSizePixel = 0
 
     local SectionCorner = Instance.new("UICorner")
@@ -22,11 +22,10 @@ function Mega.UI.CreateSection(parent, titleKey)
     
     local SectionStroke = Instance.new("UIStroke", Section)
     SectionStroke.Color = Mega.Settings.Menu.AccentColor
-    SectionStroke.Thickness = 1.2
-    SectionStroke.Transparency = 0.7
+    SectionStroke.Thickness = 1
+    SectionStroke.Transparency = 0.75
     
     local SectionGradient = Instance.new("UIGradient")
-    
     local success = pcall(function()
         local grad1 = typeof(Mega.Settings.Menu.SectionGradient1) == "Color3" and Mega.Settings.Menu.SectionGradient1 or Color3.fromRGB(15, 15, 25)
         local grad2 = typeof(Mega.Settings.Menu.SectionGradient2) == "Color3" and Mega.Settings.Menu.SectionGradient2 or Color3.fromRGB(10, 10, 20)
@@ -44,14 +43,38 @@ function Mega.UI.CreateSection(parent, titleKey)
     SectionGradient.Rotation = 45
     SectionGradient.Parent = Section
 
+    -- ✨ НОВОЕ: Левая вертикальная декоративная линия (accent color)
+    local AccentLine = Instance.new("Frame", Section)
+    AccentLine.Name = "AccentLine"
+    AccentLine.Size = UDim2.new(0, 3, 0.6, 0)
+    AccentLine.Position = UDim2.new(0, 0, 0.2, 0)
+    AccentLine.BackgroundColor3 = Mega.Settings.Menu.AccentColor
+    AccentLine.BorderSizePixel = 0
+    AccentLine.ZIndex = 2
+    Instance.new("UICorner", AccentLine).CornerRadius = UDim.new(1, 0)
+    
+    -- Pulse glow анимация на линии
+    local LineGlow = Instance.new("UIStroke", AccentLine)
+    LineGlow.Color = Mega.Settings.Menu.AccentColor
+    LineGlow.Thickness = 2
+    LineGlow.Transparency = 0.4
+    task.spawn(function()
+        while AccentLine.Parent do
+            TweenService:Create(LineGlow, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.0 }):Play()
+            task.wait(1.2)
+            TweenService:Create(LineGlow, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Transparency = 0.6 }):Play()
+            task.wait(1.2)
+        end
+    end)
+
     local SectionTitle = Instance.new("TextLabel")
     SectionTitle.Name = "SectionTitle"
-    SectionTitle.Size = UDim2.new(1, -20, 1, 0)
-    SectionTitle.Position = UDim2.new(0, 15, 0, 0)
+    SectionTitle.Size = UDim2.new(1, -35, 1, 0)
+    SectionTitle.Position = UDim2.new(0, 18, 0, 0) -- Сдвинуто правее для линии
     SectionTitle.BackgroundTransparency = 1
     SectionTitle.Text = GetText(titleKey)
     SectionTitle.TextColor3 = Mega.Settings.Menu.TextColor
-    SectionTitle.TextSize = 14
+    SectionTitle.TextSize = 13
     SectionTitle.Font = Enum.Font.GothamBold
     SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
     SectionTitle.Parent = Section
@@ -65,18 +88,18 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = textKey .. "Toggle"
-    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 38)
     ToggleFrame.BackgroundTransparency = 1
     ToggleFrame.Parent = parent
 
     local ToggleLabel = Instance.new("TextLabel")
     ToggleLabel.Name = "Label"
-    ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    ToggleLabel.Size = UDim2.new(0.65, 0, 1, 0)
     ToggleLabel.BackgroundTransparency = 1
     ToggleLabel.Text = " " .. translatedText
     ToggleLabel.TextColor3 = Mega.Settings.Menu.TextColor
     ToggleLabel.TextSize = 13
-    ToggleLabel.Font = Enum.Font.Gotham
+    ToggleLabel.Font = Enum.Font.GothamSemibold
     ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
     ToggleLabel.Parent = ToggleFrame
 
@@ -91,10 +114,11 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
 
     local initialState = getState()
 
+    -- ✨ НОВОЕ: Увеличенный toggle (50x26) с glow-эффектом
     local ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "Toggle"
-    ToggleButton.Size = UDim2.new(0, 44, 0, 22)
-    ToggleButton.Position = UDim2.new(1, -54, 0.5, -11)
+    ToggleButton.Size = UDim2.new(0, 50, 0, 26)
+    ToggleButton.Position = UDim2.new(1, -58, 0.5, -13)
     ToggleButton.BackgroundColor3 = initialState and Mega.Settings.Menu.AccentColor or Mega.Settings.Menu.ToggleOffColor
     ToggleButton.BorderSizePixel = 0
     ToggleButton.Text = ""
@@ -104,17 +128,30 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     local ToggleCorner = Instance.new("UICorner")
     ToggleCorner.CornerRadius = UDim.new(1, 0)
     ToggleCorner.Parent = ToggleButton
+    
+    -- Glow stroke — виден только когда ON
+    local ToggleGlow = Instance.new("UIStroke", ToggleButton)
+    ToggleGlow.Color = Mega.Settings.Menu.AccentColor
+    ToggleGlow.Thickness = 2.5
+    ToggleGlow.Transparency = initialState and 0.3 or 1
+    ToggleGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
     local ToggleCircle = Instance.new("Frame")
     ToggleCircle.Name = "Circle"
-    ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
-    ToggleCircle.Position = initialState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
-    ToggleCircle.BackgroundColor3 = Mega.Settings.Menu.BackgroundColor
+    ToggleCircle.Size = UDim2.new(0, 20, 0, 20)
+    ToggleCircle.Position = initialState and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
+    ToggleCircle.BackgroundColor3 = Color3.new(1, 1, 1)
     ToggleCircle.Parent = ToggleButton
     
     local CircleCorner = Instance.new("UICorner")
     CircleCorner.CornerRadius = UDim.new(1, 0)
     CircleCorner.Parent = ToggleCircle
+    
+    -- Subtle circle shadow
+    local CircleStroke = Instance.new("UIStroke", ToggleCircle)
+    CircleStroke.Color = Color3.fromRGB(0, 0, 0)
+    CircleStroke.Thickness = 1
+    CircleStroke.Transparency = 0.6
 
     local function SetState(newState)
         local path = statePath
@@ -131,14 +168,27 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
         end
         tbl[key] = newState
 
-        TweenService:Create(ToggleButton, TweenInfo.new(0.2), { BackgroundColor3 = newState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80) }):Play()
-        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = newState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9) }):Play()
+        local accentCol = Mega.Settings.Menu.AccentColor
+        TweenService:Create(ToggleButton, TweenInfo.new(0.25, Enum.EasingStyle.Quart), { BackgroundColor3 = newState and accentCol or Color3.fromRGB(55, 55, 75) }):Play()
+        TweenService:Create(ToggleCircle, TweenInfo.new(0.25, Enum.EasingStyle.Quart), { Position = newState and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 3, 0.5, -10) }):Play()
+        -- Glow появляется при ON
+        TweenService:Create(ToggleGlow, TweenInfo.new(0.25), { Transparency = newState and 0.3 or 1 }):Play()
+        -- Метка слегка ярче когда ON
+        TweenService:Create(ToggleLabel, TweenInfo.new(0.25), { TextColor3 = newState and Color3.new(1,1,1) or Mega.Settings.Menu.TextMutedColor }):Play()
         
         if callback then pcall(callback, newState) end
         
         local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
         ShowNotification(translatedText .. ": " .. statusText, 2)
     end
+    
+    -- Hover эффект
+    ToggleButton.MouseEnter:Connect(function()
+        TweenService:Create(ToggleButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 53, 0, 26) }):Play()
+    end)
+    ToggleButton.MouseLeave:Connect(function()
+        TweenService:Create(ToggleButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 50, 0, 26) }):Play()
+    end)
     
     Mega.Objects.Toggles[textKey] = SetState
     ToggleButton.MouseButton1Click:Connect(function() SetState(not getState()) end)
