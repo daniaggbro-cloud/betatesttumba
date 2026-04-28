@@ -157,21 +157,42 @@ end
 
 local function getItemCount(itemName)
     local count = 0
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    local char = LocalPlayer.Character
     
-    local function scan(container)
-        if not container then return end
-        for _, item in ipairs(container:GetChildren()) do
-            if item.Name == itemName then
-                local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
-                count = count + (tonumber(amount) or 0)
+    -- ОСНОВНОЙ МЕТОД: ReplicatedStorage.Inventories.<PlayerName>
+    -- Предметы хранятся как Accessory с атрибутом Amount
+    local ok = pcall(function()
+        local inventories = game:GetService("ReplicatedStorage"):FindFirstChild("Inventories")
+        if inventories then
+            local playerInv = inventories:FindFirstChild(LocalPlayer.Name)
+            if playerInv then
+                local item = playerInv:FindFirstChild(itemName)
+                if item then
+                    local amount = item:GetAttribute("Amount")
+                    if amount then
+                        count = tonumber(amount) or 0
+                    elseif item:IsA("Accessory") or item:IsA("Tool") then
+                        count = 1
+                    end
+                end
             end
         end
+    end)
+    
+    -- РЕЗЕРВ: Backpack + Character (на случай если структура изменится)
+    if count == 0 then
+        local function scan(container)
+            if not container then return end
+            for _, item in ipairs(container:GetChildren()) do
+                if item.Name == itemName then
+                    local amount = item:GetAttribute("Amount") or (item:IsA("Tool") and 1) or 0
+                    count = count + (tonumber(amount) or 0)
+                end
+            end
+        end
+        scan(LocalPlayer:FindFirstChild("Backpack"))
+        scan(LocalPlayer.Character)
     end
     
-    scan(backpack)
-    scan(char)
     return count
 end
 
@@ -200,56 +221,57 @@ local function getClosestItemShop()
 end
 
 -- =====================================================
--- Кэш для модуля магазина и функции расчёта цен
+-- Кэш для модуля магазина и цены melon_seeds
 -- =====================================================
-local BedwarsShopData = nil     -- Результат require(bedwars-shop) ModuleScript
-local BedwarsShopItems = nil    -- Массив ShopItems
-local BedwarsGetAdjusted = nil  -- Функция getAdjustedShopPrice
-local BedwarsGetShopItem = nil  -- Функция getShopItem
-local melonSeedsEntry = nil     -- Закэшированная запись melon_seeds
+local BedwarsShopData = nil      -- require('bedwars-shop').BedwarsShop
+local BedwarsGetAdjusted = nil   -- getAdjustedShopPrice (если есть)
+local BedwarsGetShopItemBase = nil -- getShopItemBase (нефильтрованный поиск)
+local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds (из getShopItemBase)
+local cachedMelonPrice = nil     -- Кэшированная цена
 
--- ====================================================================
--- МЕТОД A: Прямой require() модуля по известному пути в ReplicatedStorage
--- Путь: ReplicatedStorage → TS → games → bedwars → shop → bedwars-shop
--- ====================================================================
-local function tryDirectRequire()
+-- Инициализация: прямой require() модуля bedwars-shop
+-- Путь: ReplicatedStorage.TS.games.bedwars.shop.bedwars-shop
+local function ensureShopData()
     if BedwarsShopData then return true end
     
-    local success = pcall(function()
+    pcall(function()
         local RS = game:GetService("ReplicatedStorage")
-        local TS = RS:FindFirstChild("TS")
-        if not TS then return end
+        local shopModule = RS:FindFirstChild("TS")
+            and RS.TS:FindFirstChild("games")
+            and RS.TS.games:FindFirstChild("bedwars")
+            and RS.TS.games.bedwars:FindFirstChild("shop")
+            and RS.TS.games.bedwars.shop:FindFirstChild("bedwars-shop")
         
-        local games = TS:FindFirstChild("games")
-        if not games then return end
-        
-        local bedwars = games:FindFirstChild("bedwars")
-        if not bedwars then return end
-        
-        local shopFolder = bedwars:FindFirstChild("shop")
-        if not shopFolder then return end
-        
-        local shopModule = shopFolder:FindFirstChild("bedwars-shop")
         if not shopModule or not shopModule:IsA("ModuleScript") then return end
         
         local data = require(shopModule)
         if type(data) ~= "table" then return end
         
-        -- Модуль возвращает таблицу с BedwarsShop внутри
         local shop = data.BedwarsShop or data
-        if shop and shop.ShopItems then
-            BedwarsShopData = shop
-            BedwarsShopItems = shop.ShopItems
-            
-            if type(shop.getAdjustedShopPrice) == "function" then
-                BedwarsGetAdjusted = shop.getAdjustedShopPrice
+        if not shop then return end
+        
+        BedwarsShopData = shop
+        
+        if type(shop.getAdjustedShopPrice) == "function" then
+            BedwarsGetAdjusted = shop.getAdjustedShopPrice
+        end
+        -- getShopItemBase — возвращает НЕФИЛЬТРОВАННЫЙ предмет (в отличие от getShopItem)
+        -- getShopItem('melon_seeds') возвращает nil, т.к. kit-фильтр убирает его
+        if type(shop.getShopItemBase) == "function" then
+            BedwarsGetShopItemBase = shop.getShopItemBase
+        end
+        
+        -- Получаем melon_seeds через getShopItemBase (обходим фильтр)
+        if BedwarsGetShopItemBase then
+            local ok, item = pcall(BedwarsGetShopItemBase, "melon_seeds")
+            if ok and type(item) == "table" then
+                melonSeedsEntry = item
             end
-            if type(shop.getShopItem) == "function" then
-                BedwarsGetShopItem = shop.getShopItem
-            end
-            
-            -- Кэшируем melon_seeds
-            for _, item in ipairs(BedwarsShopItems) do
+        end
+        
+        -- Если getShopItemBase не помог, ищем в RAW ShopItems
+        if not melonSeedsEntry and shop.ShopItems then
+            for _, item in ipairs(shop.ShopItems) do
                 if type(item) == "table" and item.itemType == "melon_seeds" then
                     melonSeedsEntry = item
                     break
@@ -261,153 +283,42 @@ local function tryDirectRequire()
     return BedwarsShopData ~= nil
 end
 
--- ====================================================================
--- МЕТОД B: Поиск через getloadedmodules() (если прямой путь не сработал)
--- ====================================================================
-local function tryLoadedModules()
-    if BedwarsShopData then return true end
-    if not getloadedmodules then return false end
-    
-    pcall(function()
-        for _, obj in ipairs(getloadedmodules()) do
-            -- Ищем по имени или по полному пути
-            local name = obj.Name
-            if name == "bedwars-shop" or name:find("bedwars%-shop") then
-                local data = require(obj)
-                if type(data) == "table" then
-                    local shop = data.BedwarsShop or data
-                    if shop and shop.ShopItems then
-                        BedwarsShopData = shop
-                        BedwarsShopItems = shop.ShopItems
-                        if type(shop.getAdjustedShopPrice) == "function" then
-                            BedwarsGetAdjusted = shop.getAdjustedShopPrice
-                        end
-                        if type(shop.getShopItem) == "function" then
-                            BedwarsGetShopItem = shop.getShopItem
-                        end
-                        for _, item in ipairs(BedwarsShopItems) do
-                            if type(item) == "table" and item.itemType == "melon_seeds" then
-                                melonSeedsEntry = item
-                                break
-                            end
-                        end
-                        return
-                    end
-                end
-            end
-        end
-    end)
-    
-    return BedwarsShopData ~= nil
-end
-
--- Инициализация кэша - вызывается один раз
-local function ensureShopData()
-    if BedwarsShopData then return true end
-    if tryDirectRequire() then return true end
-    if tryLoadedModules() then return true end
-    return false
-end
-
--- Пробуем инициализировать сразу при загрузке модуля
+-- Запускаем инициализацию при загрузке модуля
 task.spawn(function()
-    task.wait(2) -- Даём игре загрузить все модули
+    task.wait(2)
     ensureShopData()
 end)
 
--- Rodux Store (доп. резерв)
-local BedwarsStore = nil
-local function getClientStore()
-    if BedwarsStore then return BedwarsStore end
-    if not getloadedmodules then return nil end
-    pcall(function()
-        for _, obj in ipairs(getloadedmodules()) do
-            if obj.Name == "ClientStore" or obj.Name == "Store" then
-                pcall(function()
-                    local req = require(obj)
-                    if type(req) == "table" then
-                        if req.getState then BedwarsStore = req end
-                        if req.Store and req.Store.getState then BedwarsStore = req.Store end
-                        if req.clientStore and req.clientStore.getState then BedwarsStore = req.clientStore end
-                    end
-                end)
-            end
-        end
-    end)
-    return BedwarsStore
-end
-
 local function getMelonPriceInvisibly()
     -- ============================================================
-    -- 1. МОДУЛЬ МАГАЗИНА (основной метод, работает ВСЕГДА)
+    -- 1. КЭШИРОВАННАЯ ЦЕНА (самый быстрый путь)
+    -- ============================================================
+    if cachedMelonPrice then return cachedMelonPrice end
+    
+    -- ============================================================
+    -- 2. МОДУЛЬ МАГАЗИНА (работает ВСЕГДА, даже без UI)
     -- ============================================================
     ensureShopData()
     
     if melonSeedsEntry then
-        -- Сначала пробуем динамическую цену через getAdjustedShopPrice
+        -- Пробуем динамическую цену
         if BedwarsGetAdjusted then
             local ok, adjusted = pcall(BedwarsGetAdjusted, melonSeedsEntry)
             if ok and type(adjusted) == "number" then
+                cachedMelonPrice = adjusted
                 return adjusted
             end
         end
         
-        -- Или через getShopItem (может вернуть актуальный объект с ценой)
-        if BedwarsGetShopItem then
-            local ok, shopItem = pcall(BedwarsGetShopItem, "melon_seeds")
-            if ok and type(shopItem) == "table" and shopItem.price then
-                return shopItem.price
-            end
-        end
-        
-        -- Базовая цена из модуля (статическая, но точная)
+        -- Базовая цена из модуля
         if melonSeedsEntry.price then
+            cachedMelonPrice = melonSeedsEntry.price
             return melonSeedsEntry.price
         end
     end
     
     -- ============================================================
-    -- 2. RODUX STORE (резервный)
-    -- ============================================================
-    local store = getClientStore()
-    if store then
-        local storePrice = nil
-        pcall(function()
-            local state = store:getState()
-            if state then
-                local function searchPrice(t, depth)
-                    if depth > 6 or type(t) ~= "table" then return nil end
-                    
-                    if rawget(t, "itemType") == "melon_seeds" then
-                        if rawget(t, "price") then return rawget(t, "price") end
-                    end
-                    if rawget(t, "melon_seeds") and type(rawget(t, "melon_seeds")) == "table" then
-                        local ms = rawget(t, "melon_seeds")
-                        if ms.price then return ms.price end
-                    end
-                    
-                    for k, v in pairs(t) do
-                        if type(v) == "table" then
-                            local found = searchPrice(v, depth + 1)
-                            if found then return found end
-                        end
-                    end
-                    return nil
-                end
-                storePrice = searchPrice(state, 1)
-            end
-        end)
-        if storePrice then return storePrice end
-    end
-    
-    -- ============================================================
-    -- 3. ХАРДКОД ИЗ PACKAGES.JSON (если вообще ничего не сработало)
-    -- Базовая цена melon_seeds = 2 emerald (из дампа игры)
-    -- ============================================================
-    -- Не возвращаем сразу — сначала проверим UI
-    
-    -- ============================================================
-    -- 4. UI SCAN (если магазин открыт)
+    -- 3. UI SCAN (если магазин открыт — дополнительная проверка)
     -- ============================================================
     local pg = LocalPlayer:FindFirstChild("PlayerGui")
     if pg then
@@ -420,7 +331,10 @@ local function getMelonPriceInvisibly()
                         for _, desc in ipairs(priceContainer:GetDescendants()) do
                             if desc:IsA("TextLabel") and desc.Text then
                                 local num = tonumber(desc.Text:match("%d+"))
-                                if num then return num end
+                                if num then
+                                    cachedMelonPrice = num
+                                    return num
+                                end
                             end
                         end
                     end
@@ -430,8 +344,8 @@ local function getMelonPriceInvisibly()
     end
     
     -- ============================================================
-    -- 5. ХАРДКОД FALLBACK: если ВСЕ методы не сработали
-    -- Возвращаем базовую цену из дампа (2 emerald)
+    -- 4. ХАРДКОД: базовая цена из дампа игры (packages.json)
+    -- melon_seeds: currency=emerald, price=2
     -- ============================================================
     return 2
 end
