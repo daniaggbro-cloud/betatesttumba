@@ -225,77 +225,7 @@ end
 -- Путь: PlayerGui.ItemShop...melon_seeds_ShopItemCard.Price → TextLabel.ContentText
 -- =====================================================
 
--- Возвращает ТЕКУЩУЮ цену melon_seeds
--- Использует 3 метода по убыванию приоритета:
--- 1. UI (если открыто)
--- 2. Внутренняя функция getAdjustedShopPrice (с передачей LocalPlayer)
--- 3. Математический расчёт через taxState из Rodux
-local function getMelonCurrentPrice()
-    -- 1. Попытка прочитать из UI (самый точный метод, если магазин открыт)
-    local pg = LocalPlayer:FindFirstChild("PlayerGui")
-    if pg then
-        for _, obj in ipairs(pg:GetDescendants()) do
-            if obj.Name == "melon_seeds_ShopItemCard" then
-                local priceFrame = obj:FindFirstChild("Price")
-                if priceFrame then
-                    for _, child in ipairs(priceFrame:GetDescendants()) do
-                        if child:IsA("TextLabel") then
-                            local text = child.ContentText or child.Text
-                            if text then
-                                local num = tonumber(text:match("%d+"))
-                                if num and num > 0 then
-                                    return num
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    -- 2. Попытка получить через внутреннюю функцию (исправляем ошибку GetAttribute)
-    -- Функция падала, потому что ожидала объект LocalPlayer для проверки скидок/налогов
-    if BedwarsShopData and type(BedwarsShopData.getAdjustedShopPrice) == "function" and melonSeedsBasePrice then
-        -- Создаем мок-объект предмета, чтобы функция могла его прочитать
-        local mockItem = {
-            itemType = "melon_seeds",
-            price = melonSeedsBasePrice,
-            currency = "emerald"
-        }
-        
-        -- Пробуем разные сигнатуры вызова
-        local ok, price = pcall(BedwarsShopData.getAdjustedShopPrice, BedwarsShopData, LocalPlayer, mockItem)
-        if ok and type(price) == "number" and price > 0 then return price end
-        
-        ok, price = pcall(BedwarsShopData.getAdjustedShopPrice, BedwarsShopData, mockItem, LocalPlayer)
-        if ok and type(price) == "number" and price > 0 then return price end
-        
-        ok, price = pcall(BedwarsShopData.getAdjustedShopPrice, LocalPlayer, mockItem)
-        if ok and type(price) == "number" and price > 0 then return price end
-    end
-    
-    -- 3. Математический расчёт через taxState (Родукс)
-    local basePrice = melonSeedsBasePrice or 2
-    local store = getClientStore()
-    if store then
-        local ok, taxState = pcall(function()
-            local state = store:getState()
-            if state and state.Inventory and state.Inventory.taxState then
-                return state.Inventory.taxState
-            end
-            return 0
-        end)
-        
-        if ok and type(taxState) == "number" and taxState > 0 then
-            -- Налог увеличивает цену. При taxState = 1, цена становится 3 (при базе 2)
-            -- При taxState = 2, цена становится 4 и т.д.
-            return basePrice + taxState
-        end
-    end
-    
-    return basePrice
-end
+local currentPriceGuess = 2
 
 local function StartAutoBuyLoop()
     if connections.AutoBuyLoop then connections.AutoBuyLoop:Disconnect() end
@@ -307,25 +237,29 @@ local function StartAutoBuyLoop()
         if tick() - lastBuyRun > (States.Cletus.AutoBuySpeed or 1) then
             lastBuyRun = tick()
             
-            -- Подстраховка инвентаря (вдруг они называются melon)
             local currentSeeds = getItemCount("melon_seeds") + getItemCount("melon")
             if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
             
-            local actualPrice = getMelonCurrentPrice()
             local maxPrice = States.Cletus.MaxMelonPrice or 2
             
-            -- Если базовая цена выше лимита - не покупаем
-            if actualPrice > maxPrice then return end
+            -- Если наша предполагаемая цена стала выше лимита - ждем
+            if currentPriceGuess > maxPrice then return end
+            
+            -- Проверяем, хватает ли изумрудов на нашу предполагаемую цену
+            local emeralds = getItemCount("emerald")
+            if emeralds < currentPriceGuess then return end
             
             if PurchaseRemote then
                 local shopId = getClosestItemShop()
+                if not shopId then return end -- Магазина нет рядом
+                
                 local args = {
                     {
                         shopItem = {
                             currency = "emerald",
                             itemType = "melon_seeds",
                             amount = 1,
-                            price = actualPrice,
+                            price = currentPriceGuess,
                             category = "Combat",
                             requiresKit = { "farmer_cletus" }
                         },
@@ -334,9 +268,26 @@ local function StartAutoBuyLoop()
                 }
                 
                 task.spawn(function()
+                    local seedsBefore = getItemCount("melon_seeds")
+                    
+                    -- Отправляем запрос на покупку с нашей текущей ценой
                     pcall(function()
                         PurchaseRemote:InvokeServer(unpack(args))
                     end)
+                    
+                    task.wait(0.2) -- Ждем долю секунды для обновления инвентаря
+                    
+                    local seedsAfter = getItemCount("melon_seeds")
+                    if seedsAfter <= seedsBefore then
+                        -- Покупка не удалась! Значит, игра отвергла нашу цену (она выросла из-за налога)
+                        -- или мы слишком далеко от магазина.
+                        -- Увеличиваем предполагаемую цену на 1, чтобы в следующий раз отправить правильную
+                        currentPriceGuess = currentPriceGuess + 1
+                    else
+                        -- Покупка успешна! В Bedwars цена арбузов обычно растет после каждой покупки,
+                        -- так что мы сразу готовим цену к следующей покупке.
+                        currentPriceGuess = currentPriceGuess + 1
+                    end
                 end)
             end
         end
