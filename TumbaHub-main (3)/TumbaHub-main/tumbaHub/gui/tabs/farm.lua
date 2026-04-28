@@ -77,7 +77,7 @@ end, {
     UI.CreateToggle(nil, "toggle_cletus_autobuy", "Cletus.AutoBuyMelons"),
     UI.CreateSlider(nil, "slider_cletus_maxprice", "Cletus.MaxMelonPrice", 1, 10),
     UI.CreateSlider(nil, "slider_cletus_maxamount", "Cletus.AutoBuyMaxAmount", 1, 64),
-    UI.CreateSlider(nil, "slider_cletus_autobuyspeed", "Cletus.AutoBuySpeed", 0.1, 5),
+    UI.CreateSlider(nil, "slider_cletus_autobuyspeed", "Cletus.AutoBuySpeed", 0, 1, nil, 2),
     UI.CreateToggle(nil, "toggle_cletus_esp", "Cletus.ESP", function() if Mega.Features.Cletus then Mega.Features.Cletus.RecreateESP() end end),
     UI.CreateSlider(nil, "slider_cletus_range", "Cletus.Range", 5, 100),
     UI.CreateSlider(nil, "slider_cletus_esp_transparency", "Cletus.ESPTransparency", 0, 100, function(v) Mega.States.Cletus.ESPTransparency = v/100; if Mega.Features.Cletus then Mega.Features.Cletus.UpdateVisuals() end end)
