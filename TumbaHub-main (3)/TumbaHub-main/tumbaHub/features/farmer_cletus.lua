@@ -224,15 +224,13 @@ end
 -- Кэш для модуля магазина и цены melon_seeds
 -- =====================================================
 local BedwarsShopData = nil      -- require('bedwars-shop').BedwarsShop
-local BedwarsGetAdjusted = nil   -- getAdjustedShopPrice (если есть)
 local BedwarsGetShopItemBase = nil -- getShopItemBase (нефильтрованный поиск)
 local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds (из getShopItemBase)
-local cachedMelonPrice = nil     -- Кэшированная цена
 
 -- Инициализация: прямой require() модуля bedwars-shop
 -- Путь: ReplicatedStorage.TS.games.bedwars.shop.bedwars-shop
 local function ensureShopData()
-    if BedwarsShopData then return true end
+    if melonSeedsEntry then return true end
     
     pcall(function()
         local RS = game:GetService("ReplicatedStorage")
@@ -252,17 +250,10 @@ local function ensureShopData()
         
         BedwarsShopData = shop
         
-        if type(shop.getAdjustedShopPrice) == "function" then
-            BedwarsGetAdjusted = shop.getAdjustedShopPrice
-        end
-        -- getShopItemBase — возвращает НЕФИЛЬТРОВАННЫЙ предмет (в отличие от getShopItem)
-        -- getShopItem('melon_seeds') возвращает nil, т.к. kit-фильтр убирает его
+        -- getShopItemBase — возвращает НЕФИЛЬТРОВАННЫЙ предмет
+        -- getShopItem('melon_seeds') возвращает nil из-за kit-фильтра!
         if type(shop.getShopItemBase) == "function" then
             BedwarsGetShopItemBase = shop.getShopItemBase
-        end
-        
-        -- Получаем melon_seeds через getShopItemBase (обходим фильтр)
-        if BedwarsGetShopItemBase then
             local ok, item = pcall(BedwarsGetShopItemBase, "melon_seeds")
             if ok and type(item) == "table" then
                 melonSeedsEntry = item
@@ -280,7 +271,7 @@ local function ensureShopData()
         end
     end)
     
-    return BedwarsShopData ~= nil
+    return melonSeedsEntry ~= nil
 end
 
 -- Запускаем инициализацию при загрузке модуля
@@ -289,64 +280,17 @@ task.spawn(function()
     ensureShopData()
 end)
 
-local function getMelonPriceInvisibly()
-    -- ============================================================
-    -- 1. КЭШИРОВАННАЯ ЦЕНА (самый быстрый путь)
-    -- ============================================================
-    if cachedMelonPrice then return cachedMelonPrice end
-    
-    -- ============================================================
-    -- 2. МОДУЛЬ МАГАЗИНА (работает ВСЕГДА, даже без UI)
-    -- ============================================================
+-- Возвращает БАЗОВУЮ цену melon_seeds (без shop tax)
+-- Базовая цена — это то, что показано в магазине и что ожидает пользователь
+-- НЕ кэшируем динамическую цену, т.к. shop tax меняет её после каждой покупки
+local function getMelonBasePrice()
     ensureShopData()
     
-    if melonSeedsEntry then
-        -- Пробуем динамическую цену
-        if BedwarsGetAdjusted then
-            local ok, adjusted = pcall(BedwarsGetAdjusted, melonSeedsEntry)
-            if ok and type(adjusted) == "number" then
-                cachedMelonPrice = adjusted
-                return adjusted
-            end
-        end
-        
-        -- Базовая цена из модуля
-        if melonSeedsEntry.price then
-            cachedMelonPrice = melonSeedsEntry.price
-            return melonSeedsEntry.price
-        end
+    if melonSeedsEntry and melonSeedsEntry.price then
+        return melonSeedsEntry.price -- 2 emerald (из модуля)
     end
     
-    -- ============================================================
-    -- 3. UI SCAN (если магазин открыт — дополнительная проверка)
-    -- ============================================================
-    local pg = LocalPlayer:FindFirstChild("PlayerGui")
-    if pg then
-        local itemShop = pg:FindFirstChild("ItemShop")
-        if itemShop then
-            for _, obj in ipairs(itemShop:GetDescendants()) do
-                if obj.Name == "melon_seeds_ShopItemCard" then
-                    local priceContainer = obj:FindFirstChild("Price")
-                    if priceContainer then
-                        for _, desc in ipairs(priceContainer:GetDescendants()) do
-                            if desc:IsA("TextLabel") and desc.Text then
-                                local num = tonumber(desc.Text:match("%d+"))
-                                if num then
-                                    cachedMelonPrice = num
-                                    return num
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    -- ============================================================
-    -- 4. ХАРДКОД: базовая цена из дампа игры (packages.json)
-    -- melon_seeds: currency=emerald, price=2
-    -- ============================================================
+    -- Хардкод из дампа игры (packages.json)
     return 2
 end
 
@@ -364,11 +308,10 @@ local function StartAutoBuyLoop()
             local currentSeeds = getItemCount("melon_seeds") + getItemCount("melon")
             if currentSeeds >= (States.Cletus.AutoBuyMaxAmount or 3) then return end
             
-            local actualPrice = getMelonPriceInvisibly()
+            local actualPrice = getMelonBasePrice()
             local maxPrice = States.Cletus.MaxMelonPrice or 2
             
-            -- Если не удалось узнать цену или она выше лимита - ждем
-            if not actualPrice then return end
+            -- Если базовая цена выше лимита - не покупаем
             if actualPrice > maxPrice then return end
             
             if PurchaseRemote then
