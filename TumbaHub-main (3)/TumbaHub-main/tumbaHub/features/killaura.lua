@@ -101,7 +101,7 @@ end
 local vec3 = (vector and vector.create) or Vector3.new
 
 local function GetTargetColor()
-    return States.ESP.EnemyColor or Color3.fromRGB(255, 50, 50)
+    return Color3.fromRGB(255, 50, 50)
 end
 
 local targetMarkerArrow
@@ -133,103 +133,8 @@ local function GetTargetVisuals()
     end
     targetMarkerArrow.TextLabel.TextColor3 = color
     
-    if not targetMarkerCircle then
-        targetMarkerCircle = Instance.new("CylinderHandleAdornment")
-        targetMarkerCircle.Name = "KillauraCircle"
-        targetMarkerCircle.Height = 0.05
-        targetMarkerCircle.Radius = 3
-        targetMarkerCircle.InnerRadius = 2.9
-        targetMarkerCircle.Color3 = color
-        targetMarkerCircle.Transparency = 0.6
-        targetMarkerCircle.AlwaysOnTop = true
-        targetMarkerCircle.ZIndex = 1
-        targetMarkerCircle.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-    end
-    targetMarkerCircle.Color3 = color
-
-    if #targetMarkerOrbit == 0 then
-        for i = 1, 3 do
-            local orbit = Instance.new("CylinderHandleAdornment")
-            orbit.Name = "KillauraOrbit" .. i
-            orbit.Height = 0.05
-            orbit.Radius = 3
-            orbit.InnerRadius = 2.95
-            orbit.Color3 = color
-            orbit.Transparency = 0.7
-            orbit.AlwaysOnTop = true
-            orbit.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-            table.insert(targetMarkerOrbit, orbit)
-        end
-    end
-    for _, orbit in pairs(targetMarkerOrbit) do orbit.Color3 = color end
-
-    if #targetMarkerPulse == 0 then
-        for i = 1, 2 do
-            local pulse = Instance.new("CylinderHandleAdornment")
-            pulse.Name = "KillauraPulse" .. i
-            pulse.Height = 0.05
-            pulse.Radius = 3
-            pulse.InnerRadius = 2.95
-            pulse.Color3 = color
-            pulse.Transparency = 0.8
-            pulse.AlwaysOnTop = true
-            pulse.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-            table.insert(targetMarkerPulse, pulse)
-        end
-    end
-    for _, pulse in pairs(targetMarkerPulse) do pulse.Color3 = color end
-
-    if not targetMarkerInfo then
-        targetMarkerInfo = Instance.new("BillboardGui")
-        targetMarkerInfo.Name = "KillauraInfo"
-        targetMarkerInfo.Size = UDim2.new(0, 150, 0, 50)
-        targetMarkerInfo.StudsOffset = Vector3.new(0, 5.5, 0)
-        targetMarkerInfo.AlwaysOnTop = true
-        
-        local content = Instance.new("Frame", targetMarkerInfo)
-        content.Size = UDim2.new(1, 0, 1, 0)
-        content.BackgroundTransparency = 1
-        
-        local nameLabel = Instance.new("TextLabel", content)
-        nameLabel.Name = "NameLabel"
-        nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.TextColor3 = Color3.new(1, 1, 1)
-        nameLabel.TextStrokeTransparency = 0.5
-        nameLabel.Font = Enum.Font.GothamBold
-        nameLabel.TextSize = 14
-        
-        local healthBar = Instance.new("Frame", content)
-        healthBar.Name = "HealthBar"
-        healthBar.Size = UDim2.new(0.8, 0, 0, 4)
-        healthBar.Position = UDim2.new(0.1, 0, 0.6, 0)
-        healthBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        healthBar.BorderSizePixel = 0
-        
-        local healthFill = Instance.new("Frame", healthBar)
-        healthFill.Name = "Fill"
-        healthFill.Size = UDim2.new(1, 0, 1, 0)
-        healthFill.BackgroundColor3 = color
-        healthFill.BorderSizePixel = 0
-        
-        targetMarkerInfo.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-    end
-    targetMarkerInfo.Frame.HealthBar.Fill.BackgroundColor3 = color
-
-    if not targetMarkerTracers then
-        targetMarkerTracers = Instance.new("LineHandleAdornment")
-        targetMarkerTracers.Name = "KillauraTracer"
-        targetMarkerTracers.Thickness = 2
-        targetMarkerTracers.Color3 = color
-        targetMarkerTracers.Transparency = 0.5
-        targetMarkerTracers.AlwaysOnTop = true
-        targetMarkerTracers.Length = 0
-        targetMarkerTracers.ZIndex = 0
-        targetMarkerTracers.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-    end
-    targetMarkerTracers.Color3 = color
-    
-    return targetMarkerArrow, targetMarkerCircle, targetMarkerOrbit, targetMarkerPulse, targetMarkerTracers, targetMarkerInfo
+    return targetMarkerArrow
+end
 end
 
 local killauraActive = false
@@ -262,28 +167,7 @@ if not Mega.Objects.KillauraInputConnections then
     end))
 end
 
-local function CreateHitEffect(target)
-    local tHrp = target:FindFirstChild("HumanoidRootPart") or target.PrimaryPart
-    if not tHrp then return end
-    
-    local color = GetTargetColor()
-    
-    -- Remade Hit Effect: A subtle expanding ring at the base
-    local ring = Instance.new("CylinderHandleAdornment")
-    ring.Adornee = tHrp
-    ring.Height = 0.01
-    ring.Radius = 1
-    ring.InnerRadius = 0.95
-    ring.Color3 = color
-    ring.Transparency = 0.5
-    ring.AlwaysOnTop = true
-    ring.ZIndex = 5
-    ring.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-    
-    local ts = game:GetService("TweenService")
-    ts:Create(ring, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Radius = 6, InnerRadius = 5.9, Transparency = 1}):Play()
-    task.delay(0.3, function() ring:Destroy() end)
-end
+
 
 local function isWithinFOV(targetPart)
     if not States.Combat.Killaura.UseFOV then return true end
@@ -543,73 +427,20 @@ function Mega.Features.Killaura.SetEnabled(state)
                 end
 
                 -- 2. Visual & Legit Update (Every Heartbeat for smoothness)
-                local arrow, circle, orbits, pulses, tracer, info = GetTargetVisuals()
+                local arrow = GetTargetVisuals()
                 local showESP = closestTarget and States.Combat.Killaura.TargetESP
                 
                 if showESP then
                     local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
-                    local tHum = closestTarget:FindFirstChild("Humanoid")
-                    local mode = States.Combat.Killaura.TargetESPMode or "Arrow"
-                    
-                    -- Reset all
-                    arrow.Enabled = false
-                    circle.Visible = false
-                    for _, o in pairs(orbits) do o.Visible = false end
-                    for _, p in pairs(pulses) do p.Visible = false end
-                    tracer.Visible = false
-                    info.Enabled = false
-                    
-                    if mode == "Arrow" then
+                    if tHrp then
                         arrow.Adornee = tHrp
                         arrow.Enabled = true
                         arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
-                    elseif mode == "Circle" then
-                        circle.Adornee = tHrp
-                        circle.Visible = true
-                        circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, tick() * 2)
-                    elseif mode == "Orbit" then
-                        for i, o in pairs(orbits) do
-                            o.Adornee = tHrp
-                            o.Visible = true
-                            local rotSpeed = (i % 2 == 0 and 1 or -1) * (1 + i * 0.5)
-                            o.CFrame = CFrame.new(0, -2.5 + math.sin(tick() * 2 + i) * 0.5, 0) * CFrame.Angles(math.rad(90), 0, tick() * rotSpeed)
-                        end
-                    elseif mode == "Pulse" then
-                        for i, p in pairs(pulses) do
-                            p.Adornee = tHrp
-                            p.Visible = true
-                            local pulseIdx = (tick() * 2 + (i * 1.5)) % 3
-                            p.Radius = 1 + pulseIdx * 2
-                            p.InnerRadius = math.max(0, p.Radius - 0.2)
-                            p.Transparency = 0.3 + (pulseIdx / 3) * 0.7
-                            p.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
-                        end
-                    end
-                    
-                    if States.Combat.Killaura.Tracers and hrp then
-                        tracer.Adornee = tHrp
-                        tracer.Visible = true
-                        local origin = hrp.Position
-                        local target = tHrp.Position
-                        tracer.CFrame = CFrame.new(origin, target)
-                        tracer.Length = (target - origin).Magnitude
-                    end
-                    
-                    if States.Combat.Killaura.TargetInfo and tHum then
-                        info.Adornee = tHrp
-                        info.Enabled = true
-                        info.Frame.NameLabel.Text = closestTarget.Name
-                        local healthPercent = math.clamp(tHum.Health / tHum.MaxHealth, 0, 1)
-                        info.Frame.HealthBar.Fill.Size = UDim2.new(healthPercent, 0, 1, 0)
-                        info.Frame.HealthBar.Fill.BackgroundColor3 = Color3.fromHSV(healthPercent * 0.3, 1, 1)
+                    else
+                        arrow.Enabled = false
                     end
                 else
                     arrow.Enabled = false
-                    circle.Visible = false
-                    for _, o in pairs(orbits) do o.Visible = false end
-                    for _, p in pairs(pulses) do p.Visible = false end
-                    tracer.Visible = false
-                    info.Enabled = false
                 end
 
                 -- 3. Attack Logic (Every Heartbeat for max Speed)
@@ -659,7 +490,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                             }
                         }
                         pcall(function() SwordHitRemote:FireServer(unpack(args)) end)
-                        CreateHitEffect(closestTarget)
+                        
                         
                         -- [ Симуляция клика (ЛКМ) при ударе киллауры для анимации ]
                         if States.Combat.Killaura.AutoClick then

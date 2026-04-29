@@ -396,9 +396,6 @@ Mega.Localization = {
         ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" },
         ["toggle_killaura_wallcheck"] = { ru = "🧱 Проверка препятствий", en = "🧱 Wall Check", es = "🧱 Chequeo de Paredes", pt = "🧱 Checagem de Parede", ko = "🧱 벽 관통 방지", ja = "🧱 壁チェック", uk = "🧱 Перевірка перешкод" },
                 ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" },
-        ["dropdown_killaura_target_esp_mode"] = { ru = "Режим отображения цели", en = "Target ESP Mode", uk = "Режим відображення цілі" },
-        ["toggle_killaura_tracers"] = { ru = "Линии до цели (Tracers)", en = "Target Tracers", uk = "Лінії до цілі (Tracers)" },
-        ["toggle_killaura_target_info"] = { ru = "Инфо о цели (Имя/ХП)", en = "Target Info (Name/HP)", uk = "Інфо про ціль (Ім'я/ХП)" }
     }
 }
 

@@ -177,13 +177,15 @@ Mega.States = {
             Delay = 0,
             WallCheck = false,
             RequireAim = false,
-            TargetESP = true,
-            TargetESPMode = "Arrow",
-            Tracers = false,
-            TargetInfo = false,
+            TargetESP = false,
+            UseFOV = false,
+            OnlyOnClick = false,
+            AutoClick = false,
             AnimationEnabled = true,
             AnimationMode = "Normal",
-            AnimationSpeed = 1
+            AnimationSpeed = 1,
+            FOVAngle = 90,
+            MobileBtn = false
         }
     },
     Misc = {
