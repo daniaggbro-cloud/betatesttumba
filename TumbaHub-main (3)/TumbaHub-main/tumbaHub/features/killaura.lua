@@ -299,33 +299,35 @@ function Mega.Features.Killaura.SetEnabled(state)
     if state and not killauraActive then
         killauraActive = true
         
-        -- Optimized Animation Loop (Manual Interpolation)
+        -- Ultra-Optimized Animation Loop with Lag Protection
         task.spawn(function()
             local started = false
             local currentStep = 1
             local progress = 0
             
-            -- Localize services and tables for speed
             local RunService = Services.RunService
             local currentState = States.Combat.Killaura
             
             while currentState.Enabled do
-                local isAttacking = currentState.IsAttacking
-                if currentState.AnimationEnabled and isAttacking then
+                if currentState.AnimationEnabled and currentState.IsAttacking then
                     local wrist = getArmWrist()
                     if wrist then
                         if not armC0 then armC0 = wrist.C0 end
                         started = true
                         
-                        local animMode = currentState.AnimationMode or "Normal"
-                        local animData = AuraAnimations[animMode] or AuraAnimations.Normal
                         local speed = currentState.AnimationSpeed or 1
+                        local animData = AuraAnimations[currentState.AnimationMode or "Normal"] or AuraAnimations.Normal
                         
                         local step = animData[currentStep]
                         local prevStep = animData[currentStep - 1] or {CFrame = CFrame.new()}
-                        local duration = math.max(0.005, step.Time / speed)
                         
+                        -- LAG PROTECTION: Adjust duration based on delta time
                         local dt = RunService.RenderStepped:Wait()
+                        if dt > 0.033 then -- If FPS < 30, boost speed to skip frames visually
+                            speed = speed * (dt / 0.016)
+                        end
+                        
+                        local duration = math.max(0.01, step.Time / speed)
                         progress = progress + dt
                         
                         local alpha = math.clamp(progress / duration, 0, 1)

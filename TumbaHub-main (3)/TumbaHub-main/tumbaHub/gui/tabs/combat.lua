@@ -91,7 +91,7 @@ end, {
     UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
     UI.CreateToggle(nil, "toggle_killaura_animation", "Combat.Killaura.AnimationEnabled"),
     UI.CreateDropdown(nil, "dropdown_killaura_animation_mode", "Combat.Killaura.AnimationMode", {"Normal", "Astral", "Smooth", "Exhibition", "Hamsterware", "Horizontal Spin"}, nil, false),
-    UI.CreateSlider(nil, "slider_killaura_animation_speed", "Combat.Killaura.AnimationSpeed", 1, 100, function(val) Mega.States.Combat.Killaura.AnimationSpeed = val / 10 end),
+    UI.CreateSlider(nil, "slider_killaura_animation_speed", "Combat.Killaura.AnimationSpeed", 1, 40, function(val) Mega.States.Combat.Killaura.AnimationSpeed = val / 10 end),
     UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 22),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
