@@ -100,14 +100,9 @@ end
 
 local vec3 = (vector and vector.create) or Vector3.new
 
-local VisualColors = {
-    Red = Color3.fromRGB(255, 50, 50),
-    Cyan = Color3.fromRGB(50, 255, 255),
-    Lime = Color3.fromRGB(50, 255, 50),
-    Gold = Color3.fromRGB(255, 200, 50),
-    Pink = Color3.fromRGB(255, 100, 255),
-    White = Color3.fromRGB(255, 255, 255)
-}
+local function GetTargetColor()
+    return States.ESP.EnemyColor or Color3.fromRGB(255, 50, 50)
+end
 
 local targetMarkerArrow
 local targetMarkerCircle
@@ -117,7 +112,7 @@ local targetMarkerTracers
 local targetMarkerInfo
 
 local function GetTargetVisuals()
-    local color = VisualColors[States.Combat.Killaura.TargetESPColor] or VisualColors.Red
+    local color = GetTargetColor()
     
     if not targetMarkerArrow then
         targetMarkerArrow = Instance.new("BillboardGui")
@@ -143,9 +138,9 @@ local function GetTargetVisuals()
         targetMarkerCircle.Name = "KillauraCircle"
         targetMarkerCircle.Height = 0.05
         targetMarkerCircle.Radius = 3
-        targetMarkerCircle.InnerRadius = 2.7
+        targetMarkerCircle.InnerRadius = 2.9
         targetMarkerCircle.Color3 = color
-        targetMarkerCircle.Transparency = 0.3
+        targetMarkerCircle.Transparency = 0.6
         targetMarkerCircle.AlwaysOnTop = true
         targetMarkerCircle.ZIndex = 1
         targetMarkerCircle.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
@@ -157,10 +152,10 @@ local function GetTargetVisuals()
             local orbit = Instance.new("CylinderHandleAdornment")
             orbit.Name = "KillauraOrbit" .. i
             orbit.Height = 0.05
-            orbit.Radius = 2.5 + (i * 0.5)
-            orbit.InnerRadius = orbit.Radius - 0.1
+            orbit.Radius = 3
+            orbit.InnerRadius = 2.95
             orbit.Color3 = color
-            orbit.Transparency = 0.5
+            orbit.Transparency = 0.7
             orbit.AlwaysOnTop = true
             orbit.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
             table.insert(targetMarkerOrbit, orbit)
@@ -174,9 +169,9 @@ local function GetTargetVisuals()
             pulse.Name = "KillauraPulse" .. i
             pulse.Height = 0.05
             pulse.Radius = 3
-            pulse.InnerRadius = 2.8
+            pulse.InnerRadius = 2.95
             pulse.Color3 = color
-            pulse.Transparency = 0.3
+            pulse.Transparency = 0.8
             pulse.AlwaysOnTop = true
             pulse.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
             table.insert(targetMarkerPulse, pulse)
@@ -271,19 +266,23 @@ local function CreateHitEffect(target)
     local tHrp = target:FindFirstChild("HumanoidRootPart") or target.PrimaryPart
     if not tHrp then return end
     
-    local color = VisualColors[States.Combat.Killaura.TargetESPColor] or VisualColors.Red
+    local color = GetTargetColor()
     
-    local flash = Instance.new("SphereHandleAdornment")
-    flash.Adornee = tHrp
-    flash.Radius = 1
-    flash.Color3 = color
-    flash.Transparency = 0.5
-    flash.AlwaysOnTop = true
-    flash.ZIndex = 5
-    flash.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
+    -- Remade Hit Effect: A subtle expanding ring at the base
+    local ring = Instance.new("CylinderHandleAdornment")
+    ring.Adornee = tHrp
+    ring.Height = 0.01
+    ring.Radius = 1
+    ring.InnerRadius = 0.95
+    ring.Color3 = color
+    ring.Transparency = 0.5
+    ring.AlwaysOnTop = true
+    ring.ZIndex = 5
+    ring.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
     
-    game:GetService("TweenService"):Create(flash, TweenInfo.new(0.2), {Radius = 4, Transparency = 1}):Play()
-    task.delay(0.2, function() flash:Destroy() end)
+    local ts = game:GetService("TweenService")
+    ts:Create(ring, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Radius = 6, InnerRadius = 5.9, Transparency = 1}):Play()
+    task.delay(0.3, function() ring:Destroy() end)
 end
 
 local function isWithinFOV(targetPart)

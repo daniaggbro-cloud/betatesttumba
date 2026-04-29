@@ -75,6 +75,12 @@ end)
 --#region -- Fun / Misc
 UI.CreateSection(TabFrame, "section_utils_fun")
 
+UI.CreateToggle(TabFrame, "toggle_fast_drop", "Misc.FastDrop", function(state)
+    if Mega.Features.FastDrop and Mega.Features.FastDrop.SetEnabled then
+        Mega.Features.FastDrop.SetEnabled(state)
+    end
+end)
+
 UI.CreateToggle(TabFrame, "toggle_fame_spam", "Misc.FameSpam")
 UI.CreateToggle(TabFrame, "toggle_fames_mom", "Misc.FamesMom")
 --#endregion

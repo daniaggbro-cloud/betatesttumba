@@ -99,7 +99,6 @@ end, {
     -- Group: Visuals
     UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
     UI.CreateDropdown(nil, "dropdown_killaura_target_esp_mode", "Combat.Killaura.TargetESPMode", {"Arrow", "Circle", "Pulse", "Orbit"}, nil, false),
-    UI.CreateDropdown(nil, "dropdown_killaura_target_esp_color", "Combat.Killaura.TargetESPColor", {"Red", "Cyan", "Lime", "Gold", "Pink", "White"}, nil, false),
     UI.CreateToggle(nil, "toggle_killaura_tracers", "Combat.Killaura.Tracers"),
     UI.CreateToggle(nil, "toggle_killaura_target_info", "Combat.Killaura.TargetInfo"),
     

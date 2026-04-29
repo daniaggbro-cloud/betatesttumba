@@ -303,6 +303,7 @@ Mega.Localization = {
         ["toggle_fame_spam"] = { ru = "Спам в чат", en = "Chat Spam", es = "Spam de Chat", pt = "Spam no Chat", ko = "채팅 스팸", ja = "チャットスパム", uk = "Спам у чат" },
         ["toggle_fames_mom"] = { ru = "Мама Фейма", en = "Fame's Mom", es = "Mamá de Fame", pt = "Mãe do Fame", ko = "페임의 엄마", ja = "フェイムの母", uk = "Мама Фейма" },
         ["toggle_autofish"] = { ru = "🎣 Авто-рыбалка (Legit)", en = "🎣 Auto-Fish (Legit)", es = "🎣 Auto-Pesca (Legit)", pt = "🎣 Auto-Pesca (Legit)", ko = "🎣 자동 낚시 (Legit)", ja = "🎣 自動釣り (Legit)", uk = "🎣 Авто-риболовля (Legit)" },
+        ["toggle_fast_drop"] = { ru = "Быстрый сброс (Q)", en = "Fast Drop (Q)", uk = "Швидке скидання (Q)", es = "Soltar rápido (Q)", pt = "Soltar Rápido (Q)", ko = "빠른 드롭 (Q)", ja = "高速ドロップ (Q)" },
         ["toggle_autofarm"] = { ru = "Авто-кит BETA", en = "Auto-Kit BETA", es = "Auto-Kit BETA", pt = "Auto-Kit BETA", ko = "자동 키트 BETA", ja = "自動キット BETA", uk = "Авто-кіт BETA" },
         ["toggle_chest_steal"] = { ru = "Авто-лут сундуков", en = "Chest Steal", es = "Robar Cofres", pt = "Roubar Baús", ko = "상자 훔치기", ja = "チェストスチール", uk = "Авто-лут скринь" },
         ["slider_chest_steal_range"] = { ru = "Дистанция лута", en = "Steal Range", es = "Rango de Robo", pt = "Alcance do Roubo", ko = "훔치기 범위", ja = "スチール範囲", uk = "Дистанція луту" },
@@ -396,7 +397,6 @@ Mega.Localization = {
         ["toggle_killaura_wallcheck"] = { ru = "🧱 Проверка препятствий", en = "🧱 Wall Check", es = "🧱 Chequeo de Paredes", pt = "🧱 Checagem de Parede", ko = "🧱 벽 관통 방지", ja = "🧱 壁チェック", uk = "🧱 Перевірка перешкод" },
                 ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" },
         ["dropdown_killaura_target_esp_mode"] = { ru = "Режим отображения цели", en = "Target ESP Mode", uk = "Режим відображення цілі" },
-        ["dropdown_killaura_target_esp_color"] = { ru = "Цвет отображения цели", en = "Target ESP Color", uk = "Колір відображення цілі" },
         ["toggle_killaura_tracers"] = { ru = "Линии до цели (Tracers)", en = "Target Tracers", uk = "Лінії до цілі (Tracers)" },
         ["toggle_killaura_target_info"] = { ru = "Инфо о цели (Имя/ХП)", en = "Target Info (Name/HP)", uk = "Інфо про ціль (Ім'я/ХП)" }
     }

@@ -179,7 +179,6 @@ Mega.States = {
             RequireAim = false,
             TargetESP = true,
             TargetESPMode = "Arrow",
-            TargetESPColor = "Red",
             Tracers = false,
             TargetInfo = false,
             AnimationEnabled = true,
@@ -215,6 +214,7 @@ Mega.States = {
                 ["stone"] = false
             }
         },
+        FastDrop = false,
         Adetunde = {
             Enabled = false,
             Range = 25,
