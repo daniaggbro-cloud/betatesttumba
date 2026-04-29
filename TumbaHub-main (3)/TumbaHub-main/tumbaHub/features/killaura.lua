@@ -250,14 +250,28 @@ local AuraAnimations = {
     }
 }
 
+local cachedWrist = nil
+local lastViewmodel = nil
+
 local function getArmWrist()
     local cam = workspace.CurrentCamera
-    if not cam then return nil end
-    local viewmodel = cam:FindFirstChild("Viewmodel")
-    if not viewmodel then return nil end
+    local viewmodel = cam and cam:FindFirstChild("Viewmodel")
+    if not viewmodel then 
+        cachedWrist = nil
+        lastViewmodel = nil
+        return nil 
+    end
+    
+    if viewmodel == lastViewmodel and cachedWrist then
+        return cachedWrist
+    end
+    
     local rightHand = viewmodel:FindFirstChild("RightHand") or viewmodel:FindFirstChild("RightArm")
     if not rightHand then return nil end
-    return rightHand:FindFirstChild("RightWrist") or rightHand:FindFirstChild("RightShoulder")
+    
+    cachedWrist = rightHand:FindFirstChild("RightWrist") or rightHand:FindFirstChild("RightShoulder")
+    lastViewmodel = viewmodel
+    return cachedWrist
 end
 
 local armC0 = nil
@@ -291,27 +305,30 @@ function Mega.Features.Killaura.SetEnabled(state)
             local currentStep = 1
             local progress = 0
             
-            while States.Combat.Killaura.Enabled do
-                local isAttacking = States.Combat.Killaura.IsAttacking
-                if States.Combat.Killaura.AnimationEnabled and isAttacking then
+            -- Localize services and tables for speed
+            local RunService = Services.RunService
+            local currentState = States.Combat.Killaura
+            
+            while currentState.Enabled do
+                local isAttacking = currentState.IsAttacking
+                if currentState.AnimationEnabled and isAttacking then
                     local wrist = getArmWrist()
                     if wrist then
                         if not armC0 then armC0 = wrist.C0 end
                         started = true
                         
-                        local animMode = States.Combat.Killaura.AnimationMode or "Normal"
+                        local animMode = currentState.AnimationMode or "Normal"
                         local animData = AuraAnimations[animMode] or AuraAnimations.Normal
-                        local speed = States.Combat.Killaura.AnimationSpeed or 1
+                        local speed = currentState.AnimationSpeed or 1
                         
                         local step = animData[currentStep]
                         local prevStep = animData[currentStep - 1] or {CFrame = CFrame.new()}
-                        local duration = math.max(0.01, step.Time / speed)
+                        local duration = math.max(0.005, step.Time / speed)
                         
-                        local dt = Services.RunService.Heartbeat:Wait()
+                        local dt = RunService.RenderStepped:Wait()
                         progress = progress + dt
                         
                         local alpha = math.clamp(progress / duration, 0, 1)
-                        -- Use CFrame:Lerp for maximum performance
                         wrist.C0 = armC0 * prevStep.CFrame:Lerp(step.CFrame, alpha)
                         
                         if alpha >= 1 then
@@ -322,7 +339,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                             end
                         end
                     else
-                        Services.RunService.Heartbeat:Wait()
+                        RunService.Heartbeat:Wait()
                     end
                 else
                     if started then
@@ -334,7 +351,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                             wrist.C0 = armC0
                         end
                     end
-                    Services.RunService.Heartbeat:Wait()
+                    RunService.Heartbeat:Wait()
                 end
             end
         end)
