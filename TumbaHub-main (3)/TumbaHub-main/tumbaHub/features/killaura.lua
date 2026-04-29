@@ -21,11 +21,7 @@ if not States.Combat.Killaura then
         Enabled = false, 
         Range = 25, 
         Delay = 0, 
-        TargetESP = true, 
-        TargetESPMode = "Arrow",
-        TargetESPColor = "Red",
-        Tracers = false,
-        TargetInfo = false,
+
         UseFOV = false, 
         FOVAngle = 90, 
         OnlyOnClick = false, 
@@ -36,11 +32,7 @@ if not States.Combat.Killaura then
     }
 else
     local defaults = {
-        TargetESP = true,
-        TargetESPMode = "Arrow",
-        TargetESPColor = "Red",
-        Tracers = false,
-        TargetInfo = false,
+
         AnimationEnabled = true,
         AnimationMode = "Normal",
         AnimationSpeed = 1,
@@ -104,38 +96,9 @@ local function GetTargetColor()
     return Color3.fromRGB(255, 50, 50)
 end
 
-local targetMarkerArrow
-local targetMarkerCircle
-local targetMarkerOrbit = {}
-local targetMarkerPulse = {}
-local targetMarkerTracers
-local targetMarkerInfo
 
-local function GetTargetVisuals()
-    local color = GetTargetColor()
-    
-    if not targetMarkerArrow then
-        targetMarkerArrow = Instance.new("BillboardGui")
-        targetMarkerArrow.Name = "KillauraArrow"
-        targetMarkerArrow.Size = UDim2.new(0, 50, 0, 50)
-        targetMarkerArrow.StudsOffset = Vector3.new(0, 4, 0)
-        targetMarkerArrow.AlwaysOnTop = true
-        
-        local arrowText = Instance.new("TextLabel", targetMarkerArrow)
-        arrowText.Size = UDim2.new(1, 0, 1, 0)
-        arrowText.BackgroundTransparency = 1
-        arrowText.Text = "▼"
-        arrowText.TextColor3 = color
-        arrowText.TextScaled = true
-        arrowText.TextStrokeTransparency = 0
-        arrowText.Font = Enum.Font.GothamBlack
-        targetMarkerArrow.Parent = (Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui)
-    end
-    targetMarkerArrow.TextLabel.TextColor3 = color
-    
-    return targetMarkerArrow
-end
-end
+
+
 
 local killauraActive = false
 local lastAttackTime = 0
@@ -292,14 +255,7 @@ function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
     if not state then
-        if targetMarkerArrow then 
-            targetMarkerArrow.Adornee = nil 
-            targetMarkerArrow.Enabled = false
-        end
-        if targetMarkerCircle then 
-            targetMarkerCircle.Adornee = nil 
-            targetMarkerCircle.Visible = false
-        end
+
         if AnimTween then AnimTween:Cancel() end
         local wrist = getArmWrist()
         if wrist and armC0 then
@@ -427,21 +383,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                 end
 
                 -- 2. Visual & Legit Update (Every Heartbeat for smoothness)
-                local arrow = GetTargetVisuals()
-                local showESP = closestTarget and States.Combat.Killaura.TargetESP
-                
-                if showESP then
-                    local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
-                    if tHrp then
-                        arrow.Adornee = tHrp
-                        arrow.Enabled = true
-                        arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
-                    else
-                        arrow.Enabled = false
-                    end
-                else
-                    arrow.Enabled = false
-                end
+
 
                 -- 3. Attack Logic (Every Heartbeat for max Speed)
                 if closestTarget and weapon and SwordHitRemote then

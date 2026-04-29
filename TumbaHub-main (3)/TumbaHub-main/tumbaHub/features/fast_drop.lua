@@ -19,8 +19,13 @@ if States.Misc.FastDrop == nil then States.Misc.FastDrop = false end
 local DropItemRemote
 task.spawn(function()
     while not DropItemRemote do
-        DropItemRemote = Mega.GetRemote("DropItem")
-        if not DropItemRemote then task.wait(5) end
+        -- Try common Bedwars drop remote names
+        DropItemRemote = Mega.GetRemote("Inventory/DropItem") or Mega.GetRemote("DropItem")
+        if DropItemRemote then
+            print("✅ FastDrop: Remote found - " .. DropItemRemote:GetFullName())
+        else
+            task.wait(5)
+        end
     end
 end)
 
@@ -28,12 +33,25 @@ local function isInventoryOpen()
     -- Bedwars check for open UI
     local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if playerGui then
-        local topBarApp = playerGui:FindFirstChild("TopBarApp")
-        if topBarApp and topBarApp:FindFirstChild("InventoryApp") and topBarApp.InventoryApp.Enabled then
-            return true
-        end
+        -- Check for common Bedwars inventory/shop paths
+        local inventory = playerGui:FindFirstChild("InventoryApp") or (playerGui:FindFirstChild("TopBarApp") and playerGui.TopBarApp:FindFirstChild("InventoryApp"))
+        if inventory and inventory.Enabled then return true end
+        
+        local shop = playerGui:FindFirstChild("ShopApp") or (playerGui:FindFirstChild("TopBarApp") and playerGui.TopBarApp:FindFirstChild("ShopApp"))
+        if shop and shop.Enabled then return true end
     end
     return false
+end
+
+local function getHandItem()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    
+    -- Bedwars tools are usually in the character
+    local tool = char:FindFirstChildOfClass("Tool")
+    if tool then return tool end
+    
+    return nil
 end
 
 local function performDrop()
@@ -43,16 +61,29 @@ local function performDrop()
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end
     
-    -- Don't drop if typing or in menu
+    -- Don't drop if typing
     if Services.UserInputService:GetFocusedTextBox() then return end
-    if isInventoryOpen() then return end
 
     -- Check if Q is held (or the drop key)
-    -- In Bedwars, Q is the default drop key. 
-    -- We can also check Backspace or H as in CatV6.
     if Services.UserInputService:IsKeyDown(Enum.KeyCode.Q) or Services.UserInputService:IsKeyDown(Enum.KeyCode.Backspace) or Services.UserInputService:IsKeyDown(Enum.KeyCode.H) then
+        local item = getHandItem()
+        if not item then return end
+        
+        print("🚀 FastDrop: Attempting to drop " .. item.Name)
+        
         pcall(function()
-            DropItemRemote:InvokeServer()
+            -- Bedwars usually expects a table with the item
+            local args = {
+                item = item
+            }
+            
+            for i = 1, 3 do -- 3 times per tick is plenty
+                if DropItemRemote:IsA("RemoteEvent") then
+                    DropItemRemote:FireServer(args)
+                else
+                    DropItemRemote:InvokeServer(args)
+                end
+            end
         end)
     end
 end

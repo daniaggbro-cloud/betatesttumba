@@ -119,7 +119,7 @@ Mega.Localization = {
         ["toggle_bednuke"] = { ru = "Bed Nuke", en = "Bed Nuke", es = "Bed Nuke", pt = "Bed Nuke", ko = "Bed Nuke", ja = "Bed Nuke", uk = "Bed Nuke" },
         ["slider_bednuke_range"] = { ru = "Макс. дистанция", en = "Max Range", es = "Rango Máximo", pt = "Alcance Máximo", ko = "최대 범위", ja = "最大範囲", uk = "Макс. дистанція" },
         ["slider_bednuke_packets"] = { ru = "Пакетов за тик", en = "Packets per tick", es = "Paquetes por tick", pt = "Pacotes por tick", ko = "틱당 패킷", ja = "ティックごとのパケット", uk = "Пакетів за тік" },
-        ["toggle_killaura_target_esp"] = { ru = "Показывать цель", en = "Show Target", es = "Mostrar Objetivo", pt = "Mostrar Alvo", ko = "대상 표시", ja = "ターゲットを表示", uk = "Показувати ціль" },
+
         ["toggle_killaura_use_fov"] = { ru = "👁️ Использовать FOV", en = "👁️ Use FOV", es = "👁️ Usar FOV", pt = "👁️ Usar FOV", ko = "👁️ FOV 사용", ja = "👁️ FOV使用", uk = "👁️ Використовувати FOV" },
         ["toggle_killaura_only_on_click"] = { ru = "⚔️ Только при ударе (Trigger)", en = "⚔️ Only on Click", es = "⚔️ Solo al hacer clic", pt = "⚔️ Apenas ao clicar", ko = "⚔️ 클릭 시에만 작동", ja = "⚔️ クリック時のみ", uk = "⚔️ Тільки при ударі" },
         ["toggle_killaura_autoclick"] = { ru = "🖱️ Авто-клик (Анимация удара)", en = "🖱️ Auto-Click (Swing Animation)", es = "🖱️ Auto-Click", pt = "🖱️ Auto-Click", ko = "🖱️ 자동 클릭", ja = "🖱️ オートクリック", uk = "🖱️ Авто-клік (Анімація)" },
