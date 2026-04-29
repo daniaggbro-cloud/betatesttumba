@@ -312,7 +312,6 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownFrame.Name = textKey .. "Dropdown"
     DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
     DropdownFrame.BackgroundTransparency = 1
-    DropdownFrame.ZIndex = 5
     DropdownFrame.Parent = parent
 
     local DropdownLabel = Instance.new("TextLabel")
@@ -346,38 +345,38 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     ButtonStroke.Color = Mega.Settings.Menu.AccentColor
     ButtonStroke.Transparency = 0.8
 
+    -- Global List Container (Parented to ScreenGui to avoid clipping)
     local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Size = UDim2.new(0, 200, 0, 0)
-    DropdownList.Position = UDim2.new(1, -200, 1, 5)
     DropdownList.BackgroundColor3 = Mega.Settings.Menu.SidebarColor
     DropdownList.BorderSizePixel = 0
-    DropdownList.ScrollBarThickness = 2
+    DropdownList.ScrollBarThickness = 3
     DropdownList.ScrollBarImageColor3 = Mega.Settings.Menu.AccentColor
     DropdownList.Visible = false
     DropdownList.ClipsDescendants = true
-    DropdownList.ZIndex = 500 -- Ensure it's on top
+    DropdownList.ZIndex = 2000 -- Top priority
     DropdownList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
-    DropdownList.Parent = DropdownFrame
+    DropdownList.Parent = Mega.Objects.GUI
     
     Instance.new("UICorner", DropdownList).CornerRadius = UDim.new(0, 8)
     local ListStroke = Instance.new("UIStroke", DropdownList)
     ListStroke.Color = Mega.Settings.Menu.AccentColor
-    ListStroke.Transparency = 0.6
+    ListStroke.Transparency = 0.5
 
     local ListLayout = Instance.new("UIListLayout")
     ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     ListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    ListLayout.Padding = UDim.new(0, 2)
+    ListLayout.Padding = UDim.new(0, 4)
     ListLayout.Parent = DropdownList
 
     for i, optionKey in ipairs(options) do
         local translatedOption = (optionsAreKeys and GetText(optionKey)) or optionKey
         local ListItem = Instance.new("TextButton")
-        ListItem.Size = UDim2.new(1, -10, 0, 30)
+        ListItem.Size = UDim2.new(1, -12, 0, 28)
         ListItem.BackgroundColor3 = Mega.Settings.Menu.ElementColor
-        ListItem.BackgroundTransparency = 0.2
+        ListItem.BackgroundTransparency = 0.4
         ListItem.BorderSizePixel = 0
         ListItem.Text = tostring(translatedOption)
         ListItem.TextColor3 = Color3.new(1, 1, 1)
@@ -385,23 +384,21 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         ListItem.Font = Enum.Font.GothamSemibold
         ListItem.AutoButtonColor = false
         ListItem.LayoutOrder = i
-        ListItem.ZIndex = 510
+        ListItem.ZIndex = 2010
         ListItem.Parent = DropdownList
         
         Instance.new("UICorner", ListItem).CornerRadius = UDim.new(0, 6)
 
         ListItem.MouseEnter:Connect(function()
-            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.AccentColor, BackgroundTransparency = 0.5}):Play()
+            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.AccentColor, BackgroundTransparency = 0.2}):Play()
         end)
         ListItem.MouseLeave:Connect(function()
-            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.ElementColor, BackgroundTransparency = 0.2}):Play()
+            TweenService:Create(ListItem, TweenInfo.new(0.2), {BackgroundColor3 = Mega.Settings.Menu.ElementColor, BackgroundTransparency = 0.4}):Play()
         end)
 
         ListItem.MouseButton1Click:Connect(function()
             DropdownButton.Text = translatedOption
             DropdownList.Visible = false
-            DropdownList.Size = UDim2.new(0, 200, 0, 0)
-            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
             
             local path = statePath
             local tbl = Mega.States
@@ -415,52 +412,52 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         end)
     end
 
+    local updateConn = nil
     DropdownButton.MouseButton1Click:Connect(function()
         local isExpanding = not DropdownList.Visible
         
         if isExpanding then
-            -- Disable clipping on parents to ensure dropdown is visible
-            local p = DropdownFrame.Parent
-            while p and not p:IsA("ScrollingFrame") and p.Name ~= "MainFrame" do
-                if p:IsA("Frame") or p:IsA("CanvasGroup") then
-                    p.ClipsDescendants = false
-                end
-                p = p.Parent
-            end
-
             DropdownList.Visible = true
             local targetListHeight = math.min(#options * 32 + 10, 150)
             
-            -- Smart Direction
-            local parentTab = parent:FindFirstAncestorOfClass("ScrollingFrame") or parent
-            local screenHeight = parentTab.AbsoluteSize.Y
-            local buttonPosInTab = DropdownButton.AbsolutePosition.Y - parentTab.AbsolutePosition.Y
-            local spaceBelow = screenHeight - buttonPosInTab - 35
-            
-            local openUpwards = spaceBelow < (targetListHeight + 20)
-            
-            if openUpwards then
-                DropdownList.Position = UDim2.new(1, -200, 0, -targetListHeight - 5)
-                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
-            else
-                DropdownList.Position = UDim2.new(1, -200, 1, 5)
-                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetListHeight + 5)
-            end
-            
-            DropdownList.ZIndex = 500
-            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetListHeight) }):Play()
-        else
-            local t = TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, 0) })
-            t:Play()
-            t.Completed:Connect(function() 
-                if DropdownList.Size.Y.Offset < 5 then
-                    DropdownList.Visible = false 
-                    -- Re-enable clipping on parents if no other dropdowns are open? 
-                    -- (Simplified: just leave it off for now or fix on close)
+            if updateConn then updateConn:Disconnect() end
+            updateConn = Mega.Services.RunService.RenderStepped:Connect(function()
+                if not DropdownButton or not DropdownButton.Parent or not DropdownList.Visible or not Mega.Objects.GUI.Enabled then
+                    DropdownList.Visible = false
+                    if updateConn then updateConn:Disconnect() end
+                    return
+                end
+                
+                local absPos = DropdownButton.AbsolutePosition
+                local absSize = DropdownButton.AbsoluteSize
+                
+                -- Detect space to decide direction
+                local screenHeight = Mega.Objects.GUI.AbsoluteSize.Y
+                local spaceBelow = screenHeight - absPos.Y - absSize.Y
+                local openUpwards = spaceBelow < (targetListHeight + 20)
+                
+                if openUpwards then
+                    DropdownList.Position = UDim2.new(0, absPos.X, 0, absPos.Y - targetListHeight - 5)
+                else
+                    DropdownList.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 5)
                 end
             end)
-            DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
+            
+            TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, targetListHeight) }):Play()
+        else
+            if updateConn then updateConn:Disconnect() end
+            local t = TweenService:Create(DropdownList, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, 0) })
+            t:Play()
+            t.Completed:Connect(function() 
+                if DropdownList.Size.Y.Offset < 5 then DropdownList.Visible = false end
+            end)
         end
+    end)
+
+    -- Cleanup if menu closes or tab changes
+    DropdownFrame.Destroying:Connect(function()
+        if updateConn then updateConn:Disconnect() end
+        if DropdownList then DropdownList:Destroy() end
     end)
 
     return DropdownFrame
