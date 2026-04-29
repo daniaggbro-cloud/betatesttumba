@@ -42,26 +42,36 @@ task.spawn(function()
     end
 end)
 
-local function getEquippedItemName()
+local function getInventoryItem(nameMatch)
+    local inv = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name)
+    if inv then
+        for _, item in pairs(inv:GetChildren()) do
+            if item.Name:lower():find(nameMatch) then
+                return item
+            end
+        end
+    end
+    -- Also check character
     local char = LocalPlayer.Character
-    if not char then return nil end
-    local tool = char:FindFirstChildOfClass("Tool")
-    if tool then return tool.Name end
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool and tool.Name:lower():find(nameMatch) then
+            return tool
+        end
+    end
     return nil
 end
 
 local LongJumpMethods = {
-    fireball = function(pos, dir)
-        if FireProjectileRemote then
+    fireball = function(pos, dir, toolObj)
+        if FireProjectileRemote and toolObj then
             local speed = 60
             pos = pos - dir * 0.1
             local shootPosition = (CFrame.lookAlong(pos, Vector3.new(0, -speed, 0)) * CFrame.new(Vector3.new(0, 0, 0)))
-            local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if tool then
-                pcall(function()
-                    FireProjectileRemote:InvokeServer(tool, "fireball", "fireball", shootPosition.Position, pos, shootPosition.LookVector * speed, game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
-                end)
-            end
+            local toolInstance = (toolObj:IsA("ObjectValue") and toolObj.Value) or toolObj
+            pcall(function()
+                FireProjectileRemote:InvokeServer(toolInstance, "fireball", "fireball", shootPosition.Position, pos, shootPosition.LookVector * speed, game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+            end)
         end
     end,
     tnt = function(pos, dir)
@@ -156,21 +166,15 @@ function Mega.Features.LongJump.SetEnabled(state)
         end)
         
         -- 3. Trigger item on enable
-        local itemName = getEquippedItemName()
-        if itemName then
-            local lowerName = itemName:lower()
-            local dir = hrp and hrp.CFrame.LookVector or Vector3.new(0,0,1)
-            if lowerName:find("fireball") and LongJumpMethods.fireball then
-                task.spawn(LongJumpMethods.fireball, startPos, dir)
-            elseif lowerName:find("tnt") and LongJumpMethods.tnt then
-                task.spawn(LongJumpMethods.tnt, startPos, dir)
-            else
-                JumpSpeed = States.Player.LongJumpSpeed
-                JumpTick = tick() + 2.5
-                Direction = Vector3.new(dir.X, 0, dir.Z).Unit
-            end
+        local fireball = getInventoryItem("fireball")
+        local tnt = getInventoryItem("tnt")
+        local dir = hrp and hrp.CFrame.LookVector or Vector3.new(0,0,1)
+        
+        if fireball and LongJumpMethods.fireball then
+            task.spawn(LongJumpMethods.fireball, startPos, dir, fireball)
+        elseif tnt and LongJumpMethods.tnt then
+            task.spawn(LongJumpMethods.tnt, startPos, dir, tnt)
         else
-            local dir = hrp and hrp.CFrame.LookVector or Vector3.new(0,0,1)
             JumpSpeed = States.Player.LongJumpSpeed
             JumpTick = tick() + 2.5
             Direction = Vector3.new(dir.X, 0, dir.Z).Unit
