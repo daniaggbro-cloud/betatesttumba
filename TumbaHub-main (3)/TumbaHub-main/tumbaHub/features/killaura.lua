@@ -285,37 +285,57 @@ function Mega.Features.Killaura.SetEnabled(state)
     if state and not killauraActive then
         killauraActive = true
         
-        -- Animation Loop
+        -- Optimized Animation Loop (Manual Interpolation)
         task.spawn(function()
             local started = false
+            local currentStep = 1
+            local progress = 0
+            
             while States.Combat.Killaura.Enabled do
-                local isAttacking = Mega.States.Combat.Killaura.IsAttacking -- We'll set this below
+                local isAttacking = States.Combat.Killaura.IsAttacking
                 if States.Combat.Killaura.AnimationEnabled and isAttacking then
                     local wrist = getArmWrist()
                     if wrist then
                         if not armC0 then armC0 = wrist.C0 end
                         started = true
+                        
                         local animMode = States.Combat.Killaura.AnimationMode or "Normal"
                         local animData = AuraAnimations[animMode] or AuraAnimations.Normal
                         local speed = States.Combat.Killaura.AnimationSpeed or 1
                         
-                        for i, step in ipairs(animData) do
-                            if not States.Combat.Killaura.Enabled or not Mega.States.Combat.Killaura.IsAttacking then break end
-                            AnimTween = game:GetService("TweenService"):Create(wrist, TweenInfo.new(step.Time / speed, Enum.EasingStyle.Linear), {
-                                C0 = armC0 * step.CFrame
-                            })
-                            AnimTween:Play()
-                            AnimTween.Completed:Wait()
+                        local step = animData[currentStep]
+                        local prevStep = animData[currentStep - 1] or {CFrame = CFrame.new()}
+                        local duration = math.max(0.01, step.Time / speed)
+                        
+                        local dt = Services.RunService.Heartbeat:Wait()
+                        progress = progress + dt
+                        
+                        local alpha = math.clamp(progress / duration, 0, 1)
+                        -- Use CFrame:Lerp for maximum performance
+                        wrist.C0 = armC0 * prevStep.CFrame:Lerp(step.CFrame, alpha)
+                        
+                        if alpha >= 1 then
+                            progress = 0
+                            currentStep = currentStep + 1
+                            if currentStep > #animData then
+                                currentStep = 1
+                            end
+                        end
+                    else
+                        Services.RunService.Heartbeat:Wait()
+                    end
+                else
+                    if started then
+                        started = false
+                        currentStep = 1
+                        progress = 0
+                        local wrist = getArmWrist()
+                        if wrist and armC0 then
+                            wrist.C0 = armC0
                         end
                     end
-                elseif started then
-                    started = false
-                    local wrist = getArmWrist()
-                    if wrist and armC0 then
-                        game:GetService("TweenService"):Create(wrist, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {C0 = armC0}):Play()
-                    end
+                    Services.RunService.Heartbeat:Wait()
                 end
-                task.wait(0.01)
             end
         end)
 
