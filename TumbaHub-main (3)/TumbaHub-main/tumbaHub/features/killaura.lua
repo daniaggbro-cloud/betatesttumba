@@ -203,6 +203,51 @@ local function isAimingAt(targetChar)
     return (dx * dx + dy * dy) <= (aimRadius * aimRadius)
 end
 
+local AuraAnimations = {
+    Normal = {
+        {CFrame = CFrame.new(-0.17, -0.14, -0.12) * CFrame.Angles(math.rad(-53), math.rad(50), math.rad(-64)), Time = 0.1},
+        {CFrame = CFrame.new(-0.55, -0.59, -0.1) * CFrame.Angles(math.rad(-161), math.rad(54), math.rad(-6)), Time = 0.08},
+        {CFrame = CFrame.new(-0.62, -0.68, -0.07) * CFrame.Angles(math.rad(-167), math.rad(47), math.rad(-1)), Time = 0.03},
+        {CFrame = CFrame.new(-0.56, -0.86, 0.23) * CFrame.Angles(math.rad(-167), math.rad(49), math.rad(-1)), Time = 0.03}
+    },
+    Astral = {
+        {CFrame = CFrame.new(0.7, -0.7, 0.6) * CFrame.Angles(math.rad(-16), math.rad(60), math.rad(-80)), Time = 0.1},
+        {CFrame = CFrame.new(0.7, -0.7, 0.6) * CFrame.Angles(math.rad(-16), math.rad(60), math.rad(-80)), Time = 0.15},
+        {CFrame = CFrame.new(0.95, -1.06, -2.25) * CFrame.Angles(math.rad(-179), math.rad(61), math.rad(80)), Time = 0.15}
+    },
+    ["Horizontal Spin"] = {
+        {CFrame = CFrame.Angles(math.rad(-10), math.rad(-90), math.rad(-80)), Time = 0.12},
+        {CFrame = CFrame.Angles(math.rad(-10), math.rad(180), math.rad(-80)), Time = 0.12},
+        {CFrame = CFrame.Angles(math.rad(-10), math.rad(90), math.rad(-80)), Time = 0.12},
+        {CFrame = CFrame.Angles(math.rad(-10), 0, math.rad(-80)), Time = 0.12}
+    },
+    Exhibition = {
+        {CFrame = CFrame.new(-0.17, -0.14, -0.12) * CFrame.Angles(math.rad(-53), math.rad(50), math.rad(-64)), Time = 0.1},
+        {CFrame = CFrame.new(-0.55, -0.59, -0.1) * CFrame.Angles(math.rad(-161), math.rad(54), math.rad(-6)), Time = 0.08}
+    },
+    Smooth = {
+        {CFrame = CFrame.new(-0.4, -0.3, -0.2) * CFrame.Angles(math.rad(-40), math.rad(30), math.rad(-20)), Time = 0.15},
+        {CFrame = CFrame.new(-0.2, -0.1, 0) * CFrame.Angles(0, 0, 0), Time = 0.15}
+    },
+    Hamsterware = {
+        {CFrame = CFrame.new(-0.1, -0.2, -0.3) * CFrame.Angles(math.rad(-10), math.rad(10), math.rad(-10)), Time = 0.1},
+        {CFrame = CFrame.new(-0.5, -0.5, -0.5) * CFrame.Angles(math.rad(-90), math.rad(90), math.rad(-90)), Time = 0.1}
+    }
+}
+
+local function getArmWrist()
+    local cam = workspace.CurrentCamera
+    if not cam then return nil end
+    local viewmodel = cam:FindFirstChild("Viewmodel")
+    if not viewmodel then return nil end
+    local rightHand = viewmodel:FindFirstChild("RightHand") or viewmodel:FindFirstChild("RightArm")
+    if not rightHand then return nil end
+    return rightHand:FindFirstChild("RightWrist") or rightHand:FindFirstChild("RightShoulder")
+end
+
+local armC0 = nil
+local AnimTween = nil
+
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
@@ -215,10 +260,50 @@ function Mega.Features.Killaura.SetEnabled(state)
             targetMarkerCircle.Adornee = nil 
             targetMarkerCircle.Visible = false
         end
+        if AnimTween then AnimTween:Cancel() end
+        local wrist = getArmWrist()
+        if wrist and armC0 then
+            game:GetService("TweenService"):Create(wrist, TweenInfo.new(0.3), {C0 = armC0}):Play()
+        end
     end
     
     if state and not killauraActive then
         killauraActive = true
+        
+        -- Animation Loop
+        task.spawn(function()
+            local started = false
+            while States.Combat.Killaura.Enabled do
+                local isAttacking = Mega.States.Combat.Killaura.IsAttacking -- We'll set this below
+                if States.Combat.Killaura.AnimationEnabled and isAttacking then
+                    local wrist = getArmWrist()
+                    if wrist then
+                        if not armC0 then armC0 = wrist.C0 end
+                        started = true
+                        local animMode = States.Combat.Killaura.AnimationMode or "Normal"
+                        local animData = AuraAnimations[animMode] or AuraAnimations.Normal
+                        local speed = States.Combat.Killaura.AnimationSpeed or 1
+                        
+                        for i, step in ipairs(animData) do
+                            if not States.Combat.Killaura.Enabled or not Mega.States.Combat.Killaura.IsAttacking then break end
+                            AnimTween = game:GetService("TweenService"):Create(wrist, TweenInfo.new(step.Time / speed, Enum.EasingStyle.Linear), {
+                                C0 = armC0 * step.CFrame
+                            })
+                            AnimTween:Play()
+                            AnimTween.Completed:Wait()
+                        end
+                    end
+                elseif started then
+                    started = false
+                    local wrist = getArmWrist()
+                    if wrist and armC0 then
+                        game:GetService("TweenService"):Create(wrist, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {C0 = armC0}):Play()
+                    end
+                end
+                task.wait(0.01)
+            end
+        end)
+
         task.spawn(function()
             while States.Combat.Killaura.Enabled do
                 if Mega.Unloaded then break end
@@ -300,6 +385,7 @@ function Mega.Features.Killaura.SetEnabled(state)
 
                 -- 3. Attack Logic (Every Heartbeat for max Speed)
                 if closestTarget and weapon and SwordHitRemote then
+                    States.Combat.Killaura.IsAttacking = true
                     local currentTime = tick()
                     local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
                     local jitter = math.random(-20, 20) / 1000
@@ -362,11 +448,14 @@ function Mega.Features.Killaura.SetEnabled(state)
                             end)
                         end
                     end
+                else
+                    States.Combat.Killaura.IsAttacking = false
                 end
                 
                 Services.RunService.Heartbeat:Wait()
             end
             killauraActive = false
+            States.Combat.Killaura.IsAttacking = false
         end)
     end
 end
