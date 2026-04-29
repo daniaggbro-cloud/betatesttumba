@@ -17,8 +17,23 @@ local States = Mega.States
 
 if not States.Combat then States.Combat = {} end
 if not States.Combat.Killaura then
-    States.Combat.Killaura = { Enabled = false, Range = 25, Delay = 0, TargetESP = true, UseFOV = false, FOVAngle = 90, OnlyOnClick = false, AutoClick = false }
-elseif States.Combat.Killaura.TargetESP == nil then
+    States.Combat.Killaura = { 
+        Enabled = false, 
+        Range = 25, 
+        Delay = 0, 
+        TargetESP = true, 
+        UseFOV = false, 
+        FOVAngle = 90, 
+        OnlyOnClick = false, 
+        AutoClick = false,
+        AnimationEnabled = true,
+        AnimationMode = "Normal",
+        AnimationSpeed = 1
+    }
+elseif States.Combat.Killaura.AnimationEnabled == nil then
+    States.Combat.Killaura.AnimationEnabled = true
+    States.Combat.Killaura.AnimationMode = "Normal"
+    States.Combat.Killaura.AnimationSpeed = 1
     States.Combat.Killaura.TargetESP = true
     States.Combat.Killaura.UseFOV = false
     States.Combat.Killaura.FOVAngle = 90

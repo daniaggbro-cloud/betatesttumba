@@ -331,6 +331,9 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
     DropdownButton.BackgroundColor3 = Mega.Settings.Menu.ElementColor:Lerp(Color3.new(1, 1, 1), 0.05)
     DropdownButton.BorderSizePixel = 0
     local displayText = (optionsAreKeys and GetText(initialValue)) or initialValue
+    if not displayText or displayText == "" then
+        displayText = (optionsAreKeys and GetText(options[1])) or options[1]
+    end
     DropdownButton.Text = tostring(displayText or "")
     DropdownButton.TextColor3 = Mega.Settings.Menu.TextColor
     DropdownButton.TextSize = 11
@@ -416,10 +419,19 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         local isExpanding = not DropdownList.Visible
         
         if isExpanding then
+            -- Disable clipping on parents to ensure dropdown is visible
+            local p = DropdownFrame.Parent
+            while p and not p:IsA("ScrollingFrame") and p.Name ~= "MainFrame" do
+                if p:IsA("Frame") or p:IsA("CanvasGroup") then
+                    p.ClipsDescendants = false
+                end
+                p = p.Parent
+            end
+
             DropdownList.Visible = true
             local targetListHeight = math.min(#options * 32 + 10, 150)
             
-            -- Smart Direction: Проверяем, сколько места осталось внизу
+            -- Smart Direction
             local parentTab = parent:FindFirstAncestorOfClass("ScrollingFrame") or parent
             local screenHeight = parentTab.AbsoluteSize.Y
             local buttonPosInTab = DropdownButton.AbsolutePosition.Y - parentTab.AbsolutePosition.Y
@@ -427,10 +439,9 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
             
             local openUpwards = spaceBelow < (targetListHeight + 20)
             
-            -- Устанавливаем позицию в зависимости от направления
             if openUpwards then
                 DropdownList.Position = UDim2.new(1, -200, 0, -targetListHeight - 5)
-                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35) -- Не расширяем вниз, если открываемся вверх
+                DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
             else
                 DropdownList.Position = UDim2.new(1, -200, 1, 5)
                 DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35 + targetListHeight + 5)
@@ -442,8 +453,11 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
             local t = TweenService:Create(DropdownList, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 200, 0, 0) })
             t:Play()
             t.Completed:Connect(function() 
-                if not DropdownList.Visible then return end -- Avoid double-toggle issues
-                DropdownList.Visible = false 
+                if DropdownList.Size.Y.Offset < 5 then
+                    DropdownList.Visible = false 
+                    -- Re-enable clipping on parents if no other dropdowns are open? 
+                    -- (Simplified: just leave it off for now or fix on close)
+                end
             end)
             DropdownFrame.Size = UDim2.new(0.9, 0, 0, 35)
         end
