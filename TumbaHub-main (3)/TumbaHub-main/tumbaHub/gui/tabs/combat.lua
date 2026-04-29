@@ -83,19 +83,31 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enable
         Mega.ShowNotification(Mega.GetText("toggle_killaura") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
     end
 end, {
-    UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
-    UI.CreateToggle(nil, "toggle_killaura_use_fov", "Combat.Killaura.UseFOV"),
-    UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
-    UI.CreateToggle(nil, "toggle_killaura_wallcheck", "Combat.Killaura.WallCheck"),
-    UI.CreateToggle(nil, "toggle_killaura_require_aim", "Combat.Killaura.RequireAim"),
-    UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
-    UI.CreateToggle(nil, "toggle_killaura_animation", "Combat.Killaura.AnimationEnabled"),
-    UI.CreateDropdown(nil, "dropdown_killaura_animation_mode", "Combat.Killaura.AnimationMode", {"Normal", "Astral", "Smooth", "Exhibition", "Hamsterware", "Horizontal Spin"}, nil, false),
-    UI.CreateSlider(nil, "slider_killaura_animation_speed", "Combat.Killaura.AnimationSpeed", 1, 40, function(val) Mega.States.Combat.Killaura.AnimationSpeed = val / 10 end),
-    UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
+    -- Group: Core
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 22),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura"),
+    
+    -- Group: Automation
+    UI.CreateToggle(nil, "toggle_killaura_wallcheck", "Combat.Killaura.WallCheck"),
+    UI.CreateToggle(nil, "toggle_killaura_require_aim", "Combat.Killaura.RequireAim"),
+    UI.CreateToggle(nil, "toggle_killaura_use_fov", "Combat.Killaura.UseFOV"),
+    UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
+    UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
+    UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
+    
+    -- Group: Visuals
+    UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP"),
+    UI.CreateDropdown(nil, "dropdown_killaura_target_esp_mode", "Combat.Killaura.TargetESPMode", {"Arrow", "Circle", "Pulse", "Orbit"}, nil, false),
+    UI.CreateDropdown(nil, "dropdown_killaura_target_esp_color", "Combat.Killaura.TargetESPColor", {"Red", "Cyan", "Lime", "Gold", "Pink", "White"}, nil, false),
+    UI.CreateToggle(nil, "toggle_killaura_tracers", "Combat.Killaura.Tracers"),
+    UI.CreateToggle(nil, "toggle_killaura_target_info", "Combat.Killaura.TargetInfo"),
+    
+    -- Group: Animation
+    UI.CreateToggle(nil, "toggle_killaura_animation", "Combat.Killaura.AnimationEnabled"),
+    UI.CreateDropdown(nil, "dropdown_killaura_animation_mode", "Combat.Killaura.AnimationMode", {"Normal", "Astral", "Smooth", "Exhibition", "Hamsterware", "Horizontal Spin"}, nil, false),
+    UI.CreateSlider(nil, "slider_killaura_animation_speed", "Combat.Killaura.AnimationSpeed", 1, 40, function(val) Mega.States.Combat.Killaura.AnimationSpeed = val / 10 end),
+    
     UI.CreateToggle(nil, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)
         if Mega.MobileHUD then Mega.MobileHUD.SetVisible("killaura", state) end
     end)

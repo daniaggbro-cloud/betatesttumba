@@ -176,7 +176,15 @@ Mega.States = {
             Range = 25,
             Delay = 0,
             WallCheck = false,
-            RequireAim = false
+            RequireAim = false,
+            TargetESP = true,
+            TargetESPMode = "Arrow",
+            TargetESPColor = "Red",
+            Tracers = false,
+            TargetInfo = false,
+            AnimationEnabled = true,
+            AnimationMode = "Normal",
+            AnimationSpeed = 1
         }
     },
     Misc = {
