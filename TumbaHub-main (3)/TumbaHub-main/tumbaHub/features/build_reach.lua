@@ -57,7 +57,11 @@ local function performBuildReach()
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    local maxReach = States.Player.BuildReach.Range or 100
+    local maxReach = States.Player.BuildReach.Range or 30
+    
+    local mouseHit = Mouse.Hit.Position
+    local dist = (hrp.Position - mouseHit).Magnitude
+    if dist > maxReach then return end
     
     local ray = Mouse.UnitRay
     local params = RaycastParams.new()
@@ -69,23 +73,18 @@ local function performBuildReach()
     if result then
         local hitPos = result.Position
         local hitNorm = result.Normal
-        
         local gridSize = 3
-        -- Calc block position adjacent to the hit face
-        local placementWorldPos = hitPos + (hitNorm * 1.5)
-        local bx = math.floor(placementWorldPos.X / gridSize)
-        local by = math.floor(placementWorldPos.Y / gridSize)
-        local bz = math.floor(placementWorldPos.Z / gridSize)
         
-        -- The block we are attaching to
-        local refWorldPos = hitPos - (hitNorm * 1.5)
-        local rx = math.floor(refWorldPos.X / gridSize)
-        local ry = math.floor(refWorldPos.Y / gridSize)
-        local rz = math.floor(refWorldPos.Z / gridSize)
+        local bx = math.floor((hitPos.X + hitNorm.X * 1.5) / gridSize)
+        local by = math.floor((hitPos.Y + hitNorm.Y * 1.5) / gridSize)
+        local bz = math.floor((hitPos.Z + hitNorm.Z * 1.5) / gridSize)
         
-        -- Spoofed hit position to bypass anti-cheat (must be near player, slightly below to avoid client-side player collision bugs)
-        local myPos = hrp.Position
-        local spoofedHitPos = vec3(myPos.X, myPos.Y - 3, myPos.Z)
+        local rx = math.floor((hitPos.X - hitNorm.X * 1.5) / gridSize)
+        local ry = math.floor((hitPos.Y - hitNorm.Y * 1.5) / gridSize)
+        local rz = math.floor((hitPos.Z - hitNorm.Z * 1.5) / gridSize)
+        
+        -- To bypass distance check, spoof hitPosition to be exactly at our feet
+        local spoofedHitPos = hrp.Position - Vector3.new(0, 3, 0)
         
         local args = {
             {
@@ -96,7 +95,7 @@ local function performBuildReach()
                     ["target"] = {
                         ["blockRef"] = { ["blockPosition"] = vec3(rx, ry, rz) },
                         ["hitPosition"] = spoofedHitPos,
-                        ["hitNormal"] = vec3(0, 1, 0)
+                        ["hitNormal"] = hitNorm
                     },
                     ["placementPosition"] = vec3(bx, by, bz)
                 }
