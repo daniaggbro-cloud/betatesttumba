@@ -134,6 +134,10 @@ Mega.States = {
         HighJumpPower = 50,
         Sprint = false,
         NoFall = false,
+        BuildReach = {
+            Enabled = false,
+            Range = 100
+        },
         AntiVoid = {
             Enabled = false,
             YLevel = 29,

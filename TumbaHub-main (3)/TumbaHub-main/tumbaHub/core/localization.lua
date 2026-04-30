@@ -394,7 +394,10 @@ Mega.Localization = {
         ["toggle_bednuke_bypass"] = { ru = "Обход (Без анимации)", en = "Bypass (No Animation)", es = "Omitir (Sin Animación)", pt = "Ignorar (Sem Animação)", ko = "우회 (애니메이션 없음)", ja = "バイパス (アニメーションなし)", uk = "Обхід (Без анімації)" },
         ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" },
         ["toggle_killaura_wallcheck"] = { ru = "🧱 Проверка препятствий", en = "🧱 Wall Check", es = "🧱 Chequeo de Paredes", pt = "🧱 Checagem de Parede", ko = "🧱 벽 관통 방지", ja = "🧱 壁チェック", uk = "🧱 Перевірка перешкод" },
-                ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" },
+        ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" },
+        ["section_player_building"] = { ru = "🏗️ СТРОИТЕЛЬСТВО", en = "🏗️ BUILDING", es = "🏗️ CONSTRUCCIÓN", pt = "🏗️ CONSTRUÇÃO", ko = "🏗️ 건물", ja = "🏗️ 建築", uk = "🏗️ БУДІВНИЦТВО" },
+        ["toggle_build_reach"] = { ru = "Увеличенный радиус стройки", en = "Build Reach", es = "Alcance de Construcción", pt = "Alcance de Construção", ko = "건축 도달 거리", ja = "建築リーチ", uk = "Збільшений радіус будівництва" },
+        ["slider_build_reach_range"] = { ru = "Дальность стройки", en = "Build Range", es = "Rango de Construcción", pt = "Alcance de Construção", ko = "건축 범위", ja = "建築範囲", uk = "Дальність будівництва" },
     }
 }
 

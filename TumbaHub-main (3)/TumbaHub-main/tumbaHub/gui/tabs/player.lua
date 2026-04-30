@@ -157,6 +157,21 @@ end, {
 })
 --#endregion
 
+--#region -- Building
+UI.CreateSection(TabFrame, "section_player_building")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/build_reach.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_build_reach", "Player.BuildReach.Enabled", function(state)
+    Mega.States.Player.BuildReach.Enabled = state
+    if Mega.Features.BuildReach and Mega.Features.BuildReach.SetEnabled then Mega.Features.BuildReach.SetEnabled(state) end
+end, {
+    UI.CreateSlider(nil, "slider_build_reach_range", "Player.BuildReach.Range", 10, 1000)
+})
+--#endregion
+
 
 -- Simple player logic that can live here
 local function onRenderStep()
