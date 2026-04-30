@@ -75,18 +75,15 @@ local function performBuildReach()
         local hitNorm = result.Normal
         local gridSize = 3
         
-        local bx = math.floor((hitPos.X + hitNorm.X * 1.5) / gridSize)
-        local by = math.floor((hitPos.Y + hitNorm.Y * 1.5) / gridSize)
-        local bz = math.floor((hitPos.Z + hitNorm.Z * 1.5) / gridSize)
+        -- Use math.round instead of math.floor to prevent floating point errors!
+        local bx = math.round((hitPos.X + hitNorm.X * 1.5) / gridSize)
+        local by = math.round((hitPos.Y + hitNorm.Y * 1.5) / gridSize)
+        local bz = math.round((hitPos.Z + hitNorm.Z * 1.5) / gridSize)
         
-        -- The block we are attaching to
-        local refWorldPos = hitPos - (hitNorm * 1.5)
-        local rx = math.floor(refWorldPos.X / gridSize)
-        local ry = math.floor(refWorldPos.Y / gridSize)
-        local rz = math.floor(refWorldPos.Z / gridSize)
+        local rx = math.round((hitPos.X - hitNorm.X * 1.5) / gridSize)
+        local ry = math.round((hitPos.Y - hitNorm.Y * 1.5) / gridSize)
+        local rz = math.round((hitPos.Z - hitNorm.Z * 1.5) / gridSize)
         
-        -- Use the real hit position. The server accepts up to ~30 blocks distance.
-        -- Client limit is ~6 blocks, so we just bypass the client.
         local realHitPos = vec3(hitPos.X, hitPos.Y, hitPos.Z)
         
         local args = {
@@ -121,9 +118,15 @@ for _, conn in pairs(connections) do
 end
 table.clear(connections)
 
-connections.BuildInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2) then
-        performBuildReach()
+local lastPlaceTime = 0
+connections.BuildLoop = game:GetService("RunService").RenderStepped:Connect(function()
+    if States.Player.BuildReach.Enabled then
+        if Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+            if tick() - lastPlaceTime > 0.05 then -- 50ms cooldown (20 blocks per second)
+                performBuildReach()
+                lastPlaceTime = tick()
+            end
+        end
     end
 end)
 
