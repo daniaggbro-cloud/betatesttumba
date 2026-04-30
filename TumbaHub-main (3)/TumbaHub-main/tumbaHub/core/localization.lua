@@ -398,6 +398,7 @@ Mega.Localization = {
         ["section_player_building"] = { ru = "🏗️ СТРОИТЕЛЬСТВО", en = "🏗️ BUILDING", es = "🏗️ CONSTRUCCIÓN", pt = "🏗️ CONSTRUÇÃO", ko = "🏗️ 건물", ja = "🏗️ 建築", uk = "🏗️ БУДІВНИЦТВО" },
         ["toggle_build_reach"] = { ru = "Увеличенный радиус стройки", en = "Build Reach", es = "Alcance de Construcción", pt = "Alcance de Construção", ko = "건축 도달 거리", ja = "建築リーチ", uk = "Збільшений радіус будівництва" },
         ["slider_build_reach_range"] = { ru = "Дальность стройки", en = "Build Range", es = "Rango de Construcción", pt = "Alcance de Construção", ko = "건축 범위", ja = "建築範囲", uk = "Дальність будівництва" },
+        ["slider_build_reach_delay"] = { ru = "Задержка стройки", en = "Build Delay", es = "Retraso de Construcción", pt = "Atraso de Construção", ko = "건축 지연", ja = "建築の遅延", uk = "Затримка будівництва" },
     }
 }
 

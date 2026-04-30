@@ -136,7 +136,8 @@ Mega.States = {
         NoFall = false,
         BuildReach = {
             Enabled = false,
-            Range = 100
+            Range = 30,
+            Delay = 0.15
         },
         AntiVoid = {
             Enabled = false,

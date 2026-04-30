@@ -168,7 +168,8 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_build_reach", "Player.BuildReach.E
     Mega.States.Player.BuildReach.Enabled = state
     if Mega.Features.BuildReach and Mega.Features.BuildReach.SetEnabled then Mega.Features.BuildReach.SetEnabled(state) end
 end, {
-    UI.CreateSlider(nil, "slider_build_reach_range", "Player.BuildReach.Range", 10, 30)
+    UI.CreateSlider(nil, "slider_build_reach_range", "Player.BuildReach.Range", 10, 30),
+    UI.CreateSlider(nil, "slider_build_reach_delay", "Player.BuildReach.Delay", 0.05, 1, 0.05)
 })
 --#endregion
 
