@@ -122,8 +122,9 @@ local lastPlaceTime = 0
 connections.BuildLoop = game:GetService("RunService").RenderStepped:Connect(function()
     if States.Player.BuildReach.Enabled then
         if Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-            local delay = States.Player.BuildReach.Delay or 0.15
-            if tick() - lastPlaceTime > delay then
+            local delayMs = States.Player.BuildReach.Delay or 150
+            local delaySec = delayMs / 1000.0
+            if tick() - lastPlaceTime > delaySec then
                 performBuildReach()
                 lastPlaceTime = tick()
             end
