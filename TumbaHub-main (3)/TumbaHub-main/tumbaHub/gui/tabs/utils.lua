@@ -75,12 +75,6 @@ end)
 --#region -- Fun / Misc
 UI.CreateSection(TabFrame, "section_utils_fun")
 
-UI.CreateToggle(TabFrame, "toggle_fast_drop", "Misc.FastDrop", function(state)
-    if Mega.Features.FastDrop and Mega.Features.FastDrop.SetEnabled then
-        Mega.Features.FastDrop.SetEnabled(state)
-    end
-end)
-
 UI.CreateToggle(TabFrame, "toggle_fame_spam", "Misc.FameSpam")
 UI.CreateToggle(TabFrame, "toggle_fames_mom", "Misc.FamesMom")
 --#endregion
@@ -154,30 +148,5 @@ end, {
     UI.CreateToggle(nil, "toggle_deposit_void_crystal", "Misc.AutoDeposit.Resources.void_crystal"),
     UI.CreateToggle(nil, "toggle_deposit_wood", "Misc.AutoDeposit.Resources.wood"),
     UI.CreateToggle(nil, "toggle_deposit_stone", "Misc.AutoDeposit.Resources.stone")
-})
---#endregion
-
---#region -- Auto-Drop
-
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/auto_drop.lua") end)
-end)
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_auto_drop", "Misc.AutoDrop.Enabled", function(state)
-    Mega.States.Misc.AutoDrop.Enabled = state
-    if Mega.Features.AutoDrop and Mega.Features.AutoDrop.SetEnabled then Mega.Features.AutoDrop.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_auto_drop") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
-end, {
-    UI.CreateSlider(nil, "slider_auto_drop_delay", "Misc.AutoDrop.Delay", 0.01, 1, 0.05),
-    UI.CreateSlider(nil, "slider_auto_drop_cycles", "Misc.AutoDrop.Cycles", 1, 10, 1),
-    UI.CreateKeybind(nil, "keybind_auto_drop", "Misc.AutoDrop.Keybind"),
-    UI.CreateSection(nil, "section_auto_drop_resources"),
-    UI.CreateToggle(nil, "toggle_drop_iron", "Misc.AutoDrop.Resources.iron"),
-    UI.CreateToggle(nil, "toggle_drop_diamond", "Misc.AutoDrop.Resources.diamond"),
-    UI.CreateToggle(nil, "toggle_drop_emerald", "Misc.AutoDrop.Resources.emerald"),
-    UI.CreateToggle(nil, "toggle_drop_gold", "Misc.AutoDrop.Resources.gold"),
-    UI.CreateToggle(nil, "toggle_drop_void_crystal", "Misc.AutoDrop.Resources.void_crystal")
 })
 --#endregion

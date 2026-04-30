@@ -303,7 +303,6 @@ Mega.Localization = {
         ["toggle_fame_spam"] = { ru = "Спам в чат", en = "Chat Spam", es = "Spam de Chat", pt = "Spam no Chat", ko = "채팅 스팸", ja = "チャットスパム", uk = "Спам у чат" },
         ["toggle_fames_mom"] = { ru = "Мама Фейма", en = "Fame's Mom", es = "Mamá de Fame", pt = "Mãe do Fame", ko = "페임의 엄마", ja = "フェイムの母", uk = "Мама Фейма" },
         ["toggle_autofish"] = { ru = "🎣 Авто-рыбалка (Legit)", en = "🎣 Auto-Fish (Legit)", es = "🎣 Auto-Pesca (Legit)", pt = "🎣 Auto-Pesca (Legit)", ko = "🎣 자동 낚시 (Legit)", ja = "🎣 自動釣り (Legit)", uk = "🎣 Авто-риболовля (Legit)" },
-        ["toggle_fast_drop"] = { ru = "Быстрый сброс (Q)", en = "Fast Drop (Q)", uk = "Швидке скидання (Q)", es = "Soltar rápido (Q)", pt = "Soltar Rápido (Q)", ko = "빠른 드롭 (Q)", ja = "高速ドロップ (Q)" },
         ["toggle_autofarm"] = { ru = "Авто-кит BETA", en = "Auto-Kit BETA", es = "Auto-Kit BETA", pt = "Auto-Kit BETA", ko = "자동 키트 BETA", ja = "自動キット BETA", uk = "Авто-кіт BETA" },
         ["toggle_chest_steal"] = { ru = "Авто-лут сундуков", en = "Chest Steal", es = "Robar Cofres", pt = "Roubar Baús", ko = "상자 훔치기", ja = "チェストスチール", uk = "Авто-лут скринь" },
         ["slider_chest_steal_range"] = { ru = "Дистанция лута", en = "Steal Range", es = "Rango de Robo", pt = "Alcance do Roubo", ko = "훔치기 범위", ja = "スチール範囲", uk = "Дистанція луту" },
@@ -396,16 +395,6 @@ Mega.Localization = {
         ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" },
         ["toggle_killaura_wallcheck"] = { ru = "🧱 Проверка препятствий", en = "🧱 Wall Check", es = "🧱 Chequeo de Paredes", pt = "🧱 Checagem de Parede", ko = "🧱 벽 관통 방지", ja = "🧱 壁チェック", uk = "🧱 Перевірка перешкод" },
                 ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" },
-        ["toggle_auto_drop"] = { ru = "Авто-сброс ресурсов (Auto Drop)", en = "Auto Drop Resources", es = "Auto Soltar Recursos", pt = "Auto Soltar Recursos", ko = "자동 리소스 드롭", ja = "自動リソースドロップ", uk = "Авто-скидання ресурсів" },
-        ["section_auto_drop_resources"] = { ru = "Ресурсы для сброса", en = "Resources to Drop", es = "Recursos a Soltar", pt = "Recursos para Soltar", ko = "드롭할 자원", ja = "ドロップするリソース", uk = "Ресурси для скидання" },
-        ["toggle_drop_iron"] = { ru = "Сбрасывать Железо (Iron)", en = "Drop Iron", es = "Soltar Hierro", pt = "Soltar Ferro", ko = "철 드롭", ja = "鉄をドロップ", uk = "Скидати Залізо (Iron)" },
-        ["toggle_drop_diamond"] = { ru = "Сбрасывать Алмазы (Diamond)", en = "Drop Diamond", es = "Soltar Diamante", pt = "Soltar Diamante", ko = "다이아몬드 드롭", ja = "ダイヤモンドをドロップ", uk = "Скидати Діаманти (Diamond)" },
-        ["toggle_drop_emerald"] = { ru = "Сбрасывать Изумруды (Emerald)", en = "Drop Emerald", es = "Soltar Esmeralda", pt = "Soltar Esmeralda", ko = "에메랄드 드롭", ja = "エメラルドをドロップ", uk = "Скидати Смарагди (Emerald)" },
-        ["toggle_drop_gold"] = { ru = "Сбрасывать Золото (Gold)", en = "Drop Gold", es = "Soltar Oro", pt = "Soltar Ouro", ko = "금 드롭", ja = "金をドロップ", uk = "Скидати Золото (Gold)" },
-        ["toggle_drop_void_crystal"] = { ru = "Сбрасывать Кристаллы пустоты", en = "Drop Void Crystal", es = "Soltar Cristal del Vacío", pt = "Soltar Cristal do Vazio", ko = "공허 수정 드롭", ja = "ヴォイドクリスタルをドロップ", uk = "Скидати Кристали порожнечі" },
-        ["slider_auto_drop_delay"] = { ru = "Задержка сброса (сек)", en = "Drop Delay (sec)", es = "Retraso de Soltar", pt = "Atraso de Soltar", ko = "드롭 지연 (초)", ja = "ドロップ遅延 (秒)", uk = "Задержка скидання (сек)" },
-        ["slider_auto_drop_cycles"] = { ru = "Количество циклов (Spam)", en = "Drop Cycles (Spam)", es = "Ciclos de Soltar", pt = "Ciclos de Soltar", ko = "드롭 사이클 (스팸)", ja = "ドロップサイクル (スパム)", uk = "Кількість циклів (Spam)" },
-        ["keybind_auto_drop"] = { ru = "Клавиша для сброса", en = "Drop Keybind", es = "Tecla de Soltar", pt = "Tecla para Soltar", ko = "드롭 키바인드", ja = "ドロップキーバインド", uk = "Клавіша для скидання" },
     }
 }
 
