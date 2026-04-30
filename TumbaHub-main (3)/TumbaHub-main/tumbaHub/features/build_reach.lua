@@ -79,12 +79,15 @@ local function performBuildReach()
         local by = math.floor((hitPos.Y + hitNorm.Y * 1.5) / gridSize)
         local bz = math.floor((hitPos.Z + hitNorm.Z * 1.5) / gridSize)
         
-        local rx = math.floor((hitPos.X - hitNorm.X * 1.5) / gridSize)
-        local ry = math.floor((hitPos.Y - hitNorm.Y * 1.5) / gridSize)
-        local rz = math.floor((hitPos.Z - hitNorm.Z * 1.5) / gridSize)
+        -- The block we are attaching to
+        local refWorldPos = hitPos - (hitNorm * 1.5)
+        local rx = math.floor(refWorldPos.X / gridSize)
+        local ry = math.floor(refWorldPos.Y / gridSize)
+        local rz = math.floor(refWorldPos.Z / gridSize)
         
-        -- To bypass distance check, spoof hitPosition to be exactly at our feet
-        local spoofedHitPos = hrp.Position - Vector3.new(0, 3, 0)
+        -- Use the real hit position. The server accepts up to ~30 blocks distance.
+        -- Client limit is ~6 blocks, so we just bypass the client.
+        local realHitPos = vec3(hitPos.X, hitPos.Y, hitPos.Z)
         
         local args = {
             {
@@ -94,7 +97,7 @@ local function performBuildReach()
                 ["mouseBlockInfo"] = {
                     ["target"] = {
                         ["blockRef"] = { ["blockPosition"] = vec3(rx, ry, rz) },
-                        ["hitPosition"] = spoofedHitPos,
+                        ["hitPosition"] = realHitPos,
                         ["hitNormal"] = hitNorm
                     },
                     ["placementPosition"] = vec3(bx, by, bz)
