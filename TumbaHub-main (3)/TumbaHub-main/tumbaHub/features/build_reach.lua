@@ -77,10 +77,15 @@ local function performBuildReach()
         local by = math.floor(placementWorldPos.Y / gridSize)
         local bz = math.floor(placementWorldPos.Z / gridSize)
         
-        -- Spoofed positions to bypass anti-cheat
+        -- The block we are attaching to
+        local refWorldPos = hitPos - (hitNorm * 1.5)
+        local rx = math.floor(refWorldPos.X / gridSize)
+        local ry = math.floor(refWorldPos.Y / gridSize)
+        local rz = math.floor(refWorldPos.Z / gridSize)
+        
+        -- Spoofed hit position to bypass anti-cheat (must be near player, slightly below to avoid client-side player collision bugs)
         local myPos = hrp.Position
-        local spoofedHitPos = vec3(myPos.X, myPos.Y, myPos.Z)
-        local spoofedBlockPos = vec3(math.floor(myPos.X/gridSize), math.floor((myPos.Y-3)/gridSize), math.floor(myPos.Z/gridSize))
+        local spoofedHitPos = vec3(myPos.X, myPos.Y - 3, myPos.Z)
         
         local args = {
             {
@@ -89,7 +94,7 @@ local function performBuildReach()
                 ["blockData"] = 0,
                 ["mouseBlockInfo"] = {
                     ["target"] = {
-                        ["blockRef"] = { ["blockPosition"] = spoofedBlockPos },
+                        ["blockRef"] = { ["blockPosition"] = vec3(rx, ry, rz) },
                         ["hitPosition"] = spoofedHitPos,
                         ["hitNormal"] = vec3(0, 1, 0)
                     },
