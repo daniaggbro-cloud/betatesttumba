@@ -1,6 +1,5 @@
 -- features/auto_drop.lua
--- Redesigned Auto Drop feature for resources
--- Based on user's remote event structure
+-- Redesigned Auto Drop feature with Keybind Hold and Multi-Cycle Spam support
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.AutoDrop = {}
@@ -12,7 +11,6 @@ local States = Mega.States
 local DropItemRemote
 task.spawn(function()
     while true do
-        -- Try specific path first (as provided by user)
         local netManaged = Services.ReplicatedStorage:FindFirstChild("rbxts_include")
         if netManaged then
             netManaged = netManaged:FindFirstChild("node_modules")
@@ -34,13 +32,12 @@ task.spawn(function()
             DropItemRemote = netManaged:FindFirstChild("DropItem")
         end
 
-        -- Fallback to GetRemote
         if not DropItemRemote then
             DropItemRemote = Mega.GetRemote("DropItem")
         end
 
         if DropItemRemote then 
-            print("✅ [AutoDrop] Remote found: " .. DropItemRemote:GetFullName())
+            print("✅ [AutoDrop] Remote ready for spam: " .. DropItemRemote:GetFullName())
             break 
         end
         task.wait(5)
@@ -50,49 +47,80 @@ end)
 local function getInventoryFolder()
     local inventories = Services.ReplicatedStorage:FindFirstChild("Inventories")
     if inventories then
-        -- Try local player name and also fallback to "DONALT_TRUMD" if that was the case
         return inventories:FindFirstChild(LocalPlayer.Name) or inventories:FindFirstChild("DONALT_TRUMD")
     end
     return nil
 end
 
+local function isTriggerHeld()
+    local config = States.Misc.AutoDrop
+    if not config or not config.Enabled then return false end
+    
+    local bind = config.Keybind
+    if not bind or bind == "None" then return true end -- Always active if no bind
+    
+    -- Check if typing
+    if Services.UserInputService:GetFocusedTextBox() then return false end
+
+    local success, keyCode = pcall(function() return Enum.KeyCode[bind] end)
+    if success and keyCode then
+        return Services.UserInputService:IsKeyDown(keyCode)
+    end
+    return false
+end
+
 local lastDropTime = 0
 local function processAutoDrop()
-    if not States.Misc.AutoDrop or not States.Misc.AutoDrop.Enabled then return end
+    if not isTriggerHeld() then return end
     if not DropItemRemote then return end
     
-    local delay = States.Misc.AutoDrop.Delay or 0.5
+    local config = States.Misc.AutoDrop
+    local delay = config.Delay or 0.1
     if tick() - lastDropTime < delay then return end
     
     local inv = getInventoryFolder()
     if not inv then return end
     
-    local resourcesToDrop = States.Misc.AutoDrop.Resources
-    if not resourcesToDrop then return end
+    local resourcesToDrop = config.Resources
+    local cycles = config.Cycles or 1
 
-    for _, item in pairs(inv:GetChildren()) do
-        local itemName = item.Name:lower()
-        if resourcesToDrop[itemName] == true then
+    local droppedAny = false
+    -- Get children once per tick to avoid repeated calls
+    local items = inv:GetChildren()
+
+    for i = 1, cycles do
+        local itemToDrop = nil
+        
+        -- Find the first available item that matches filters
+        for _, item in pairs(items) do
+            local itemName = item.Name:lower()
+            if resourcesToDrop[itemName] == true then
+                itemToDrop = item
+                break
+            end
+        end
+
+        if itemToDrop then
+            droppedAny = true
             lastDropTime = tick()
             
-            -- Debug print
-            if Mega.Settings and Mega.Settings.System and Mega.Settings.System.DebugMode then
-                print("🚀 [AutoDrop] Dropping resource: " .. item.Name)
-            end
-
             task.spawn(function()
-                local success, err = pcall(function()
-                    -- User's structure: InvokeServer({ item = itemInstance })
+                pcall(function()
                     DropItemRemote:InvokeServer({
-                        item = item
+                        item = itemToDrop
                     })
                 end)
-                if not success then
-                    warn("❌ [AutoDrop] Failed to drop item: " .. tostring(err))
-                end
             end)
             
-            break -- Only drop one stack at a time to respect delay
+            -- Remove from local list so we don't try to drop the same instance twice in one burst
+            for idx, itm in pairs(items) do
+                if itm == itemToDrop then
+                    table.remove(items, idx)
+                    break
+                end
+            end
+        else
+            break -- No more items of selected types
         end
     end
 end
@@ -102,18 +130,17 @@ function Mega.Features.AutoDrop.SetEnabled(state)
     if state then
         if not connection then
             connection = Services.RunService.Heartbeat:Connect(processAutoDrop)
-            print("🔔 [AutoDrop] Feature activated")
+            print("🔥 [AutoDrop] Keybind spam loop active")
         end
     else
         if connection then
             connection:Disconnect()
             connection = nil
-            print("🔕 [AutoDrop] Feature deactivated")
+            print("💤 [AutoDrop] Keybind spam loop inactive")
         end
     end
 end
 
--- Initialize from existing state
 if States.Misc.AutoDrop and States.Misc.AutoDrop.Enabled then
     Mega.Features.AutoDrop.SetEnabled(true)
 end

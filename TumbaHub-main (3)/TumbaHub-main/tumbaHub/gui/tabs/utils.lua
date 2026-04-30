@@ -170,7 +170,9 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_auto_drop", "Misc.AutoDrop.Enabled
         Mega.ShowNotification(Mega.GetText("toggle_auto_drop") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
     end
 end, {
-    UI.CreateSlider(nil, "slider_auto_drop_delay", "Misc.AutoDrop.Delay", 0.01, 1, 0.1),
+    UI.CreateSlider(nil, "slider_auto_drop_delay", "Misc.AutoDrop.Delay", 0.01, 1, 0.05),
+    UI.CreateSlider(nil, "slider_auto_drop_cycles", "Misc.AutoDrop.Cycles", 1, 10, 1),
+    UI.CreateKeybind(nil, "keybind_auto_drop", "Misc.AutoDrop.Keybind"),
     UI.CreateSection(nil, "section_auto_drop_resources"),
     UI.CreateToggle(nil, "toggle_drop_iron", "Misc.AutoDrop.Resources.iron"),
     UI.CreateToggle(nil, "toggle_drop_diamond", "Misc.AutoDrop.Resources.diamond"),

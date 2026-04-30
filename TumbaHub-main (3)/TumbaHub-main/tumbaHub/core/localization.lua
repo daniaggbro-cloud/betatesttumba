@@ -403,7 +403,9 @@ Mega.Localization = {
         ["toggle_drop_emerald"] = { ru = "Сбрасывать Изумруды (Emerald)", en = "Drop Emerald", es = "Soltar Esmeralda", pt = "Soltar Esmeralda", ko = "에메랄드 드롭", ja = "エメラルドをドロップ", uk = "Скидати Смарагди (Emerald)" },
         ["toggle_drop_gold"] = { ru = "Сбрасывать Золото (Gold)", en = "Drop Gold", es = "Soltar Oro", pt = "Soltar Ouro", ko = "금 드롭", ja = "金をドロップ", uk = "Скидати Золото (Gold)" },
         ["toggle_drop_void_crystal"] = { ru = "Сбрасывать Кристаллы пустоты", en = "Drop Void Crystal", es = "Soltar Cristal del Vacío", pt = "Soltar Cristal do Vazio", ko = "공허 수정 드롭", ja = "ヴォイドクリスタルをドロップ", uk = "Скидати Кристали порожнечі" },
-        ["slider_auto_drop_delay"] = { ru = "Задержка сброса (сек)", en = "Drop Delay (sec)", es = "Retraso de Soltar", pt = "Atraso de Soltar", ko = "드롭 지연 (초)", ja = "ドロップ遅延 (秒)", uk = "Затримка скидання (сек)" },
+        ["slider_auto_drop_delay"] = { ru = "Задержка сброса (сек)", en = "Drop Delay (sec)", es = "Retraso de Soltar", pt = "Atraso de Soltar", ko = "드롭 지연 (초)", ja = "ドロップ遅延 (秒)", uk = "Задержка скидання (сек)" },
+        ["slider_auto_drop_cycles"] = { ru = "Количество циклов (Spam)", en = "Drop Cycles (Spam)", es = "Ciclos de Soltar", pt = "Ciclos de Soltar", ko = "드롭 사이클 (스팸)", ja = "ドロップサイクル (スパム)", uk = "Кількість циклів (Spam)" },
+        ["keybind_auto_drop"] = { ru = "Клавиша для сброса", en = "Drop Keybind", es = "Tecla de Soltar", pt = "Tecla para Soltar", ko = "드롭 키바인드", ja = "ドロップキーバインド", uk = "Клавіша для скидання" },
     }
 }
 
