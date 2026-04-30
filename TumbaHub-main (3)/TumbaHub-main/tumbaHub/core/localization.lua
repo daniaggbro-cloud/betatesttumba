@@ -396,6 +396,14 @@ Mega.Localization = {
         ["toggle_chams"] = { ru = "Заливка модели (Свой персонаж)", en = "Chams (Local Player)", es = "Chams (Jugador Local)", pt = "Chams (Jogador Local)", ko = "챔스 (자신)", ja = "チャムス (ローカルプレイヤー)", uk = "Заливка моделі (Свій персонаж)" },
         ["toggle_killaura_wallcheck"] = { ru = "🧱 Проверка препятствий", en = "🧱 Wall Check", es = "🧱 Chequeo de Paredes", pt = "🧱 Checagem de Parede", ko = "🧱 벽 관통 방지", ja = "🧱 壁チェック", uk = "🧱 Перевірка перешкод" },
                 ["toggle_killaura_require_aim"] = { ru = "👁️ Только при наведении", en = "👁️ Require Aim (Hover)", es = "👁️ Solo al apuntar", pt = "👁️ Apenas ao mirar", ko = "👁️ 조준 시에만", ja = "👁️ エイムが必要", uk = "👁️ Тільки при наведенні" },
+        ["toggle_auto_drop"] = { ru = "Авто-сброс ресурсов (Auto Drop)", en = "Auto Drop Resources", es = "Auto Soltar Recursos", pt = "Auto Soltar Recursos", ko = "자동 리소스 드롭", ja = "自動リソースドロップ", uk = "Авто-скидання ресурсів" },
+        ["section_auto_drop_resources"] = { ru = "Ресурсы для сброса", en = "Resources to Drop", es = "Recursos a Soltar", pt = "Recursos para Soltar", ko = "드롭할 자원", ja = "ドロップするリソース", uk = "Ресурси для скидання" },
+        ["toggle_drop_iron"] = { ru = "Сбрасывать Железо (Iron)", en = "Drop Iron", es = "Soltar Hierro", pt = "Soltar Ferro", ko = "철 드롭", ja = "鉄をドロップ", uk = "Скидати Залізо (Iron)" },
+        ["toggle_drop_diamond"] = { ru = "Сбрасывать Алмазы (Diamond)", en = "Drop Diamond", es = "Soltar Diamante", pt = "Soltar Diamante", ko = "다이아몬드 드롭", ja = "ダイヤモンドをドロップ", uk = "Скидати Діаманти (Diamond)" },
+        ["toggle_drop_emerald"] = { ru = "Сбрасывать Изумруды (Emerald)", en = "Drop Emerald", es = "Soltar Esmeralda", pt = "Soltar Esmeralda", ko = "에메랄드 드롭", ja = "エメラルドをドロップ", uk = "Скидати Смарагди (Emerald)" },
+        ["toggle_drop_gold"] = { ru = "Сбрасывать Золото (Gold)", en = "Drop Gold", es = "Soltar Oro", pt = "Soltar Ouro", ko = "금 드롭", ja = "金をドロップ", uk = "Скидати Золото (Gold)" },
+        ["toggle_drop_void_crystal"] = { ru = "Сбрасывать Кристаллы пустоты", en = "Drop Void Crystal", es = "Soltar Cristal del Vacío", pt = "Soltar Cristal do Vazio", ko = "공허 수정 드롭", ja = "ヴォイドクリスタルをドロップ", uk = "Скидати Кристали порожнечі" },
+        ["slider_auto_drop_delay"] = { ru = "Задержка сброса (сек)", en = "Drop Delay (sec)", es = "Retraso de Soltar", pt = "Atraso de Soltar", ko = "드롭 지연 (초)", ja = "ドロップ遅延 (秒)", uk = "Затримка скидання (сек)" },
     }
 }
 

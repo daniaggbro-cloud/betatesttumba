@@ -217,6 +217,17 @@ Mega.States = {
             }
         },
         FastDrop = false,
+        AutoDrop = {
+            Enabled = false,
+            Delay = 0.5,
+            Resources = {
+                ["iron"] = false,
+                ["diamond"] = false,
+                ["emerald"] = false,
+                ["gold"] = false,
+                ["void_crystal"] = false
+            }
+        },
         Adetunde = {
             Enabled = false,
             Range = 25,

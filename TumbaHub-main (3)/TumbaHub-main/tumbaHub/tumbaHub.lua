@@ -170,6 +170,7 @@ InitPhase("features", {
     "features/chest_steal.lua",
     "features/chest_esp.lua",
     "features/auto_deposit.lua",
+    "features/auto_drop.lua",
     "features/fast_drop.lua",
     "features/killaura.lua",
     "features/bed_nuke.lua",
