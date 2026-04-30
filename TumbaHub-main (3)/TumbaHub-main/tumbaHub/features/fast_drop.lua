@@ -19,10 +19,17 @@ if States.Misc.FastDrop == nil then States.Misc.FastDrop = false end
 local DropItemRemote
 task.spawn(function()
     while not DropItemRemote do
-        -- Try common Bedwars drop remote names
-        DropItemRemote = Mega.GetRemote("Inventory/DropItem") or Mega.GetRemote("DropItem")
+        -- Try specific remote name first
+        DropItemRemote = Mega.GetRemote("DropItem")
+        
+        -- Verification to ensure we didn't find PickupItemDrop by accident
+        if DropItemRemote and DropItemRemote.Name == "PickupItemDrop" then
+            DropItemRemote = nil
+        end
+
         if DropItemRemote then
             print("✅ FastDrop: Remote found - " .. DropItemRemote:GetFullName())
+            break
         else
             task.wait(5)
         end
