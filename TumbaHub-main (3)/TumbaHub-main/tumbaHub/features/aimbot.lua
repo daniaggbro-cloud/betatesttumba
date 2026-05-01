@@ -168,7 +168,10 @@ connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
     end
 end)
 
-if not getgenv().TumbaAimbotHooksLoaded then
+local execName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown"
+local isWeakExecutor = execName:lower():find("solara") or execName:lower():find("celery") or execName:lower():find("incognito") or execName:lower():find("macsploit")
+
+if not isWeakExecutor and not getgenv().TumbaAimbotHooksLoaded then
     getgenv().TumbaAimbotHooksLoaded = true
     
     local oldNamecall
