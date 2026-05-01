@@ -28,12 +28,7 @@ TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 4
 -- Add this frame to the global list of tab frames
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
---#region -- Automation
-UI.CreateSection(TabFrame, "section_combat_auto")
-
-UI.CreateToggle(TabFrame, "toggle_triggerbot", "Combat.TriggerBot")
-UI.CreateToggle(TabFrame, "toggle_rapidfire", "Combat.RapidFire")
---#endregion
+-- Removed Automation Section (Not Implemented)
 
 --#region -- Aimbot & AutoShoot
 UI.CreateSection(TabFrame, "tab_aim")
@@ -57,12 +52,7 @@ end, {
 })
 --#endregion
 
---#region -- Accuracy
-UI.CreateSection(TabFrame, "section_combat_accuracy")
-
-UI.CreateToggle(TabFrame, "toggle_norecoil", "Combat.NoRecoil")
-UI.CreateToggle(TabFrame, "toggle_nospread", "Combat.NoSpread")
---#endregion
+-- Removed Accuracy Section (Not Implemented)
 
 --#region -- Killaura
 UI.CreateSection(TabFrame, "section_combat_killaura")
@@ -153,8 +143,4 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled"
 end, bedNukeSettings)
 --#endregion
 
---#region -- Auto Buy
-UI.CreateSection(TabFrame, "section_combat_autobuy")
-
-UI.CreateLabel(TabFrame, "coming_soon")
---#endregion
+-- Removed Auto Buy Section (Not Implemented)

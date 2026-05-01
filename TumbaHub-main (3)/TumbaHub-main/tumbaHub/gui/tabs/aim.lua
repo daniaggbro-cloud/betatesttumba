@@ -65,7 +65,7 @@ UI.CreateDropdown(TabFrame, "dropdown_aim_target", "AimAssist.TargetPart", {
     Mega.States.AimAssist.TargetPart = partMap[val] or "Head"
 end, true) -- true indicates options are localization keys
 
-UI.CreateButton(TabFrame, "button_aim_fov_color", function() Mega.ShowNotification("Color pickers are not implemented yet.", 3) end)
+-- Removed FOV Color Picker (Not Implemented)
 --#endregion
 
 --#region -- Aim Keybind

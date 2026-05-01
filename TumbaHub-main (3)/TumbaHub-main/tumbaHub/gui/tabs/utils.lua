@@ -32,8 +32,7 @@ UI.CreateButton(TabFrame, "button_clear_chat", function()
     Mega.ShowNotification(Mega.GetText("notify_chat_cleared"), 2)
 end)
 
-UI.CreateButton(TabFrame, "button_screenshot", function() Mega.ShowNotification("Not implemented yet", 2) end)
-UI.CreateButton(TabFrame, "button_server_info", function() Mega.ShowNotification("Not implemented yet", 2) end)
+-- Removed Screenshot and Server Info buttons (Not Implemented)
 
 local kitBanContainer = Instance.new("Frame")
 kitBanContainer.Name = "KitBanContainer"
@@ -73,12 +72,7 @@ UI.CreateButton(TabFrame, "button_reload_script", function()
 end)
 --#endregion
 
---#region -- Fun / Misc
-UI.CreateSection(TabFrame, "section_utils_fun")
-
-UI.CreateToggle(TabFrame, "toggle_fame_spam", "Misc.FameSpam")
-UI.CreateToggle(TabFrame, "toggle_fames_mom", "Misc.FamesMom")
---#endregion
+-- Removed Fun/Misc Section (Not Implemented)
 
 --#region -- Auto-Honor
 task.spawn(function()

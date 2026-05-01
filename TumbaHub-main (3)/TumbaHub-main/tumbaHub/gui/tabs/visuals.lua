@@ -48,17 +48,7 @@ UI.CreateToggle(TabFrame, "toggle_removeshadows", "Visuals.RemoveShadows", funct
     Lighting.GlobalShadows = not state
 end)
 
--- Chams are complex and would need a dedicated feature module.
--- For now, it's just a toggle that doesn't do anything.
-UI.CreateToggle(TabFrame, "toggle_chams", "Visuals.Chams", function(state)
-    Mega.ShowNotification("Chams not implemented yet.", 2)
-    if not state then return end
-    -- Immediately toggle it back off since it's not implemented
-    task.wait(0.1)
-    if Mega.Objects.Toggles["toggle_chams"] then
-        Mega.Objects.Toggles["toggle_chams"](false)
-    end
-end)
+-- Removed Chams (Not Implemented)
 
 -- Restore settings on script unload/cleanup
 -- This would be connected in a main cleanup function
