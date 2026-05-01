@@ -60,13 +60,13 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/long_jump.lua") end)
 end)
 
-if not Mega.States.Player.LongJumpKeybind then Mega.States.Player.LongJumpKeybind = "X" end
+if not Mega.States.Player.LongJumpKeybind then Mega.States.Player.LongJumpKeybind = "None" end
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_long_jump", "Player.LongJump", function(state)
     Mega.States.Player.LongJump = state
     if Mega.Features.LongJump and Mega.Features.LongJump.SetEnabled then Mega.Features.LongJump.SetEnabled(state) end
 end, {
-    UI.CreateDropdown(nil, "dropdown_long_jump_key", "Player.LongJumpKeybind", {"X", "C", "V", "B", "Z", "R", "F", "G", "T", "Q", "E"}, function(val)
+    UI.CreateDropdown(nil, "dropdown_long_jump_key", "Player.LongJumpKeybind", {"None", "X", "C", "V", "B", "Z", "R", "F", "G", "T", "Q", "E"}, function(val)
         Mega.States.Player.LongJumpKeybind = val
     end),
     UI.CreateSlider(nil, "slider_long_jump_speed", "Player.LongJumpSpeed", 1, 37),

@@ -242,8 +242,11 @@ end
 
 if not connections.Keybind then
     connections.Keybind = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        local bindString = Mega.States.Player.LongJumpKeybind or "X"
-        local bindEnum = Enum.KeyCode[bindString]
+        local bindString = Mega.States.Player.LongJumpKeybind or "None"
+        if bindString == "None" then return end
+        
+        local success, bindEnum = pcall(function() return Enum.KeyCode[bindString] end)
+        if not success or not bindEnum then return end
         
         if not gameProcessed and input.KeyCode == bindEnum then
             local newState = not States.Player.LongJump
