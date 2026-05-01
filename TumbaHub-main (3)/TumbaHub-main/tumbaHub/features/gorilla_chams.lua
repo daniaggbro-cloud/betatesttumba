@@ -104,23 +104,41 @@ local function ProcessPlayers()
                 
                 -- Анимация
                 local root = player.Character:FindFirstChild("HumanoidRootPart")
+                local humanoid = player.Character:FindFirstChild("Humanoid")
                 local gorillaPart = player.Character:FindFirstChild("GorillaChamsPart")
-                if root and gorillaPart then
+                if root and humanoid and gorillaPart then
                     local weld = gorillaPart:FindFirstChild("GorillaWeld")
                     if weld then
-                        local horizSpeed = Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude
+                        local velocity = root.AssemblyLinearVelocity
+                        local horizSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+                        local vertSpeed = velocity.Y
+                        local turnSpeed = root.AssemblyAngularVelocity.Y
                         
-                        if horizSpeed > 1 then
-                            -- Анимация ходьбы (Gorilla Run)
-                            local speedMult = math.clamp(horizSpeed / 16, 0.5, 2)
-                            local bounceY = math.abs(math.sin(timeSec * 15 * speedMult)) * 0.4
-                            local tiltZ = math.sin(timeSec * 15 * speedMult) * 0.15
-                            local tiltX = math.cos(timeSec * 15 * speedMult) * 0.1
-                            weld.C0 = CFrame.new(0, -1 + bounceY, 0) * CFrame.Angles(tiltX, 0, tiltZ)
+                        -- Базовое смещение (немного ниже, чтобы ноги стояли на земле при новом размере)
+                        local baseC0 = CFrame.new(0, -1.2, 0)
+                        
+                        if humanoid.FloorMaterial == Enum.Material.Air then
+                            -- Анимация в воздухе (прыжок / падение)
+                            -- При падении наклоняемся вперед, при взлете назад
+                            local fallTiltX = math.clamp(-vertSpeed / 50, -0.6, 0.6)
+                            weld.C0 = baseC0 * CFrame.Angles(fallTiltX, 0, 0)
+                        elseif horizSpeed > 1 then
+                            -- Детальная анимация бега
+                            local speedMult = math.clamp(horizSpeed / 16, 0.5, 2.5)
+                            local cycle = timeSec * 15 * speedMult
+                            
+                            local bounceY = math.abs(math.sin(cycle)) * 0.6
+                            local swayX = math.sin(cycle / 2) * 0.3 -- Переваливание влево-вправо
+                            local leanForward = -0.3 * speedMult -- Наклон тела вперед при разгоне
+                            local turnLean = math.clamp(-turnSpeed * 0.1, -0.5, 0.5) -- Наклон в сторону при повороте
+                            
+                            weld.C0 = baseC0 * CFrame.new(swayX * 0.5, bounceY, 0) * CFrame.Angles(leanForward, swayX, turnLean)
                         else
-                            -- Анимация дыхания (Idle)
+                            -- Детальная анимация простоя (Idle)
                             local breathe = math.sin(timeSec * 3) * 0.05
-                            weld.C0 = CFrame.new(0, -1 + breathe, 0)
+                            local lookAround = math.sin(timeSec * 0.5) * 0.15 -- Плавное вращение туловища
+                            
+                            weld.C0 = baseC0 * CFrame.new(0, breathe, 0) * CFrame.Angles(0, lookAround, 0)
                         end
                     end
                 end
