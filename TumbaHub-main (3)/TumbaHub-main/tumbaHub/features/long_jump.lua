@@ -78,7 +78,7 @@ local function executeJump()
     local speedVal = States.Player.LongJumpSpeed or 37
     startPos = hrp.Position
 
-    if itemName and itemName:find("dao") then
+    if itemName and itemName:lower():find("dao") then
         if useAbilityRemote then
             useAbilityRemote:FireServer('dash', {
                 direction = dir,
@@ -89,15 +89,20 @@ local function executeJump()
             jumpTick = tick() + 2.4
             direction = dir
         end
-    elseif itemName and (itemName == "jade_hammer" or itemName == "void_axe") then
+    elseif itemName and (itemName:lower():find("jade_hammer") or itemName:lower():find("void_axe")) then
         if useAbilityRemote then
             useAbilityRemote:FireServer(itemName..'_jump', {})
             jumpSpeed = 1.4 * speedVal
             jumpTick = tick() + 2.5
             direction = dir
         end
-    elseif itemName and itemName == "fireball" then
+    elseif itemName and itemName:lower():find("fireball") then
         local projectileRemote = Mega.GetRemote("ProjectileFire")
+        if not projectileRemote then
+            pcall(function()
+                projectileRemote = Services.ReplicatedStorage.rbxts_include.node_modules["@rbxts"].net.out._NetManaged.ProjectileFire
+            end)
+        end
         if projectileRemote then
             -- Throw fireball straight down
             local shootDir = Vector3.new(0, -60, 0)
