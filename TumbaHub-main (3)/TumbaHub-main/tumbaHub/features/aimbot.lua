@@ -174,38 +174,39 @@ if not getgenv().TumbaAimbotHooksLoaded then
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
         local method = getnamecallmethod()
-        local target = Mega.Features.Aimbot.Target
-        local enabled = (States.Combat.Aimbot.Enabled or States.Combat.AutoShoot.Enabled) and target and not checkcaller()
-
-        if enabled then
-            if self == Services.Workspace and (method == "Raycast" or method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist") then
-                local origin = ({...})[1]
-                if typeof(origin) == "Vector3" then
-                    local direction = (target.Position - origin).Unit * ({...})[2].Magnitude
-                    return oldNamecall(self, origin, direction, ({...})[3])
-                elseif typeof(origin) == "Ray" then
-                    local newRay = Ray.new(origin.Origin, (target.Position - origin.Origin).Unit * origin.Direction.Magnitude)
-                    return oldNamecall(self, newRay, ({...})[2], ({...})[3], ({...})[4])
-                end
-            elseif method == "ScreenPointToRay" or method == "ViewportPointToRay" then
-                if setnamecallmethod then setnamecallmethod(method) end
-                local ray = oldNamecall(self, ...)
-                if typeof(ray) == "Ray" then
-                    return Ray.new(ray.Origin, (target.Position - ray.Origin).Unit * ray.Direction.Magnitude)
-                end
-            elseif method == "InvokeServer" and tostring(self) == "ProjectileFire" then
-                local args = {...}
-                if typeof(args[4]) == "Vector3" and typeof(args[6]) == "Vector3" then
-                    local speed = args[6].Magnitude
-                    local dist = (target.Position - args[4]).Magnitude
-                    local timeToHit = dist / speed
-                    local drop = 0.5 * 196.2 * (timeToHit ^ 2)
-                    local targetVelocity = target.AssemblyLinearVelocity or Vector3.new(0,0,0)
-                    local predictedPos = target.Position + (targetVelocity * timeToHit) + Vector3.new(0, drop, 0)
-                    
-                    args[6] = (predictedPos - args[4]).Unit * speed
+        
+        if method == "Raycast" or method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist" or method == "ScreenPointToRay" or method == "ViewportPointToRay" or (method == "InvokeServer" and tostring(self) == "ProjectileFire") then
+            local target = Mega.Features.Aimbot.Target
+            if target and (States.Combat.Aimbot.Enabled or States.Combat.AutoShoot.Enabled) and not checkcaller() then
+                if self == Services.Workspace and (method == "Raycast" or method == "FindPartOnRay" or method == "FindPartOnRayWithIgnoreList" or method == "FindPartOnRayWithWhitelist") then
+                    local origin = ({...})[1]
+                    if typeof(origin) == "Vector3" then
+                        local direction = (target.Position - origin).Unit * ({...})[2].Magnitude
+                        return oldNamecall(self, origin, direction, ({...})[3])
+                    elseif typeof(origin) == "Ray" then
+                        local newRay = Ray.new(origin.Origin, (target.Position - origin.Origin).Unit * origin.Direction.Magnitude)
+                        return oldNamecall(self, newRay, ({...})[2], ({...})[3], ({...})[4])
+                    end
+                elseif method == "ScreenPointToRay" or method == "ViewportPointToRay" then
                     if setnamecallmethod then setnamecallmethod(method) end
-                    return oldNamecall(self, unpack(args))
+                    local ray = oldNamecall(self, ...)
+                    if typeof(ray) == "Ray" then
+                        return Ray.new(ray.Origin, (target.Position - ray.Origin).Unit * ray.Direction.Magnitude)
+                    end
+                elseif method == "InvokeServer" and tostring(self) == "ProjectileFire" then
+                    local args = {...}
+                    if typeof(args[4]) == "Vector3" and typeof(args[6]) == "Vector3" then
+                        local speed = args[6].Magnitude
+                        local dist = (target.Position - args[4]).Magnitude
+                        local timeToHit = dist / speed
+                        local drop = 0.5 * 196.2 * (timeToHit ^ 2)
+                        local targetVelocity = target.AssemblyLinearVelocity or Vector3.new(0,0,0)
+                        local predictedPos = target.Position + (targetVelocity * timeToHit) + Vector3.new(0, drop, 0)
+                        
+                        args[6] = (predictedPos - args[4]).Unit * speed
+                        if setnamecallmethod then setnamecallmethod(method) end
+                        return oldNamecall(self, unpack(args))
+                    end
                 end
             end
         end
@@ -214,17 +215,16 @@ if not getgenv().TumbaAimbotHooksLoaded then
 
     local oldIndex
     oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
-        local target = Mega.Features.Aimbot.Target
-        local enabled = (States.Combat.Aimbot.Enabled or States.Combat.AutoShoot.Enabled) and target and not checkcaller()
-
-        if enabled and self == Mouse and (key == "Hit" or key == "Target") then
-            if key == "Hit" then
-                return CFrame.new(target.Position)
-            elseif key == "Target" then
-                return target
+        if self == Mouse and (key == "Hit" or key == "Target") then
+            local target = Mega.Features.Aimbot.Target
+            if target and (States.Combat.Aimbot.Enabled or States.Combat.AutoShoot.Enabled) and not checkcaller() then
+                if key == "Hit" then
+                    return CFrame.new(target.Position)
+                elseif key == "Target" then
+                    return target
+                end
             end
         end
-        
         return oldIndex(self, key)
     end))
 end
