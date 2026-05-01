@@ -61,6 +61,7 @@ local function performBuildReach()
     
     local mouseHit = Mouse.Hit.Position
     local dist = (hrp.Position - mouseHit).Magnitude
+    if dist <= 15 then return end -- Let native game handle close placement
     if dist > maxReach then return end
     
     local ray = Mouse.UnitRay
@@ -71,6 +72,8 @@ local function performBuildReach()
     local result = Services.Workspace:Raycast(ray.Origin, ray.Direction * maxReach, params)
     
     if result then
+        if result.Instance.Transparency == 1 then return end -- Ignore invisible barriers
+        
         local hitPos = result.Position
         local hitNorm = result.Normal
         local gridSize = 3
