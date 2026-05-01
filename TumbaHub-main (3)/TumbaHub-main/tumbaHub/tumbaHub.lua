@@ -137,7 +137,15 @@ local function InitPhase(id, list)
     for i, path in ipairs(list) do
         if loaderUI and loaderUI.Update then
             local overallPercent = (i / count) * 100
-            loaderUI.Update(overallPercent, "Syncing: " .. path)
+            -- Менее детализированный текст загрузки
+            local phaseNames = {
+                network = "Connecting to Server...",
+                core = "Loading Core Systems...",
+                features = "Injecting Features...",
+                ui = "Building Interface..."
+            }
+            local loadingText = phaseNames[id] or ("Loading " .. string.upper(id) .. "...")
+            loaderUI.Update(overallPercent, loadingText)
         end
         Mega.LoadModule(path)
         -- INCREASED DELAY FOR FREE EXECUTORS (Prevents Luna socket crash)
@@ -209,6 +217,17 @@ end
 
 print("🔥 TUMBA MEGA SYSTEM (Refactored) LOADED SUCCESSFULLY!")
 print("🎮 Use RightShift to open the menu")
+
+-- Показываем пользователю, что нового добавили в этом обновлении
+task.spawn(function()
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "TumbaHub Обновлен!",
+            Text = "Добавлено: 3D Gorilla Mode с анимациями\nИсправлено: Aim Assist, Краши экзекьюторов",
+            Duration = 10
+        })
+    end)
+end)
 
 -- === AUTO-INJECT ON TELEPORT (QUEUE ON TELEPORT) ===
 local queue_on_teleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or queueonteleport
