@@ -1,5 +1,5 @@
 -- features/long_jump.lua
--- Item-Abuse Long Jump for Bedwars (CatV6 Port)
+-- Item-Abuse Long Jump for Bedwars (CatV6 Port with Fireball/TNT Support)
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.LongJump = {}
@@ -8,7 +8,8 @@ local Services = Mega.Services or {
     Players = game:GetService("Players"),
     ReplicatedStorage = game:GetService("ReplicatedStorage"),
     RunService = game:GetService("RunService"),
-    Workspace = game:GetService("Workspace")
+    Workspace = game:GetService("Workspace"),
+    HttpService = game:GetService("HttpService")
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -32,6 +33,10 @@ local jumpSpeed = 0
 local direction = Vector3.new(0,0,0)
 local startPos = nil
 
+local isWaitingForKnockback = false
+local expectedSpeed = 0
+local expectedDir = Vector3.new(0,0,0)
+
 -- Remotes
 local useAbilityRemote = nil
 task.spawn(function()
@@ -43,47 +48,104 @@ end)
 
 local function getEquippedItem()
     local char = LocalPlayer.Character
-    if not char then return nil end
+    if not char then return nil, nil end
     local tool = char:FindFirstChildWhichIsA("Tool")
-    if tool then return tool.Name end
-    return nil
+    if tool then return tool.Name, tool end
+    return nil, nil
 end
 
 local function executeJump()
     local char = LocalPlayer.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
 
     local cam = Services.Workspace.CurrentCamera
     local dir = (States.Player.LongJumpCamera and cam) and cam.CFrame.LookVector or hrp.CFrame.LookVector
     dir = Vector3.new(dir.X, 0, dir.Z).Unit
     local pos = hrp.Position
 
-    local item = getEquippedItem()
+    local itemName, tool = getEquippedItem()
     local speedVal = States.Player.LongJumpSpeed or 37
     startPos = hrp.Position
 
-    if item and item:find("dao") then
+    if itemName and itemName:find("dao") then
         if useAbilityRemote then
             useAbilityRemote:FireServer('dash', {
                 direction = dir,
                 origin = pos,
-                weapon = item
+                weapon = itemName
             })
             jumpSpeed = 4.5 * speedVal
             jumpTick = tick() + 2.4
             direction = dir
         end
-    elseif item and (item == "jade_hammer" or item == "void_axe") then
+    elseif itemName and (itemName == "jade_hammer" or itemName == "void_axe") then
         if useAbilityRemote then
-            useAbilityRemote:FireServer(item..'_jump', {})
+            useAbilityRemote:FireServer(itemName..'_jump', {})
             jumpSpeed = 1.4 * speedVal
             jumpTick = tick() + 2.5
             direction = dir
         end
+    elseif itemName and itemName == "fireball" then
+        local projectileRemote = Mega.GetRemote("ProjectileFire")
+        if projectileRemote then
+            -- Throw fireball straight down
+            local shootDir = Vector3.new(0, -60, 0)
+            local guid = Services.HttpService:GenerateGUID(true)
+            
+            pcall(function()
+                projectileRemote:InvokeServer(
+                    tool,
+                    "fireball",
+                    "fireball",
+                    hrp.Position,
+                    hrp.Position,
+                    shootDir,
+                    guid,
+                    {drawDurationSeconds = 1},
+                    workspace:GetServerTimeNow() - 0.045
+                )
+            end)
+
+            -- Freeze player to wait for explosion
+            hrp.Anchored = true
+            isWaitingForKnockback = true
+            expectedDir = dir
+            expectedSpeed = speedVal * 1.8 
+            
+            -- Setup Health Changed Connection
+            if connections.HealthCheck then connections.HealthCheck:Disconnect() end
+            connections.HealthCheck = hum.HealthChanged:Connect(function(health)
+                if isWaitingForKnockback then
+                    isWaitingForKnockback = false
+                    hrp.Anchored = false
+                    jumpSpeed = expectedSpeed
+                    jumpTick = tick() + 2.5
+                    direction = expectedDir
+                    if connections.HealthCheck then connections.HealthCheck:Disconnect() end
+                end
+            end)
+
+            -- Failsafe: Unfreeze after 1.5s if no explosion hit
+            task.delay(1.5, function()
+                if isWaitingForKnockback then
+                    isWaitingForKnockback = false
+                    if hrp then hrp.Anchored = false end
+                    if connections.HealthCheck then connections.HealthCheck:Disconnect() end
+                    if States.Player.LongJump then
+                        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
+                            Mega.Objects.Toggles["toggle_long_jump"](false)
+                        else
+                            Mega.Features.LongJump.SetEnabled(false)
+                        end
+                    end
+                end
+            end)
+        end
     else
-        -- Fallback: If no specific item is held, just do a velocity boost (Universal mode fallback)
+        -- Fallback: Basic boost if no item held
         jumpSpeed = 2.5 * speedVal
         jumpTick = tick() + 1.5
         direction = dir
@@ -102,6 +164,8 @@ function Mega.Features.LongJump.SetEnabled(state)
         executeJump()
         
         connections.PreSim = Services.RunService.PreSimulation:Connect(function(dt)
+            if isWaitingForKnockback then return end -- Don't apply velocity while frozen
+            
             local char = LocalPlayer.Character
             if not char then return end
             local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -120,7 +184,8 @@ function Mega.Features.LongJump.SetEnabled(state)
                     hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 15, hrp.AssemblyLinearVelocity.Z)
                 end
                 startPos = nil
-            else
+            elseif jumpSpeed > 0 then
+                -- Jump finished
                 if startPos then
                     hrp.CFrame = CFrame.lookAlong(startPos, hrp.CFrame.LookVector)
                 end
@@ -139,9 +204,16 @@ function Mega.Features.LongJump.SetEnabled(state)
             end
         end)
     else
+        isWaitingForKnockback = false
         jumpTick = tick()
         direction = Vector3.new(0,0,0)
         jumpSpeed = 0
+        
+        local char = LocalPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp and hrp.Anchored then hrp.Anchored = false end
+        end
     end
 end
 
