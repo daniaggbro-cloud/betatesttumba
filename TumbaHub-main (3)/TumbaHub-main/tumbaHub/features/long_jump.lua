@@ -242,7 +242,10 @@ end
 
 if not connections.Keybind then
     connections.Keybind = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == Enum.KeyCode.X then
+        local bindString = Mega.States.Player.LongJumpKeybind or "X"
+        local bindEnum = Enum.KeyCode[bindString]
+        
+        if not gameProcessed and input.KeyCode == bindEnum then
             local newState = not States.Player.LongJump
             States.Player.LongJump = newState
             if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
