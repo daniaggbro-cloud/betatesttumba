@@ -38,6 +38,17 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_fly", "Player.Fly", nil, {
 
 
 UI.CreateToggle(TabFrame, "toggle_inf_jump", "Player.InfiniteJump")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/high_jump.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_high_jump", "Player.HighJump.Enabled", function(state)
+    Mega.States.Player.HighJump.Enabled = state
+    if Mega.Features.HighJump and Mega.Features.HighJump.SetEnabled then Mega.Features.HighJump.SetEnabled(state) end
+end, {
+    UI.CreateSlider(nil, "slider_high_jump_power", "Player.HighJump.Power", 50, 300)
+})
 UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
 
 task.spawn(function()
