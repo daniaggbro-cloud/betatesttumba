@@ -169,10 +169,12 @@ connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
 end)
 
 local execName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown"
-local isWeakExecutor = execName:lower():find("solara") or execName:lower():find("celery") or execName:lower():find("incognito") or execName:lower():find("macsploit")
 local canHook = type(hookmetamethod) == "function" and type(newcclosure) == "function" and type(getnamecallmethod) == "function"
 
-if not isWeakExecutor and canHook and not getgenv().TumbaAimbotHooksLoaded then
+-- Completely disable hooks by default to prevent Roact/CoreScript crashes on free executors
+local USE_HOOKS = false
+
+if USE_HOOKS and canHook and not getgenv().TumbaAimbotHooksLoaded then
     getgenv().TumbaAimbotHooksLoaded = true
     
     local oldNamecall
