@@ -229,96 +229,21 @@ local BedwarsGetShopItemBase = nil -- getShopItemBase (нефильтрован�
 local melonSeedsEntry = nil      -- Закэшированная запись melon_seeds (из getShopItemBase)
 local cachedMelonPrice = nil     -- Кэшированная цена
 
--- Инициализация: прямой require() модуля bedwars-shop
--- Путь: ReplicatedStorage.TS.games.bedwars.shop.bedwars-shop
 local function ensureShopData()
-    if BedwarsShopData then return true end
-    
-    pcall(function()
-        local RS = game:GetService("ReplicatedStorage")
-        local shopModule = RS:FindFirstChild("TS")
-            and RS.TS:FindFirstChild("games")
-            and RS.TS.games:FindFirstChild("bedwars")
-            and RS.TS.games.bedwars:FindFirstChild("shop")
-            and RS.TS.games.bedwars.shop:FindFirstChild("bedwars-shop")
-        
-        if not shopModule or not shopModule:IsA("ModuleScript") then return end
-        
-        local data = require(shopModule)
-        if type(data) ~= "table" then return end
-        
-        local shop = data.BedwarsShop or data
-        if not shop then return end
-        
-        BedwarsShopData = shop
-        
-        if type(shop.getAdjustedShopPrice) == "function" then
-            BedwarsGetAdjusted = shop.getAdjustedShopPrice
-        end
-        -- getShopItemBase — возвращает НЕФИЛЬТРОВАННЫЙ предмет (в отличие от getShopItem)
-        -- getShopItem('melon_seeds') возвращает nil, т.к. kit-фильтр убирает его
-        if type(shop.getShopItemBase) == "function" then
-            BedwarsGetShopItemBase = shop.getShopItemBase
-        end
-        
-        -- Получаем melon_seeds через getShopItemBase (обходим фильтр)
-        if BedwarsGetShopItemBase then
-            local ok, item = pcall(BedwarsGetShopItemBase, "melon_seeds")
-            if ok and type(item) == "table" then
-                melonSeedsEntry = item
-            end
-        end
-        
-        -- Если getShopItemBase не помог, ищем в RAW ShopItems
-        if not melonSeedsEntry and shop.ShopItems then
-            for _, item in ipairs(shop.ShopItems) do
-                if type(item) == "table" and item.itemType == "melon_seeds" then
-                    melonSeedsEntry = item
-                    break
-                end
-            end
-        end
-    end)
-    
-    return BedwarsShopData ~= nil
+    return false
 end
 
--- Запускаем инициализацию при загрузке модуля
-task.spawn(function()
-    task.wait(2)
-    ensureShopData()
-end)
+-- Запускаем инициализацию при загрузке модуля (отключено из-за крашей на бесплатных экзекьюторах)
+-- task.spawn(function()
+--     task.wait(2)
+--     ensureShopData()
+-- end)
 
 local function getMelonPriceInvisibly()
-    -- ============================================================
-    -- 1. КЭШИРОВАННАЯ ЦЕНА (самый быстрый путь)
-    -- ============================================================
     if cachedMelonPrice then return cachedMelonPrice end
     
     -- ============================================================
-    -- 2. МОДУЛЬ МАГАЗИНА (работает ВСЕГДА, даже без UI)
-    -- ============================================================
-    ensureShopData()
-    
-    if melonSeedsEntry then
-        -- Пробуем динамическую цену
-        if BedwarsGetAdjusted then
-            local ok, adjusted = pcall(BedwarsGetAdjusted, melonSeedsEntry)
-            if ok and type(adjusted) == "number" then
-                cachedMelonPrice = adjusted
-                return adjusted
-            end
-        end
-        
-        -- Базовая цена из модуля
-        if melonSeedsEntry.price then
-            cachedMelonPrice = melonSeedsEntry.price
-            return melonSeedsEntry.price
-        end
-    end
-    
-    -- ============================================================
-    -- 3. UI SCAN (если магазин открыт — дополнительная проверка)
+    -- UI SCAN (безопасный метод поиска цены)
     -- ============================================================
     local pg = LocalPlayer:FindFirstChild("PlayerGui")
     if pg then
@@ -344,8 +269,7 @@ local function getMelonPriceInvisibly()
     end
     
     -- ============================================================
-    -- 4. ХАРДКОД: базовая цена из дампа игры (packages.json)
-    -- melon_seeds: currency=emerald, price=2
+    -- ХАРДКОД: базовая цена (работает в 99% случаев)
     -- ============================================================
     return 2
 end
