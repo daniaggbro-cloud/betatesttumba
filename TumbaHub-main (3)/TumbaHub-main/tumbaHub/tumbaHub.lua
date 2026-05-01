@@ -87,7 +87,11 @@ function Mega.LoadModule(path)
     if not success or not content then
         local url = baseURL .. path
         success, content = pcall(function() return game:HttpGet(url) end)
-        if success and content:find("404: Not Found") then success = false; content = nil end
+        -- Защита от ошибок бесплатных экзекьюторов (timeout, 404, пустые файлы)
+        if success and (content:find("404: Not Found") or content:lower():match("timeout") or #content < 10) then 
+            success = false
+            content = nil 
+        end
     end
 
     if success and content then
@@ -136,7 +140,8 @@ local function InitPhase(id, list)
             loaderUI.Update(overallPercent, "Syncing: " .. path)
         end
         Mega.LoadModule(path)
-        task.wait(0.05)
+        -- INCREASED DELAY FOR FREE EXECUTORS (Prevents Luna socket crash)
+        task.wait(0.15)
     end
 end
 
@@ -169,12 +174,9 @@ InitPhase("features", {
     "features/lani.lua",
     "features/chest_steal.lua",
     "features/chest_esp.lua",
-    "features/auto_deposit.lua",
     "features/build_reach.lua",
     "features/killaura.lua",
-    "features/bed_nuke.lua",
-    "features/bot.lua",
-    "features/ai_chat.lua"
+    "features/bed_nuke.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE
