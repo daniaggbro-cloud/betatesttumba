@@ -13,9 +13,8 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if not States.Player then States.Player = {} end
-if type(States.Player.HighJump) ~= "table" then
-    States.Player.HighJump = { Enabled = (States.Player.HighJump == true), Power = 150 }
-end
+if States.Player.HighJump == nil then States.Player.HighJump = false end
+if States.Player.HighJumpPower == nil then States.Player.HighJumpPower = 150 end
 
 if not Mega.Objects.HighJumpConnections then Mega.Objects.HighJumpConnections = {} end
 local connections = Mega.Objects.HighJumpConnections
@@ -28,7 +27,7 @@ table.clear(connections)
 local lastJump = 0
 
 local function OnJumpRequest()
-    if not States.Player.HighJump.Enabled then return end
+    if not States.Player.HighJump then return end
     
     -- Prevent spamming
     if tick() - lastJump < 1 then return end
@@ -44,7 +43,7 @@ local function OnJumpRequest()
             local bv = Instance.new("BodyVelocity")
             bv.Name = "HighJumpBoost"
             bv.MaxForce = Vector3.new(0, 100000, 0)
-            bv.Velocity = Vector3.new(0, States.Player.HighJump.Power, 0)
+            bv.Velocity = Vector3.new(0, States.Player.HighJumpPower, 0)
             bv.Parent = hrp
             
             task.delay(0.15, function()
@@ -57,7 +56,7 @@ local function OnJumpRequest()
 end
 
 function Mega.Features.HighJump.SetEnabled(state)
-    States.Player.HighJump.Enabled = state
+    States.Player.HighJump = state
     if state then
         if not connections.JumpReq then
             connections.JumpReq = Services.UserInputService.JumpRequest:Connect(OnJumpRequest)
@@ -78,7 +77,7 @@ function Mega.Features.HighJump.SetEnabled(state)
     end
 end
 
-if States.Player.HighJump.Enabled then
+if States.Player.HighJump then
     Mega.Features.HighJump.SetEnabled(true)
 end
 

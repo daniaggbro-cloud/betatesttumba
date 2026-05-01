@@ -43,11 +43,11 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/high_jump.lua") end)
 end)
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_high_jump", "Player.HighJump.Enabled", function(state)
-    Mega.States.Player.HighJump.Enabled = state
+UI.CreateToggleWithSettings(TabFrame, "toggle_high_jump", "Player.HighJump", function(state)
+    Mega.States.Player.HighJump = state
     if Mega.Features.HighJump and Mega.Features.HighJump.SetEnabled then Mega.Features.HighJump.SetEnabled(state) end
 end, {
-    UI.CreateSlider(nil, "slider_high_jump_power", "Player.HighJump.Power", 50, 300)
+    UI.CreateSlider(nil, "slider_high_jump_power", "Player.HighJumpPower", 50, 300)
 })
 UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
 
