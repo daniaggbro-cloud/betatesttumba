@@ -47,7 +47,13 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_high_jump", "Player.HighJump", fun
     Mega.States.Player.HighJump = state
     if Mega.Features.HighJump and Mega.Features.HighJump.SetEnabled then Mega.Features.HighJump.SetEnabled(state) end
 end, {
-    UI.CreateSlider(nil, "slider_high_jump_power", "Player.HighJumpPower", 50, 300)
+    UI.CreateDropdown(nil, "dropdown_high_jump_mode", "Player.HighJumpMode", {"Velocity", "CFrame"}, function(val)
+        Mega.States.Player.HighJumpMode = val
+    end),
+    UI.CreateSlider(nil, "slider_high_jump_power", "Player.HighJumpPower", 10, 150),
+    UI.CreateToggle(nil, "toggle_high_jump_autodisable", "Player.HighJumpAutoDisable", function(state)
+        Mega.States.Player.HighJumpAutoDisable = state
+    end)
 })
 UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
 

@@ -1,12 +1,13 @@
 -- features/high_jump.lua
--- Logic for High Jump / Boost
+-- Logic for High Jump / Boost (Ported from CatV6 style)
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.HighJump = {}
 
 local Services = Mega.Services or {
     Players = game:GetService("Players"),
-    UserInputService = game:GetService("UserInputService")
+    UserInputService = game:GetService("UserInputService"),
+    RunService = game:GetService("RunService")
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -14,7 +15,9 @@ local States = Mega.States
 
 if not States.Player then States.Player = {} end
 if States.Player.HighJump == nil then States.Player.HighJump = false end
-if States.Player.HighJumpPower == nil then States.Player.HighJumpPower = 150 end
+if States.Player.HighJumpMode == nil then States.Player.HighJumpMode = "Velocity" end
+if States.Player.HighJumpPower == nil then States.Player.HighJumpPower = 50 end
+if States.Player.HighJumpAutoDisable == nil then States.Player.HighJumpAutoDisable = false end
 
 if not Mega.Objects.HighJumpConnections then Mega.Objects.HighJumpConnections = {} end
 local connections = Mega.Objects.HighJumpConnections
@@ -24,55 +27,61 @@ for _, conn in pairs(connections) do
 end
 table.clear(connections)
 
-local lastJump = 0
-
-local function OnJumpRequest()
-    if not States.Player.HighJump then return end
-    
-    -- Prevent spamming
-    if tick() - lastJump < 1 then return end
-    lastJump = tick()
-    
+local function jump()
     local char = LocalPlayer.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local humanoid = char:FindFirstChildOfClass("Humanoid")
-        
-        if hrp and humanoid then
-            -- We apply the velocity
-            local bv = Instance.new("BodyVelocity")
-            bv.Name = "HighJumpBoost"
-            bv.MaxForce = Vector3.new(0, 100000, 0)
-            bv.Velocity = Vector3.new(0, States.Player.HighJumpPower, 0)
-            bv.Parent = hrp
-            
-            task.delay(0.15, function()
-                if bv and bv.Parent then 
-                    bv:Destroy() 
-                end
-            end)
-        end
+    if not char then return end
+    
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    
+    if not humanoid or not hrp then return end
+    if humanoid.Health <= 0 then return end
+
+    local mode = States.Player.HighJumpMode or "Velocity"
+    local power = States.Player.HighJumpPower or 50
+
+    if mode == "Velocity" then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, power, hrp.Velocity.Z)
+    elseif mode == "CFrame" then
+        local start = math.max(power - humanoid.JumpHeight, 0)
+        task.spawn(function()
+            repeat
+                if not hrp or not humanoid or humanoid.Health <= 0 then break end
+                hrp.CFrame = hrp.CFrame + Vector3.new(0, start * 0.016, 0)
+                start = start - (workspace.Gravity * 0.016)
+                task.wait()
+            until start <= 0
+        end)
     end
 end
 
 function Mega.Features.HighJump.SetEnabled(state)
     States.Player.HighJump = state
+    
+    -- Cleanup previous connections
+    if connections.RenderStep then
+        connections.RenderStep:Disconnect()
+        connections.RenderStep = nil
+    end
+
     if state then
-        if not connections.JumpReq then
-            connections.JumpReq = Services.UserInputService.JumpRequest:Connect(OnJumpRequest)
-        end
-    else
-        if connections.JumpReq then
-            connections.JumpReq:Disconnect()
-            connections.JumpReq = nil
-        end
-        -- Cleanup existing boosts
-        local char = LocalPlayer.Character
-        if char then
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp and hrp:FindFirstChild("HighJumpBoost") then
-                hrp.HighJumpBoost:Destroy()
-            end
+        if States.Player.HighJumpAutoDisable then
+            jump()
+            -- Automatically toggle off in UI after a tiny delay
+            task.delay(0.05, function()
+                if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_high_jump"] then
+                    Mega.Objects.Toggles["toggle_high_jump"](false)
+                else
+                    Mega.Features.HighJump.SetEnabled(false)
+                end
+            end)
+        else
+            connections.RenderStep = Services.RunService.RenderStepped:Connect(function()
+                if not Services.UserInputService:GetFocusedTextBox() and Services.UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    jump()
+                end
+            end)
         end
     end
 end
