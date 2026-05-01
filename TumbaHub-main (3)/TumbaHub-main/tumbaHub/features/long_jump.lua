@@ -1,0 +1,162 @@
+-- features/long_jump.lua
+-- Item-Abuse Long Jump for Bedwars (CatV6 Port)
+
+if not Mega.Features then Mega.Features = {} end
+Mega.Features.LongJump = {}
+
+local Services = Mega.Services or {
+    Players = game:GetService("Players"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    RunService = game:GetService("RunService"),
+    Workspace = game:GetService("Workspace")
+}
+
+local LocalPlayer = Services.Players.LocalPlayer
+local States = Mega.States
+
+if not States.Player then States.Player = {} end
+if States.Player.LongJump == nil then States.Player.LongJump = false end
+if States.Player.LongJumpSpeed == nil then States.Player.LongJumpSpeed = 37 end
+if States.Player.LongJumpCamera == nil then States.Player.LongJumpCamera = false end
+
+if not Mega.Objects.LongJumpConnections then Mega.Objects.LongJumpConnections = {} end
+local connections = Mega.Objects.LongJumpConnections
+
+for _, conn in pairs(connections) do 
+    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+end
+table.clear(connections)
+
+local jumpTick = 0
+local jumpSpeed = 0
+local direction = Vector3.new(0,0,0)
+local startPos = nil
+
+-- Remotes
+local useAbilityRemote = nil
+task.spawn(function()
+    local events = Services.ReplicatedStorage:FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events")
+    if events then
+        useAbilityRemote = events:FindFirstChild("useAbility")
+    end
+end)
+
+local function getEquippedItem()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local tool = char:FindFirstChildWhichIsA("Tool")
+    if tool then return tool.Name end
+    return nil
+end
+
+local function executeJump()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local cam = Services.Workspace.CurrentCamera
+    local dir = (States.Player.LongJumpCamera and cam) and cam.CFrame.LookVector or hrp.CFrame.LookVector
+    dir = Vector3.new(dir.X, 0, dir.Z).Unit
+    local pos = hrp.Position
+
+    local item = getEquippedItem()
+    local speedVal = States.Player.LongJumpSpeed or 37
+    startPos = hrp.Position
+
+    if item and item:find("dao") then
+        if useAbilityRemote then
+            useAbilityRemote:FireServer('dash', {
+                direction = dir,
+                origin = pos,
+                weapon = item
+            })
+            jumpSpeed = 4.5 * speedVal
+            jumpTick = tick() + 2.4
+            direction = dir
+        end
+    elseif item and (item == "jade_hammer" or item == "void_axe") then
+        if useAbilityRemote then
+            useAbilityRemote:FireServer(item..'_jump', {})
+            jumpSpeed = 1.4 * speedVal
+            jumpTick = tick() + 2.5
+            direction = dir
+        end
+    else
+        -- Fallback: If no specific item is held, just do a velocity boost (Universal mode fallback)
+        jumpSpeed = 2.5 * speedVal
+        jumpTick = tick() + 1.5
+        direction = dir
+    end
+end
+
+function Mega.Features.LongJump.SetEnabled(state)
+    States.Player.LongJump = state
+
+    if connections.PreSim then
+        connections.PreSim:Disconnect()
+        connections.PreSim = nil
+    end
+
+    if state then
+        executeJump()
+        
+        connections.PreSim = Services.RunService.PreSimulation:Connect(function(dt)
+            local char = LocalPlayer.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hrp or not hum then return end
+
+            if jumpTick > tick() then
+                local currentVelocity = hrp.AssemblyLinearVelocity
+                local targetVel = direction * (16 + ((jumpTick - tick()) > 1.1 and jumpSpeed or 0))
+                
+                hrp.AssemblyLinearVelocity = Vector3.new(targetVel.X, currentVelocity.Y, targetVel.Z)
+                
+                if hum.FloorMaterial == Enum.Material.Air and not startPos then
+                    hrp.AssemblyLinearVelocity = hrp.AssemblyLinearVelocity + Vector3.new(0, dt * (Services.Workspace.Gravity - 23), 0)
+                else
+                    hrp.AssemblyLinearVelocity = Vector3.new(hrp.AssemblyLinearVelocity.X, 15, hrp.AssemblyLinearVelocity.Z)
+                end
+                startPos = nil
+            else
+                if startPos then
+                    hrp.CFrame = CFrame.lookAlong(startPos, hrp.CFrame.LookVector)
+                end
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                jumpSpeed = 0
+                
+                -- Auto Disable when finished
+                if States.Player.LongJump then
+                    States.Player.LongJump = false
+                    if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
+                        Mega.Objects.Toggles["toggle_long_jump"](false)
+                    else
+                        Mega.Features.LongJump.SetEnabled(false)
+                    end
+                end
+            end
+        end)
+    else
+        jumpTick = tick()
+        direction = Vector3.new(0,0,0)
+        jumpSpeed = 0
+    end
+end
+
+if States.Player.LongJump then
+    Mega.Features.LongJump.SetEnabled(true)
+end
+
+if Mega.UnloadedSignal then
+    if not connections.Unload then
+        connections.Unload = Mega.UnloadedSignal:Connect(function()
+            for _, conn in pairs(connections) do 
+                if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+            end
+        end)
+    end
+end
+
+return Mega.Features.LongJump

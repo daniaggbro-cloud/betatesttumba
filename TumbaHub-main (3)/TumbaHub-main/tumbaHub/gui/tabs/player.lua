@@ -55,6 +55,21 @@ end, {
         Mega.States.Player.HighJumpAutoDisable = state
     end)
 })
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/long_jump.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_long_jump", "Player.LongJump", function(state)
+    Mega.States.Player.LongJump = state
+    if Mega.Features.LongJump and Mega.Features.LongJump.SetEnabled then Mega.Features.LongJump.SetEnabled(state) end
+end, {
+    UI.CreateSlider(nil, "slider_long_jump_speed", "Player.LongJumpSpeed", 1, 37),
+    UI.CreateToggle(nil, "toggle_long_jump_camera", "Player.LongJumpCamera", function(state)
+        Mega.States.Player.LongJumpCamera = state
+    end)
+})
+
 UI.CreateToggle(TabFrame, "toggle_nofall", "Player.NoFall")
 
 task.spawn(function()
