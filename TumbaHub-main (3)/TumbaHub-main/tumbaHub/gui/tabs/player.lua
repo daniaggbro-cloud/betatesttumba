@@ -33,7 +33,10 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_speed", "Player.Speed", function(s
     Mega.States.Player.Speed = state
     if Mega.Features.Speed and Mega.Features.Speed.SetEnabled then Mega.Features.Speed.SetEnabled(state) end
 end, {
-    UI.CreateSlider(nil, "slider_speed", "Player.SpeedValue", 16, 200, function(val)
+    UI.CreateDropdown(nil, "dropdown_speed_mode", "Player.SpeedMode", {"CFrame", "Bhop"}, function(val)
+        Mega.States.Player.SpeedMode = val
+    end),
+    UI.CreateSlider(nil, "slider_speed", "Player.SpeedValue", 16, 25, function(val)
         Mega.States.Player.SpeedValue = val
     end)
 })

@@ -1,5 +1,5 @@
 -- features/speed.lua
--- Advanced Velocity-Sync Speedhack module
+-- Advanced Speedhack module with Bhop support and animation fixes
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Speed = {}
@@ -23,8 +23,6 @@ function Mega.Features.Speed.SetEnabled(state)
     CleanupConnections()
     
     if state then
-        -- We use Heartbeat because it runs after physics calculation, 
-        -- making CFrame micro-teleports smoother and less jittery.
         connections.SpeedLoop = Services.RunService.Heartbeat:Connect(function(deltaTime)
             if not States.Player.Speed then return end
             
@@ -35,20 +33,48 @@ function Mega.Features.Speed.SetEnabled(state)
             local hum = char:FindFirstChild("Humanoid")
             
             if hrp and hum and hum.Health > 0 then
-                -- Target speed from the menu slider
                 local targetSpeed = States.Player.SpeedValue or 23
+                local mode = States.Player.SpeedMode or "CFrame"
                 
-                -- Check if the player is trying to move (WASD/Joystick)
+                -- Check if the player is trying to move
                 if hum.MoveDirection.Magnitude > 0 then
-                    -- 1. Velocity-Sync: Reduce the physics velocity to near-zero on the X/Z plane.
-                    -- This tricks the server's velocity magnitude checks into thinking we are walking normally or lagging.
-                    local currentVel = hrp.AssemblyLinearVelocity
-                    hrp.AssemblyLinearVelocity = Vector3.new(currentVel.X * 0.01, currentVel.Y, currentVel.Z * 0.01)
+                    local moveDir = hum.MoveDirection
                     
-                    -- 2. CFrame Translation: Manually move the player forward.
-                    -- We use the full targetSpeed because we zeroed out the native velocity.
-                    local moveVector = hum.MoveDirection * targetSpeed * deltaTime
-                    hrp.CFrame = hrp.CFrame + moveVector
+                    if mode == "CFrame" then
+                        -- FIX ANIMATION: We do NOT zero out the velocity. 
+                        -- We let the normal WalkSpeed (16) handle physics and animations,
+                        -- then we use CFrame to teleport the REMAINING difference.
+                        local extraSpeed = math.max(0, targetSpeed - 16)
+                        
+                        if extraSpeed > 0 then
+                            local moveVector = moveDir * extraSpeed * deltaTime
+                            hrp.CFrame = hrp.CFrame + moveVector
+                        end
+                        
+                    elseif mode == "Bhop" then
+                        -- BUNNY HOP METHOD: Best for strict anti-cheats.
+                        -- Force jump if on ground
+                        if hum.FloorMaterial ~= Enum.Material.Air then
+                            hum.Jump = true
+                        end
+                        
+                        -- Apply speed boost while in the air
+                        -- Bedwars is often more lenient with horizontal distance when falling/jumping
+                        local extraSpeed = math.max(0, targetSpeed - 16)
+                        
+                        if extraSpeed > 0 then
+                            local moveVector = moveDir * extraSpeed * deltaTime
+                            hrp.CFrame = hrp.CFrame + moveVector
+                            
+                            -- Slight velocity push to maintain momentum
+                            local currentVel = hrp.AssemblyLinearVelocity
+                            hrp.AssemblyLinearVelocity = Vector3.new(
+                                moveDir.X * targetSpeed, 
+                                currentVel.Y, 
+                                moveDir.Z * targetSpeed
+                            )
+                        end
+                    end
                 end
             end
         end)
