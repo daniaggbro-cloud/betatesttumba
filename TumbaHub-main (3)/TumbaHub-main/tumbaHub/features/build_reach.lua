@@ -66,8 +66,17 @@ local function performBuildReach()
     
     local ray = Mouse.UnitRay
     local params = RaycastParams.new()
-    params.FilterDescendantsInstances = {char}
-    params.FilterType = Enum.RaycastFilterType.Exclude
+    
+    local mapFolder = Services.Workspace:FindFirstChild("Map")
+    local blocksFolder = mapFolder and mapFolder:FindFirstChild("Blocks")
+    
+    if blocksFolder then
+        params.FilterDescendantsInstances = {blocksFolder}
+        params.FilterType = Enum.RaycastFilterType.Include
+    else
+        params.FilterDescendantsInstances = {char}
+        params.FilterType = Enum.RaycastFilterType.Exclude
+    end
     
     local result = Services.Workspace:Raycast(ray.Origin, ray.Direction * maxReach, params)
     
