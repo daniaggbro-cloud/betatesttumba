@@ -220,24 +220,7 @@ end, {
 --#endregion
 
 
--- Simple player logic that can live here
-local function onRenderStep()
-    local char = Mega.Services.LocalPlayer.Character
-    if not char then return end
-    
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not humanoid then return end
-
-    if Mega.States.Player.Speed then
-        humanoid.WalkSpeed = Mega.States.Player.SpeedValue
-    else
-        if humanoid.WalkSpeed == Mega.States.Player.SpeedValue then
-             humanoid.WalkSpeed = 16 -- Default speed
-        end
-    end
-end
-
-Mega.Objects.Connections.PlayerTabSpeed = Mega.Services.RunService.RenderStepped:Connect(onRenderStep)
+-- Removed old WalkSpeed loop to allow features/speed.lua to handle it properly.
 
 -- Подключаем Infinite Jump ровно один раз, чтобы избежать утечки памяти и лагов
 if not Mega.Objects.Connections.InfiniteJump then
