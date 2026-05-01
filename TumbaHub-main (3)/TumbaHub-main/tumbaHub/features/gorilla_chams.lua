@@ -63,14 +63,16 @@ local function ApplyGorilla(character)
     local mesh = Instance.new("SpecialMesh")
     mesh.MeshId = MESH_ID
     mesh.TextureId = TEXTURE_ID
-    -- Внимание: Scale возможно придется подогнать! Начнем с 1,1,1 или 0.05
-    mesh.Scale = Vector3.new(0.03, 0.03, 0.03) 
+    -- Сделали немного меньше по просьбе (0.022 вместо 0.03)
+    mesh.Scale = Vector3.new(0.022, 0.022, 0.022) 
     mesh.Parent = gorillaPart
 
-    -- Скрепляем с телом игрока
-    local weld = Instance.new("WeldConstraint")
+    -- Скрепляем с телом игрока с помощью обычного Weld (чтобы можно было анимировать C0)
+    local weld = Instance.new("Weld")
+    weld.Name = "GorillaWeld"
     weld.Part0 = rootPart
     weld.Part1 = gorillaPart
+    weld.C0 = CFrame.new(0, -1, 0) -- Базовое смещение вниз
     weld.Parent = gorillaPart
 
     gorillaPart.Parent = character
@@ -94,10 +96,34 @@ local function RemoveGorilla(character)
 end
 
 local function ProcessPlayers()
+    local timeSec = tick()
     for _, player in pairs(Services.Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             if States.Visuals.GorillaMode then
                 ApplyGorilla(player.Character)
+                
+                -- Анимация
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                local gorillaPart = player.Character:FindFirstChild("GorillaChamsPart")
+                if root and gorillaPart then
+                    local weld = gorillaPart:FindFirstChild("GorillaWeld")
+                    if weld then
+                        local horizSpeed = Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude
+                        
+                        if horizSpeed > 1 then
+                            -- Анимация ходьбы (Gorilla Run)
+                            local speedMult = math.clamp(horizSpeed / 16, 0.5, 2)
+                            local bounceY = math.abs(math.sin(timeSec * 15 * speedMult)) * 0.4
+                            local tiltZ = math.sin(timeSec * 15 * speedMult) * 0.15
+                            local tiltX = math.cos(timeSec * 15 * speedMult) * 0.1
+                            weld.C0 = CFrame.new(0, -1 + bounceY, 0) * CFrame.Angles(tiltX, 0, tiltZ)
+                        else
+                            -- Анимация дыхания (Idle)
+                            local breathe = math.sin(timeSec * 3) * 0.05
+                            weld.C0 = CFrame.new(0, -1 + breathe, 0)
+                        end
+                    end
+                end
             else
                 RemoveGorilla(player.Character)
             end
@@ -110,12 +136,10 @@ function Mega.Features.GorillaChams.SetEnabled(state)
     CleanupConnections()
     
     if state then
-        -- Обновляем каждые полсекунды для новых игроков/спавнов
-        connections.GorillaLoop = task.spawn(function()
-            while task.wait(0.5) do
-                if not States.Visuals.GorillaMode then break end
-                ProcessPlayers()
-            end
+        -- Обновляем с высокой частотой для плавной анимации
+        connections.GorillaLoop = Services.RunService.Heartbeat:Connect(function()
+            if not States.Visuals.GorillaMode then return end
+            ProcessPlayers()
         end)
     else
         -- Возвращаем всё как было
