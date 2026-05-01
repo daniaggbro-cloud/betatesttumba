@@ -49,6 +49,14 @@ end)
 local function getEquippedItem()
     local char = LocalPlayer.Character
     if not char then return nil, nil end
+    
+    -- Bedwars uses HandInvItem to store the equipped tool reference
+    local handInvItem = char:FindFirstChild("HandInvItem")
+    if handInvItem and handInvItem.Value then
+        return handInvItem.Value.Name, handInvItem.Value
+    end
+    
+    -- Fallback for standard games
     local tool = char:FindFirstChildWhichIsA("Tool")
     if tool then return tool.Name, tool end
     return nil, nil
@@ -104,7 +112,7 @@ local function executeJump()
                     hrp.Position,
                     shootDir,
                     guid,
-                    {drawDurationSeconds = 1},
+                    {shotId = guid, drawDurationSec = 1},
                     workspace:GetServerTimeNow() - 0.045
                 )
             end)
@@ -145,10 +153,15 @@ local function executeJump()
             end)
         end
     else
-        -- Fallback: Basic boost if no item held
-        jumpSpeed = 2.5 * speedVal
-        jumpTick = tick() + 1.5
-        direction = dir
+        -- Fallback removed: If no valid item is held, don't do a generic jump 
+        -- because it will just trigger anticheat and rubberband.
+        if States.Player.LongJump then
+            task.delay(0.1, function()
+                if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
+                    Mega.Objects.Toggles["toggle_long_jump"](false)
+                end
+            end)
+        end
     end
 end
 
