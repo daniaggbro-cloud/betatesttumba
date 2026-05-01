@@ -8,10 +8,11 @@ local Services = Mega.Services or {
     Players = game:GetService("Players"),
     ReplicatedStorage = game:GetService("ReplicatedStorage"),
     RunService = game:GetService("RunService"),
-    Workspace = game:GetService("Workspace"),
-    HttpService = game:GetService("HttpService")
+    Workspace = game:GetService("Workspace")
 }
 
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
@@ -106,7 +107,7 @@ local function executeJump()
         if projectileRemote then
             -- Throw fireball straight down
             local shootDir = Vector3.new(0, -60, 0)
-            local guid = Services.HttpService:GenerateGUID(true)
+            local guid = HttpService:GenerateGUID(true)
             
             pcall(function()
                 projectileRemote:InvokeServer(
@@ -237,6 +238,20 @@ end
 
 if States.Player.LongJump then
     Mega.Features.LongJump.SetEnabled(true)
+end
+
+if not connections.Keybind then
+    connections.Keybind = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.X then
+            local newState = not States.Player.LongJump
+            States.Player.LongJump = newState
+            if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
+                Mega.Objects.Toggles["toggle_long_jump"](newState)
+            else
+                Mega.Features.LongJump.SetEnabled(newState)
+            end
+        end
+    end)
 end
 
 if Mega.UnloadedSignal then
