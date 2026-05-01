@@ -25,8 +25,17 @@ Mega.Objects.TabFrames[tabKey] = TabFrame
 --#region -- Movement
 UI.CreateSection(TabFrame, "section_player_movement")
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_speed", "Player.Speed", nil, {
-    UI.CreateSlider(nil, "slider_speed", "Player.SpeedValue", 16, 200)
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/speed.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_speed", "Player.Speed", function(state)
+    Mega.States.Player.Speed = state
+    if Mega.Features.Speed and Mega.Features.Speed.SetEnabled then Mega.Features.Speed.SetEnabled(state) end
+end, {
+    UI.CreateSlider(nil, "slider_speed", "Player.SpeedValue", 16, 200, function(val)
+        Mega.States.Player.SpeedValue = val
+    end)
 })
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_fly", "Player.Fly", nil, {
