@@ -41,6 +41,7 @@ kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
 kitBanContainer.BackgroundTransparency = 1
 Mega.Objects.KitBanContainer = kitBanContainer
 
+if not Mega.States.Misc.KitBan then Mega.States.Misc.KitBan = {} end
 Mega.States.Misc.KitBan.Enabled = false
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", function(state)

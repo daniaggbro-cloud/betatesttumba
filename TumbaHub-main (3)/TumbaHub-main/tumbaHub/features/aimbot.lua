@@ -170,8 +170,9 @@ end)
 
 local execName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown"
 local isWeakExecutor = execName:lower():find("solara") or execName:lower():find("celery") or execName:lower():find("incognito") or execName:lower():find("macsploit")
+local canHook = type(hookmetamethod) == "function" and type(newcclosure) == "function" and type(getnamecallmethod) == "function"
 
-if not isWeakExecutor and not getgenv().TumbaAimbotHooksLoaded then
+if not isWeakExecutor and canHook and not getgenv().TumbaAimbotHooksLoaded then
     getgenv().TumbaAimbotHooksLoaded = true
     
     local oldNamecall
