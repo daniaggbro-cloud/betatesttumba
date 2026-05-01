@@ -54,10 +54,10 @@ function Loader.Create()
         end
     end)
 
-    -- THE TITAN CONTAINER
+    -- THE TITAN CONTAINER (Simplified)
     local Titan = Instance.new("CanvasGroup", Overlay)
-    Titan.Size = UDim2.new(0, 550, 0, 380)
-    Titan.Position = UDim2.new(0.5, 0, 0.48, 0)
+    Titan.Size = UDim2.new(0, 450, 0, 180)
+    Titan.Position = UDim2.new(0.5, 0, 0.5, 0)
     Titan.AnchorPoint = Vector2.new(0.5, 0.5)
     Titan.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
     Titan.BorderSizePixel = 0
@@ -109,82 +109,27 @@ function Loader.Create()
         StageButtons[s.id] = {label = label, line = line, key = s.key}
     end
 
-    -- Stats Panel
-    local StatsPanel = Instance.new("Frame", Titan)
-    StatsPanel.Size = UDim2.new(0, 140, 0, 200)
-    StatsPanel.Position = UDim2.new(1, -150, 0, 60)
-    StatsPanel.BackgroundTransparency = 1
-    
-    local function CreateStat(name, valFunc)
-        local f = Instance.new("TextLabel", StatsPanel)
-        f.Size = UDim2.new(1, 0, 0, 20)
-        f.BackgroundTransparency = 1
-        f.Font = Enum.Font.Code
-        f.TextSize = 12
-        f.TextColor3 = Color3.fromRGB(0, 160, 255)
-        f.TextXAlignment = Enum.TextXAlignment.Right
-        
-        task.spawn(function()
-            while f.Parent do
-                local success, result = pcall(valFunc)
-                f.Text = name .. ": " .. (success and tostring(result) or "...")
-                task.wait(0.5)
-            end
-        end)
-    end
-    
-    CreateStat("PING", function() return math.floor(Services.Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) .. "ms" end)
-    CreateStat("FPS", function() return math.floor(1 / RunService.RenderStepped:Wait()) end)
-    CreateStat("MEM", function() return math.floor(Services.Stats:GetTotalMemoryUsageMb()) .. "MB" end)
-
-    -- LOGS TERMINAL
-    local Terminal = Instance.new("ScrollingFrame", Titan)
-    Terminal.Size = UDim2.new(1, -30, 0, 100)
-    Terminal.Position = UDim2.new(0, 15, 1, -115)
-    Terminal.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
-    Terminal.BorderSizePixel = 0
-    Terminal.ScrollBarThickness = 2
-    Terminal.ScrollingEnabled = false
-    Instance.new("UICorner", Terminal).CornerRadius = UDim.new(0, 6)
-    local LogLayout = Instance.new("UIListLayout", Terminal)
-    LogLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    LogLayout.Padding = UDim.new(0, 2)
-    
-    local function AddLog(msg, color)
-        local l = Instance.new("TextLabel", Terminal)
-        l.Size = UDim2.new(1, -10, 0, 16)
-        l.BackgroundTransparency = 1
-        l.Font = Enum.Font.Code
-        l.TextSize = 11
-        l.TextColor3 = color or Color3.fromRGB(150, 150, 170)
-        l.Text = "> " .. msg
-        l.TextXAlignment = Enum.TextXAlignment.Left
-        Terminal.CanvasPosition = Vector2.new(0, 9999)
-        local fullText = l.Text
-        l.Text = "> "
-        task.spawn(function()
-            for i = 3, #fullText do l.Text = fullText:sub(1, i) task.wait(0.01) end
-        end)
-    end
-
+    -- (Stats Panel and Logs Terminal removed for simplified design)
     -- Centerpiece
     local Logo = Instance.new("ImageLabel", Titan)
-    Logo.Size = UDim2.new(0, 70, 0, 70)
-    Logo.Position = UDim2.new(0, 60, 0, 100)
+    Logo.Size = UDim2.new(0, 60, 0, 60)
+    Logo.Position = UDim2.new(0, 30, 0, 60)
     Logo.BackgroundTransparency = 1
     Logo.Image = "rbxassetid://13388222306"
     Logo.ImageColor3 = Color3.fromRGB(0, 160, 255)
+    
     local PhaseLabel = Instance.new("TextLabel", Titan)
     PhaseLabel.Size = UDim2.new(0, 300, 0, 30)
-    PhaseLabel.Position = UDim2.new(0, 110, 0, 85)
+    PhaseLabel.Position = UDim2.new(0, 110, 0, 65)
     PhaseLabel.BackgroundTransparency = 1
     PhaseLabel.Font = Enum.Font.GothamBlack
     PhaseLabel.TextSize = 20
     PhaseLabel.TextColor3 = Color3.new(1, 1, 1)
     PhaseLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
     local StatusLabel = Instance.new("TextLabel", Titan)
     StatusLabel.Size = UDim2.new(0, 300, 0, 20)
-    StatusLabel.Position = UDim2.new(0, 110, 0, 110)
+    StatusLabel.Position = UDim2.new(0, 110, 0, 95)
     StatusLabel.BackgroundTransparency = 1
     StatusLabel.Font = Enum.Font.GothamBold
     StatusLabel.TextSize = 12
@@ -195,7 +140,7 @@ function Loader.Create()
     -- Progress Bar
     local BarBase = Instance.new("Frame", Titan)
     BarBase.Size = UDim2.new(1, -60, 0, 6)
-    BarBase.Position = UDim2.new(0.5, 0, 0, 250)
+    BarBase.Position = UDim2.new(0.5, 0, 1, -30)
     BarBase.AnchorPoint = Vector2.new(0.5, 0.5)
     BarBase.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
     BarBase.BorderSizePixel = 0
@@ -241,7 +186,6 @@ function Loader.Create()
         for _, s in ipairs(StageList) do if s.id == id then stageKey = s.key break end end
         if stageKey then
             PhaseLabel.Text = SafeGetText(stageKey)
-            AddLog("SWITCHING TO " .. id:upper() .. " ENVIRONMENT...", Color3.fromRGB(0, 255, 180))
         end
     end
 
@@ -250,12 +194,10 @@ function Loader.Create()
         Percent.Text = math.floor(percent) .. "%"
         if status then
             StatusLabel.Text = status:upper()
-            AddLog(status)
         end
     end
 
     function self.Destroy()
-        AddLog("INITIALIZATION COMPLETE. READY.", Color3.new(1,1,1))
         task.wait(0.5)
         local t = TweenService:Create(Titan, TweenInfo.new(0.8, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             GroupTransparency = 1,
