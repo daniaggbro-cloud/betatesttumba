@@ -48,8 +48,19 @@ UI.CreateToggle(TabFrame, "toggle_removeshadows", "Visuals.RemoveShadows", funct
     Lighting.GlobalShadows = not state
 end)
 
--- Removed Chams (Not Implemented)
+--#region -- Custom Models
+UI.CreateSection(TabFrame, "section_visuals_custom")
 
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/gorilla_chams.lua") end)
+end)
+
+UI.CreateToggle(TabFrame, "toggle_gorilla_mode", "Visuals.GorillaMode", function(state)
+    if Mega.Features.GorillaChams and Mega.Features.GorillaChams.SetEnabled then
+        Mega.Features.GorillaChams.SetEnabled(state)
+    end
+end)
+--#endregion
 -- Restore settings on script unload/cleanup
 -- This would be connected in a main cleanup function
 -- table.insert(Mega.Objects.Connections, function()
