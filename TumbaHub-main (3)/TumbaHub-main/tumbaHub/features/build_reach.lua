@@ -61,28 +61,16 @@ local function performBuildReach()
     
     local mouseHit = Mouse.Hit.Position
     local dist = (hrp.Position - mouseHit).Magnitude
-    if dist <= 15 then return end -- Let native game handle close placement
     if dist > maxReach then return end
     
     local ray = Mouse.UnitRay
     local params = RaycastParams.new()
-    
-    local mapFolder = Services.Workspace:FindFirstChild("Map")
-    local blocksFolder = mapFolder and mapFolder:FindFirstChild("Blocks")
-    
-    if blocksFolder then
-        params.FilterDescendantsInstances = {blocksFolder}
-        params.FilterType = Enum.RaycastFilterType.Include
-    else
-        params.FilterDescendantsInstances = {char}
-        params.FilterType = Enum.RaycastFilterType.Exclude
-    end
+    params.FilterDescendantsInstances = {char}
+    params.FilterType = Enum.RaycastFilterType.Exclude
     
     local result = Services.Workspace:Raycast(ray.Origin, ray.Direction * maxReach, params)
     
     if result then
-        if result.Instance.Transparency == 1 then return end -- Ignore invisible barriers
-        
         local hitPos = result.Position
         local hitNorm = result.Normal
         local gridSize = 3
@@ -131,10 +119,9 @@ end
 table.clear(connections)
 
 local lastPlaceTime = 0
-connections.InputBegan = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+connections.BuildLoop = game:GetService("RunService").RenderStepped:Connect(function()
     if States.Player.BuildReach.Enabled then
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+        if Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
             local delayMs = States.Player.BuildReach.Delay or 150
             local delaySec = delayMs / 1000.0
             if tick() - lastPlaceTime > delaySec then
