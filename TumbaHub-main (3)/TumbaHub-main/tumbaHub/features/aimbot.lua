@@ -100,8 +100,9 @@ connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
 
     local aimbotEnabled = States.Combat.Aimbot.Enabled
     local autoShootEnabled = States.Combat.AutoShoot.Enabled
+    local aimAssistEnabled = States.AimAssist and States.AimAssist.Enabled
 
-    if aimbotEnabled or autoShootEnabled then
+    if aimbotEnabled or autoShootEnabled or aimAssistEnabled then
         local target = getClosestPlayerToCursor()
         if target and target.Character then
             Mega.Features.Aimbot.Target = target.Character:FindFirstChild("HumanoidRootPart") or target.Character:FindFirstChild("Head")
@@ -113,6 +114,18 @@ connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
     end
     
     local aimbotTarget = Mega.Features.Aimbot.Target
+    
+    -- [NEW] Manual Camera Aimbot for Free Executors (Aim Assist)
+    if aimAssistEnabled and aimbotTarget then
+        local currentCamera = Services.Workspace.CurrentCamera
+        local targetPos = aimbotTarget.Position
+        local smooth = (States.AimAssist and States.AimAssist.Smoothness) or 0.5
+        
+        local currentCFrame = currentCamera.CFrame
+        local newCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
+        
+        currentCamera.CFrame = currentCFrame:Lerp(newCFrame, smooth)
+    end
     
     if autoShootEnabled and aimbotTarget then
         local windowActive = (type(iswindowactive) == "function") and iswindowactive() or true
