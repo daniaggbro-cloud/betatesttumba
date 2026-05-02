@@ -27,6 +27,19 @@ local function GetPickaxe()
     return nil
 end
 
+local function GetBlockPosition(block)
+    if block:IsA("Model") then
+        if block.PrimaryPart then
+            return block.PrimaryPart.Position
+        else
+            return block:GetPivot().Position
+        end
+    elseif block:IsA("BasePart") then
+        return block.Position
+    end
+    return nil
+end
+
 local function GetNearestCannon()
     local character = LocalPlayer.Character
     if not character then return nil end
@@ -35,20 +48,36 @@ local function GetNearestCannon()
     if not rootPart then return nil end
     
     local map = Workspace:FindFirstChild("Map")
-    local blocks = map and map:FindFirstChild("Blocks")
-    if not blocks then return nil end
+    if not map then return nil end
     
+    -- Function to search in a specific Blocks folder
     local closestCannon = nil
-    local minDist = 20 -- Max distance to look for the cannon
+    local minDist = 20
     
-    -- Iterate through placed blocks
-    for _, block in ipairs(blocks:GetChildren()) do
-        if block.Name:lower():find("cannon") or block.Name:lower():find("davey") or block.Name:lower():find("tnt") then
-            local dist = (block.Position - rootPart.Position).Magnitude
-            if dist < minDist then
-                minDist = dist
-                closestCannon = block
+    local function SearchInFolder(blocksFolder)
+        if not blocksFolder then return end
+        for _, block in ipairs(blocksFolder:GetChildren()) do
+            if block.Name:lower():find("cannon") or block.Name:lower():find("davey") or block.Name:lower():find("tnt") then
+                local blockPos = GetBlockPosition(block)
+                if blockPos then
+                    local dist = (blockPos - rootPart.Position).Magnitude
+                    if dist < minDist then
+                        minDist = dist
+                        closestCannon = block
+                    end
+                end
             end
+        end
+    end
+    
+    -- Check main map folder (Real match)
+    SearchInFolder(map:FindFirstChild("Blocks"))
+    
+    -- Check custom worlds folder (Training range, custom match, etc.)
+    local worlds = map:FindFirstChild("Worlds")
+    if worlds then
+        for _, world in ipairs(worlds:GetChildren()) do
+            SearchInFolder(world:FindFirstChild("Blocks"))
         end
     end
     
@@ -120,16 +149,19 @@ function AutoDavey.OnLaunch()
                 end
                 
                 if damageRemote then
+                    local cannonPos = GetBlockPosition(cannon)
+                    if not cannonPos then return end
+                    
                     local args = {
                         {
                             blockRef = {
                                 blockPosition = Vector3.new(
-                                    math.round(cannon.Position.X / 3),
-                                    math.round(cannon.Position.Y / 3),
-                                    math.round(cannon.Position.Z / 3)
+                                    math.round(cannonPos.X / 3),
+                                    math.round(cannonPos.Y / 3),
+                                    math.round(cannonPos.Z / 3)
                                 )
                             },
-                            hitPosition = cannon.Position + Vector3.new(0, 0.5, 0),
+                            hitPosition = cannonPos + Vector3.new(0, 0.5, 0),
                             hitNormal = Vector3.zAxis
                         }
                     }

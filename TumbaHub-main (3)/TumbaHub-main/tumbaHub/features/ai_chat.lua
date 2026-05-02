@@ -34,7 +34,9 @@ end
 
 -- --- CONFIGURATION ---
 local API_CONFIG = {
-    URL = "https://tubmahub-server.onrender.com"
+    URL = "https://api.groq.com/openai/v1/chat/completions",
+    API_KEY = "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", -- User's Groq Key
+    MODEL = "llama-3.3-70b-versatile"
 }
 
 local PERSONA = [[
@@ -100,10 +102,13 @@ function AIChat.SendMessage(userText, successCallback, errorCallback)
                 Url = API_CONFIG.URL,
                 Method = "POST",
                 Headers = {
-                    ["Content-Type"] = "application/json"
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "Bearer " .. API_CONFIG.API_KEY
                 },
                 Body = HttpService:JSONEncode({
-                    messages = AIChat.History
+                    model = API_CONFIG.MODEL,
+                    messages = AIChat.History,
+                    temperature = 0.7
                 })
             })
         end)
@@ -123,7 +128,7 @@ function AIChat.SendMessage(userText, successCallback, errorCallback)
                 pcall(function()
                     local errData = HttpService:JSONDecode(response.Body)
                     if errData and errData.error and errData.error.message then
-                        errMsg = "⚠️ Server Error: " .. errData.error.message
+                        errMsg = "⚠️ Groq Error: " .. errData.error.message
                     end
                 end)
             end
