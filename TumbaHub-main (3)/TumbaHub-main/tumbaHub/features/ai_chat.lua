@@ -34,10 +34,9 @@ end
 
 -- --- CONFIGURATION ---
 local API_CONFIG = {
-    URL = "https://api.groq.com/openai/v1/chat/completions",
-    API_KEY = "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", -- User's Groq Key
-    MODEL = "llama-3.3-70b-versatile"
+    URL = "https://tubmahub-server.onrender.com/api/ai_chat_proxy"
 }
+
 
 local PERSONA = [[
 Ты — Tumba AI Версия 2.0, ИИ-ассистент TumbaHub Premium, созданный для помощи пользователям. 
@@ -102,13 +101,10 @@ function AIChat.SendMessage(userText, successCallback, errorCallback)
                 Url = API_CONFIG.URL,
                 Method = "POST",
                 Headers = {
-                    ["Content-Type"] = "application/json",
-                    ["Authorization"] = "Bearer " .. API_CONFIG.API_KEY
+                    ["Content-Type"] = "application/json"
                 },
                 Body = HttpService:JSONEncode({
-                    model = API_CONFIG.MODEL,
-                    messages = AIChat.History,
-                    temperature = 0.7
+                    messages = AIChat.History
                 })
             })
         end)
@@ -128,7 +124,7 @@ function AIChat.SendMessage(userText, successCallback, errorCallback)
                 pcall(function()
                     local errData = HttpService:JSONDecode(response.Body)
                     if errData and errData.error and errData.error.message then
-                        errMsg = "⚠️ Groq Error: " .. errData.error.message
+                        errMsg = "⚠️ Server Error: " .. errData.error.message
                     end
                 end)
             end
