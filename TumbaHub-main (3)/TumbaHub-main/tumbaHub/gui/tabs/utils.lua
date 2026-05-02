@@ -54,17 +54,6 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", f
         if Mega.Features.KitBan and Mega.Features.KitBan.ExecuteBan then
             Mega.Features.KitBan.ExecuteBan()
         end
-        
-        task.spawn(function()
-            task.wait(0.2)
-            Mega.States.Misc.KitBan.Enabled = false
-            if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_kit_ban"] then
-                Mega.Objects.Toggles["toggle_kit_ban"](false)
-            end
-            notifyFeature("toggle_kit_ban", false)
-        end)
-    else
-        notifyFeature("toggle_kit_ban", false)
     end
 end, {
     kitBanContainer
