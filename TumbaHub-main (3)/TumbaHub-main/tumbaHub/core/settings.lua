@@ -191,6 +191,11 @@ Mega.States = {
             AnimationSpeed = 1,
             FOVAngle = 90,
             MobileBtn = false
+        },
+        AutoHeal = {
+            Enabled = false,
+            Threshold = 35,
+            Delay = 500
         }
     },
     Misc = {

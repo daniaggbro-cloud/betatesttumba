@@ -119,6 +119,10 @@ Mega.Localization = {
         ["toggle_bednuke"] = { ru = "Bed Nuke", en = "Bed Nuke", es = "Bed Nuke", pt = "Bed Nuke", ko = "Bed Nuke", ja = "Bed Nuke", uk = "Bed Nuke" },
         ["slider_bednuke_range"] = { ru = "Макс. дистанция", en = "Max Range", es = "Rango Máximo", pt = "Alcance Máximo", ko = "최대 범위", ja = "最大範囲", uk = "Макс. дистанція" },
         ["slider_bednuke_packets"] = { ru = "Пакетов за тик", en = "Packets per tick", es = "Paquetes por tick", pt = "Pacotes por tick", ko = "틱당 패킷", ja = "ティックごとのパケット", uk = "Пакетів за тік" },
+        ["section_combat_autoheal"] = { ru = "❤️ АВТО-ХИЛ", en = "❤️ AUTO-HEAL", es = "❤️ AUTO-CURACIÓN", pt = "❤️ AUTO-CURA", ko = "❤️ 자동 힐", ja = "❤️ 自動回復", uk = "❤️ АВТО-ЗЦІЛЕННЯ" },
+        ["toggle_autoheal"] = { ru = "Включить Авто-хил", en = "Enable Auto-Heal", es = "Habilitar Auto-Curación", pt = "Ativar Auto-Cura", ko = "자동 힐 활성화", ja = "自動回復を有効にする", uk = "Увімкнути Авто-зцілення" },
+        ["slider_autoheal_threshold"] = { ru = "Порог здоровья (HP)", en = "Health Threshold (HP)", es = "Umbral de Salud (HP)", pt = "Limite de Saúde (HP)", ko = "체력 임계값 (HP)", ja = "体力しきい値 (HP)", uk = "Поріг здоров'я (HP)" },
+        ["slider_autoheal_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
 
         ["toggle_killaura_use_fov"] = { ru = "👁️ Использовать FOV", en = "👁️ Use FOV", es = "👁️ Usar FOV", pt = "👁️ Usar FOV", ko = "👁️ FOV 사용", ja = "👁️ FOV使用", uk = "👁️ Використовувати FOV" },
         ["toggle_killaura_only_on_click"] = { ru = "⚔️ Только при ударе (Trigger)", en = "⚔️ Only on Click", es = "⚔️ Solo al hacer clic", pt = "⚔️ Apenas ao clicar", ko = "⚔️ 클릭 시에만 작동", ja = "⚔️ クリック時のみ", uk = "⚔️ Тільки при ударі" },

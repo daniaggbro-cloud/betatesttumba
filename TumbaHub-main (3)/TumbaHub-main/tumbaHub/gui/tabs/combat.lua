@@ -143,4 +143,26 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled"
 end, bedNukeSettings)
 --#endregion
 
+--#region -- Auto Heal
+UI.CreateSection(TabFrame, "section_combat_autoheal")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/auto_heal.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_autoheal", "Combat.AutoHeal.Enabled", function(state)
+    Mega.States.Combat.AutoHeal.Enabled = state
+    if Mega.Features.AutoHeal and Mega.Features.AutoHeal.SetEnabled then
+        Mega.Features.AutoHeal.SetEnabled(state)
+    end
+end, {
+    UI.CreateSlider(nil, "slider_autoheal_threshold", "Combat.AutoHeal.Threshold", 1, 100, function(val)
+        Mega.States.Combat.AutoHeal.Threshold = val
+    end),
+    UI.CreateSlider(nil, "slider_autoheal_delay", "Combat.AutoHeal.Delay", 0, 5000, function(val)
+        Mega.States.Combat.AutoHeal.Delay = val
+    end)
+})
+--#endregion
+
 -- Removed Auto Buy Section (Not Implemented)
