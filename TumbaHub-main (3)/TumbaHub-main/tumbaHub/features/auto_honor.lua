@@ -13,75 +13,93 @@ local States = Mega.States
 
 if not States.Misc then States.Misc = {} end
 if not States.Misc.AutoHonor then
-    States.Misc.AutoHonor = { Enabled = false, Target = "Teammate" } -- "Teammate" or "Enemy"
+    States.Misc.AutoHonor = { Enabled = false }
 end
 
-local gameOverConnection
+local teamChangeConnection
+local lastPlayingTeam = nil
 
-local function giveHonor()
+local function giveHonor(teammate, enemy)
+    task.spawn(function()
+        pcall(function()
+            local remote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 5)
+            if remote then
+                remote = remote:WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("TryGiveMatchHonorPoints", 5)
+            end
+            
+            if remote then
+                if teammate then
+                    remote:InvokeServer({ toPlayerId = teammate.UserId })
+                    print("[TumbaHub] Auto Honor given to teammate: " .. teammate.Name)
+                    task.wait(0.5)
+                end
+                if enemy then
+                    remote:InvokeServer({ toPlayerId = enemy.UserId })
+                    print("[TumbaHub] Auto Honor given to enemy: " .. enemy.Name)
+                end
+            end
+        end)
+    end)
+end
+
+local function triggerAutoHonor()
     local players = Services.Players:GetPlayers()
-    local validTargets = {}
+    local teammates = {}
+    local enemies = {}
     
     for _, p in ipairs(players) do
         if p ~= LocalPlayer then
-            local isTeammate = (p.Team == LocalPlayer.Team)
-            if States.Misc.AutoHonor.Target == "Teammate" and isTeammate then
-                table.insert(validTargets, p)
-            elseif States.Misc.AutoHonor.Target == "Enemy" and not isTeammate then
-                table.insert(validTargets, p)
-            end
-        end
-    end
-
-    -- Если подходящих целей нет (например, тиммейтов не осталось), добавляем любых других доступных игроков
-    if #validTargets == 0 then
-        for _, p in ipairs(players) do
-            if p ~= LocalPlayer then
-                table.insert(validTargets, p)
-            end
-        end
-    end
-
-    if #validTargets > 0 then
-        local targetPlayer = validTargets[math.random(1, #validTargets)]
-        task.spawn(function()
-            pcall(function()
-                local remote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 5):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("TryGiveMatchHonorPoints")
-                if remote then
-                    remote:InvokeServer({
-                        toPlayerId = targetPlayer.UserId
-                    })
-                    print("[TumbaHub] Auto Honor given to " .. targetPlayer.Name)
+            if p.Team then
+                if lastPlayingTeam and p.Team == lastPlayingTeam then
+                    table.insert(teammates, p)
+                elseif p.Team.Name ~= "Spectators" then
+                    table.insert(enemies, p)
                 end
-            end)
-        end)
+            end
+        end
     end
+
+    local selectedTeammate = #teammates > 0 and teammates[math.random(1, #teammates)] or nil
+    local selectedEnemy = #enemies > 0 and enemies[math.random(1, #enemies)] or nil
+    
+    -- Если подходящих целей нет (например, все ливнули), пытаемся выдать хоть кому-то
+    if not selectedEnemy then
+        for _, p in ipairs(players) do
+            if p ~= LocalPlayer and p ~= selectedTeammate then
+                selectedEnemy = p
+                break
+            end
+        end
+    end
+
+    giveHonor(selectedTeammate, selectedEnemy)
 end
 
 function Mega.Features.AutoHonor.SetEnabled(state)
     States.Misc.AutoHonor.Enabled = state
     
     if state then
-        if gameOverConnection then gameOverConnection:Disconnect() end
+        if teamChangeConnection then teamChangeConnection:Disconnect() end
         
-        task.spawn(function()
-            local networking = Services.ReplicatedStorage:WaitForChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events", 10)
-            if networking then
-                local gameOver = networking:WaitForChild("gameOver", 5)
-                if gameOver then
-                    gameOverConnection = gameOver.OnClientEvent:Connect(function()
-                        if not States.Misc.AutoHonor.Enabled then return end
-                        -- Даем время на загрузку финального экрана (3 секунды)
-                        task.wait(3)
-                        giveHonor()
-                    end)
-                end
+        if LocalPlayer.Team and LocalPlayer.Team.Name ~= "Spectators" then
+            lastPlayingTeam = LocalPlayer.Team
+        end
+        
+        teamChangeConnection = LocalPlayer:GetPropertyChangedSignal("Team"):Connect(function()
+            if not States.Misc.AutoHonor.Enabled or not LocalPlayer.Team then return end
+            
+            if LocalPlayer.Team.Name ~= "Spectators" then
+                lastPlayingTeam = LocalPlayer.Team
+            elseif LocalPlayer.Team.Name == "Spectators" and lastPlayingTeam ~= nil then
+                task.wait(2) -- Даем время на загрузку финального экрана
+                triggerAutoHonor()
+                lastPlayingTeam = nil
             end
         end)
     else
-        if gameOverConnection then
-            gameOverConnection:Disconnect()
-            gameOverConnection = nil
+        if teamChangeConnection then
+            teamChangeConnection:Disconnect()
+            teamChangeConnection = nil
         end
     end
 end
