@@ -40,11 +40,6 @@ kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
 kitBanContainer.BackgroundTransparency = 1
 Mega.Objects.KitBanContainer = kitBanContainer
 
--- Initialize/Update Kit Ban list if the feature is loaded
-if Mega.Features.KitBan and Mega.Features.KitBan.UpdateUI then
-    Mega.Features.KitBan.UpdateUI()
-end
-
 if not Mega.States.Misc.KitBan then Mega.States.Misc.KitBan = {} end
 Mega.States.Misc.KitBan.Enabled = false
 
@@ -54,6 +49,17 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_ban", "Misc.KitBan.Enabled", f
         if Mega.Features.KitBan and Mega.Features.KitBan.ExecuteBan then
             Mega.Features.KitBan.ExecuteBan()
         end
+        
+        task.spawn(function()
+            task.wait(0.2)
+            Mega.States.Misc.KitBan.Enabled = false
+            if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_kit_ban"] then
+                Mega.Objects.Toggles["toggle_kit_ban"](false)
+            end
+            notifyFeature("toggle_kit_ban", false)
+        end)
+    else
+        notifyFeature("toggle_kit_ban", false)
     end
 end, {
     kitBanContainer
@@ -80,7 +86,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_auto_honor", "Misc.AutoHonor.Enabl
         Mega.ShowNotification((Mega.GetText("toggle_auto_honor") or "Auto Honor") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
     end
 end, {
-    UI.CreateDropdown(nil, "dropdown_auto_honor_target", "Misc.AutoHonor.Target", {"Teammate", "Enemy"}, function(val) Mega.States.Misc.AutoHonor.Target = val end)
+    UI.CreateDropdown(nil, "dropdown_auto_honor_target", "Misc.AutoHonor.Target", {"Teammate", "Enemy", "Teammate and Enemy"}, function(val) Mega.States.Misc.AutoHonor.Target = val end)
 })
 --#endregion
 
