@@ -22,7 +22,7 @@ Mega = {
     LoadedModules = {}
 }
 
-local baseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
+local repositoryBaseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
 
 function Mega.GetImageFromURL(url, fileName)
     local folderPath = "tumbaHub/icons_v2/"
@@ -85,7 +85,7 @@ function Mega.LoadModule(path)
 
     -- 2. Если локального файла нет, качаем с GitHub
     if not success or not content then
-        local url = baseURL .. path
+        local url = repositoryBaseURL .. path
         success, content = pcall(function() return game:HttpGet(url) end)
         -- Защита от ошибок бесплатных экзекьюторов (timeout, 404, пустые файлы)
         if success and (content:find("404: Not Found") or content:lower():match("timeout") or #content < 10) then 
@@ -129,12 +129,12 @@ if Mega.Loader then
     loaderUI = Mega.Loader.Create()
 end
 
-local function InitPhase(id, list)
+local function InitializePhase(phaseId, moduleList)
     if loaderUI and loaderUI.SetStage then 
-        loaderUI.SetStage(id) 
+        loaderUI.SetStage(phaseId) 
     end
-    local count = #list
-    for i, path in ipairs(list) do
+    local count = #moduleList
+    for i, path in ipairs(moduleList) do
         if loaderUI and loaderUI.Update then
             local overallPercent = (i / count) * 100
             -- Менее детализированный текст загрузки
@@ -144,7 +144,7 @@ local function InitPhase(id, list)
                 features = "Injecting Features...",
                 ui = "Building Interface..."
             }
-            local loadingText = phaseNames[id] or ("Loading " .. string.upper(id) .. "...")
+            local loadingText = phaseNames[phaseId] or ("Loading " .. string.upper(phaseId) .. "...")
             loaderUI.Update(overallPercent, loadingText)
         end
         Mega.LoadModule(path)
@@ -154,12 +154,12 @@ local function InitPhase(id, list)
 end
 
 -- PHASE 1: NETWORK HANDSHAKE
-InitPhase("network", {
+InitializePhase("network", {
     "core/metadata.lua"
 })
 
 -- PHASE 2: BUILDING CORE ENVIRONMENT
-InitPhase("core", {
+InitializePhase("core", {
     "core/dumper.lua",
     "core/settings.lua",
     "core/localization.lua",
@@ -167,7 +167,7 @@ InitPhase("core", {
 })
 
 -- PHASE 3: SYNCING SYSTEM FEATURES
-InitPhase("features", {
+InitializePhase("features", {
     "library/notifications.lua",
     "library/ui_builder.lua",
     "core/mobile_hud.lua",
@@ -189,7 +189,7 @@ InitPhase("features", {
 })
 
 -- PHASE 4: FINALIZING INTERFACE
-InitPhase("ui", {
+InitializePhase("ui", {
     "gui/main_window.lua"
 })
 

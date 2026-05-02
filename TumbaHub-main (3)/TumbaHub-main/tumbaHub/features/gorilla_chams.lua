@@ -31,7 +31,7 @@ end
 local MESH_ID = "rbxassetid://430330296"
 local TEXTURE_ID = "rbxassetid://430330316"
 
-local function ApplyGorilla(character)
+local function ApplyGorillaModel(character)
     if not character then return end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return end
@@ -78,7 +78,7 @@ local function ApplyGorilla(character)
     gorillaPart.Parent = character
 end
 
-local function RemoveGorilla(character)
+local function RemoveGorillaModel(character)
     if not character then return end
     
     local gorillaPart = character:FindFirstChild("GorillaChamsPart")
@@ -95,24 +95,24 @@ local function RemoveGorilla(character)
     end
 end
 
-local function ProcessPlayers()
-    local timeSec = tick()
+local function UpdateAllPlayersGorilla()
+    local currentTime = tick()
     for _, player in pairs(Services.Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             if States.Visuals.GorillaMode then
-                ApplyGorilla(player.Character)
+                ApplyGorillaModel(player.Character)
                 
                 -- Анимация
-                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
                 local humanoid = player.Character:FindFirstChild("Humanoid")
                 local gorillaPart = player.Character:FindFirstChild("GorillaChamsPart")
-                if root and humanoid and gorillaPart then
+                if rootPart and humanoid and gorillaPart then
                     local weld = gorillaPart:FindFirstChild("GorillaWeld")
                     if weld then
-                        local velocity = root.AssemblyLinearVelocity
-                        local horizSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-                        local vertSpeed = velocity.Y
-                        local turnSpeed = root.AssemblyAngularVelocity.Y
+                        local velocity = rootPart.AssemblyLinearVelocity
+                        local horizontalSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+                        local verticalSpeed = velocity.Y
+                        local turnSpeed = rootPart.AssemblyAngularVelocity.Y
                         
                         -- Базовое смещение (немного ниже, чтобы ноги стояли на земле при новом размере)
                         local baseC0 = CFrame.new(0, -1.2, 0)
@@ -120,30 +120,30 @@ local function ProcessPlayers()
                         if humanoid.FloorMaterial == Enum.Material.Air then
                             -- Анимация в воздухе (прыжок / падение)
                             -- При падении наклоняемся вперед, при взлете назад
-                            local fallTiltX = math.clamp(-vertSpeed / 50, -0.6, 0.6)
+                            local fallTiltX = math.clamp(-verticalSpeed / 50, -0.6, 0.6)
                             weld.C0 = baseC0 * CFrame.Angles(fallTiltX, 0, 0)
-                        elseif horizSpeed > 1 then
+                        elseif horizontalSpeed > 1 then
                             -- Детальная анимация бега
-                            local speedMult = math.clamp(horizSpeed / 16, 0.5, 2.5)
-                            local cycle = timeSec * 15 * speedMult
+                            local speedMultiplier = math.clamp(horizontalSpeed / 16, 0.5, 2.5)
+                            local animationCycle = currentTime * 15 * speedMultiplier
                             
-                            local bounceY = math.abs(math.sin(cycle)) * 0.6
-                            local swayX = math.sin(cycle / 2) * 0.3 -- Переваливание влево-вправо
-                            local leanForward = -0.3 * speedMult -- Наклон тела вперед при разгоне
+                            local bounceY = math.abs(math.sin(animationCycle)) * 0.6
+                            local swayX = math.sin(animationCycle / 2) * 0.3 -- Переваливание влево-вправо
+                            local leanForward = -0.3 * speedMultiplier -- Наклон тела вперед при разгоне
                             local turnLean = math.clamp(-turnSpeed * 0.1, -0.5, 0.5) -- Наклон в сторону при повороте
                             
                             weld.C0 = baseC0 * CFrame.new(swayX * 0.5, bounceY, 0) * CFrame.Angles(leanForward, swayX, turnLean)
                         else
                             -- Детальная анимация простоя (Idle)
-                            local breathe = math.sin(timeSec * 3) * 0.05
-                            local lookAround = math.sin(timeSec * 0.5) * 0.15 -- Плавное вращение туловища
+                            local breatheCycle = math.sin(currentTime * 3) * 0.05
+                            local lookAroundCycle = math.sin(currentTime * 0.5) * 0.15 -- Плавное вращение туловища
                             
-                            weld.C0 = baseC0 * CFrame.new(0, breathe, 0) * CFrame.Angles(0, lookAround, 0)
+                            weld.C0 = baseC0 * CFrame.new(0, breatheCycle, 0) * CFrame.Angles(0, lookAroundCycle, 0)
                         end
                     end
                 end
             else
-                RemoveGorilla(player.Character)
+                RemoveGorillaModel(player.Character)
             end
         end
     end
@@ -157,13 +157,13 @@ function Mega.Features.GorillaChams.SetEnabled(state)
         -- Обновляем с высокой частотой для плавной анимации
         connections.GorillaLoop = Services.RunService.Heartbeat:Connect(function()
             if not States.Visuals.GorillaMode then return end
-            ProcessPlayers()
+            UpdateAllPlayersGorilla()
         end)
     else
         -- Возвращаем всё как было
         for _, player in pairs(Services.Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
-                RemoveGorilla(player.Character)
+                RemoveGorillaModel(player.Character)
             end
         end
     end

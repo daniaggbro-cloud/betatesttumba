@@ -11,7 +11,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local oldNamecall
 
-local function GetPickaxe()
+local function FindPlayerPickaxe()
     local inventoryFolder = ReplicatedStorage:FindFirstChild("Inventories")
     if not inventoryFolder then return nil end
 
@@ -103,7 +103,7 @@ function AutoDavey.SetEnabled(state)
             if not checkcaller() and (method == "FireServer" or method == "InvokeServer") then
                 -- Check if this is the cannon launch remote
                 if self.Name == "LaunchSelfFromCannon" or self.Name == "CannonLaunch" or self.Name == "davey_launch" then
-                    task.spawn(AutoDavey.OnLaunch)
+                    task.spawn(AutoDavey.HandleCannonLaunch)
                 end
             end
             
@@ -112,7 +112,7 @@ function AutoDavey.SetEnabled(state)
     end
 end
 
-function AutoDavey.OnLaunch()
+function AutoDavey.HandleCannonLaunch()
     local settings = Mega.States.Combat.AutoDavey
     if not settings or not settings.Enabled then return end
     
@@ -131,8 +131,8 @@ function AutoDavey.OnLaunch()
     
     -- 2. Break on impact
     if settings.BreakOnImpact then
-        local cannon = GetNearestCannon()
-        if cannon then
+        local targetCannon = GetNearestCannon()
+        if targetCannon then
             pcall(function()
                 local damageRemote = Mega.GetRemote("DamageBlock") or Mega.GetRemote("MinerDig")
                 if not damageRemote then
@@ -149,10 +149,10 @@ function AutoDavey.OnLaunch()
                 end
                 
                 if damageRemote then
-                    local cannonPos = GetBlockPosition(cannon)
+                    local cannonPos = GetBlockPosition(targetCannon)
                     if not cannonPos then return end
                     
-                    local args = {
+                    local blockArgs = {
                         {
                             blockRef = {
                                 blockPosition = Vector3.new(
@@ -168,10 +168,10 @@ function AutoDavey.OnLaunch()
                     -- Fire multiple times to ensure it breaks
                     for i = 1, 5 do
                         if damageRemote:IsA("RemoteEvent") then
-                            damageRemote:FireServer(unpack(args))
+                            damageRemote:FireServer(unpack(blockArgs))
                         elseif damageRemote:IsA("RemoteFunction") then
                             -- InvokeServer yields, so we spawn it to not block the loop
-                            task.spawn(function() damageRemote:InvokeServer(unpack(args)) end)
+                            task.spawn(function() damageRemote:InvokeServer(unpack(blockArgs)) end)
                         end
                     end
                 end
@@ -181,21 +181,21 @@ function AutoDavey.OnLaunch()
     
     -- 3. Legit switch (Switch to Pickaxe)
     if settings.LegitSwitch then
-        local pickaxe = GetPickaxe()
+        local pickaxe = FindPlayerPickaxe()
         if pickaxe then
             pcall(function()
                 local equipRemote = Mega.GetRemote("SetInvItem") or Mega.GetRemote("EquipItem")
                 
                 if equipRemote then
-                    local args = {
+                    local equipArgs = {
                         {
                             hand = pickaxe
                         }
                     }
                     if equipRemote:IsA("RemoteEvent") then
-                        equipRemote:FireServer(unpack(args))
+                        equipRemote:FireServer(unpack(equipArgs))
                     elseif equipRemote:IsA("RemoteFunction") then
-                        equipRemote:InvokeServer(unpack(args))
+                        equipRemote:InvokeServer(unpack(equipArgs))
                     end
                 end
             end)

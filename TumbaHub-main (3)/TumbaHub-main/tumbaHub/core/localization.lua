@@ -127,8 +127,23 @@ Mega.Localization = {
         ["section_combat_autodavey"] = { ru = "🏴‍☠️ AUTO DAVEY", en = "🏴‍☠️ AUTO DAVEY", es = "🏴‍☠️ AUTO DAVEY", pt = "🏴‍☠️ AUTO DAVEY", ko = "🏴‍☠️ AUTO DAVEY", ja = "🏴‍☠️ AUTO DAVEY", uk = "🏴‍☠️ AUTO DAVEY" },
         ["toggle_autodavey"] = { ru = "Auto Davey", en = "Auto Davey", es = "Auto Davey", pt = "Auto Davey", ko = "Auto Davey", ja = "Auto Davey", uk = "Auto Davey" },
         ["toggle_autodavey_jump"] = { ru = "Прыжок при ударе", en = "Jump on impact", es = "Saltar al impacto", pt = "Pular no impacto", ko = "타격 시 점프", ja = "インパクト時にジャンプ", uk = "Стрибок при ударі" },
-        ["toggle_autodavey_break"] = { ru = "Ломать ТНТ при ударе", en = "Break on impact", es = "Romper al impacto", pt = "Quebrar no impacto", ko = "타격 시 파괴", ja = "インパクト時に破壊", uk = "Ламати ТНТ при ударі" },
-        ["toggle_autodavey_legitswitch"] = { ru = "Легит свитч", en = "Legit switch", es = "Cambio legítimo", pt = "Troca legítima", ko = "합법적인 전환", ja = "合法的なスイッチ", uk = "Легіт світч" },
+        ["toggle_autodavey_break"] = { ru = "Ломать пушку при ударе", en = "Break on impact", es = "Romper al impacto", pt = "Quebrar no impacto", ko = "타격 시 파괴", ja = "インパクト時に破壊", uk = "Ламати пушку при ударі" },
+        ["toggle_autodavey_legitswitch"] = { ru = "Легитный свитч (Кирка)", en = "Legit switch (Pickaxe)", es = "Cambio legítimo", pt = "Troca legítima", ko = "합법적인 전환", ja = "合法的なスイッチ", uk = "Легіт світч (Кирка)" },
+
+        ["section_visuals_custom"] = { ru = "🎭 КАСТОМНЫЕ МОДЕЛИ", en = "🎭 CUSTOM MODELS", uk = "🎭 КАСТОМНІ МОДЕЛІ" },
+        ["toggle_gorilla_mode"] = { ru = "Режим Гориллы (3D)", en = "Gorilla Mode (3D)", uk = "Режим Горили (3D)" },
+        ["toggle_kit_ban"] = { ru = "Кит-Бан (Выдать бан)", en = "Kit Ban (Execute)", uk = "Кіт-Бан (Видати бан)" },
+        ["search_kit_ban"] = { ru = "🔍 Поиск кита...", en = "🔍 Search Kit...", uk = "🔍 Пошук кіта..." },
+
+        ["toggle_high_jump"] = { ru = "Высокий прыжок (HighJump)", en = "High Jump", uk = "Високий стрибок (HighJump)" },
+        ["dropdown_high_jump_mode"] = { ru = "Метод прыжка", en = "Jump Mode", uk = "Метод стрибка" },
+        ["slider_high_jump_power"] = { ru = "Сила прыжка", en = "Jump Power", uk = "Сила стрибка" },
+        ["toggle_high_jump_autodisable"] = { ru = "Авто-выключение", en = "Auto Disable", uk = "Авто-вимкнення" },
+
+        ["toggle_long_jump"] = { ru = "Длинный прыжок (LongJump)", en = "Long Jump", uk = "Довгий стрибок (LongJump)" },
+        ["dropdown_long_jump_key"] = { ru = "Клавиша активации", en = "Activation Key", uk = "Клавіша активації" },
+        ["slider_long_jump_speed"] = { ru = "Скорость прыжка", en = "Jump Speed", uk = "Швидкість стрибка" },
+        ["toggle_long_jump_camera"] = { ru = "Следование камеры", en = "Camera Follow", uk = "Слідування камери" },
 
         ["toggle_killaura_use_fov"] = { ru = "👁️ Использовать FOV", en = "👁️ Use FOV", es = "👁️ Usar FOV", pt = "👁️ Usar FOV", ko = "👁️ FOV 사용", ja = "👁️ FOV使用", uk = "👁️ Використовувати FOV" },
         ["toggle_killaura_only_on_click"] = { ru = "⚔️ Только при ударе (Trigger)", en = "⚔️ Only on Click", es = "⚔️ Solo al hacer clic", pt = "⚔️ Apenas ao clicar", ko = "⚔️ 클릭 시에만 작동", ja = "⚔️ クリック時のみ", uk = "⚔️ Тільки при ударі" },
