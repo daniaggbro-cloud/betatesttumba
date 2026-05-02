@@ -106,6 +106,18 @@ function AutoDavey.OnLaunch()
         if cannon then
             pcall(function()
                 local damageRemote = Mega.GetRemote("DamageBlock") or Mega.GetRemote("MinerDig")
+                if not damageRemote then
+                    damageRemote = ReplicatedStorage:FindFirstChild("rbxts_include")
+                        and ReplicatedStorage.rbxts_include:FindFirstChild("node_modules")
+                        and ReplicatedStorage.rbxts_include.node_modules:FindFirstChild("@easy-games")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]:FindFirstChild("block-engine")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["block-engine"]:FindFirstChild("node_modules")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["block-engine"].node_modules:FindFirstChild("@rbxts")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["block-engine"].node_modules["@rbxts"]:FindFirstChild("net")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["block-engine"].node_modules["@rbxts"].net:FindFirstChild("out")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["block-engine"].node_modules["@rbxts"].net.out:FindFirstChild("_NetManaged")
+                        and ReplicatedStorage.rbxts_include.node_modules["@easy-games"]["block-engine"].node_modules["@rbxts"].net.out._NetManaged:FindFirstChild("DamageBlock")
+                end
                 
                 if damageRemote then
                     local args = {
@@ -118,13 +130,17 @@ function AutoDavey.OnLaunch()
                                 )
                             },
                             hitPosition = cannon.Position + Vector3.new(0, 0.5, 0),
-                            hitNormal = Vector3.new(0, 1, 0)
+                            hitNormal = Vector3.zAxis
                         }
                     }
-                    if damageRemote:IsA("RemoteEvent") then
-                        damageRemote:FireServer(unpack(args))
-                    elseif damageRemote:IsA("RemoteFunction") then
-                        damageRemote:InvokeServer(unpack(args))
+                    -- Fire multiple times to ensure it breaks
+                    for i = 1, 5 do
+                        if damageRemote:IsA("RemoteEvent") then
+                            damageRemote:FireServer(unpack(args))
+                        elseif damageRemote:IsA("RemoteFunction") then
+                            -- InvokeServer yields, so we spawn it to not block the loop
+                            task.spawn(function() damageRemote:InvokeServer(unpack(args)) end)
+                        end
                     end
                 end
             end)
