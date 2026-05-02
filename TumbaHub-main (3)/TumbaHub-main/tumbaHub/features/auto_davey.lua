@@ -105,9 +105,7 @@ function AutoDavey.OnLaunch()
         local cannon = GetNearestCannon()
         if cannon then
             pcall(function()
-                -- Getting the exact DamageBlock remote
-                local netManaged = ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-                local damageRemote = netManaged:FindFirstChild("DamageBlock") or netManaged:FindFirstChild("MinerDig")
+                local damageRemote = Mega.GetRemote("DamageBlock") or Mega.GetRemote("MinerDig")
                 
                 if damageRemote then
                     local args = {
@@ -138,8 +136,7 @@ function AutoDavey.OnLaunch()
         local pickaxe = GetPickaxe()
         if pickaxe then
             pcall(function()
-                local netManaged = ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-                local equipRemote = netManaged:FindFirstChild("SetInvItem")
+                local equipRemote = Mega.GetRemote("SetInvItem") or Mega.GetRemote("EquipItem")
                 
                 if equipRemote then
                     local args = {
