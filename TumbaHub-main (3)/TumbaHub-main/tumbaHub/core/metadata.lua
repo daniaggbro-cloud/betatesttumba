@@ -56,8 +56,12 @@ function MetadataManager.Init()
     end
 end
 
+local remoteCache = {}
+
 -- Function to get a remote by internal name
 function Mega.GetRemote(name)
+    if remoteCache[name] then return remoteCache[name] end
+
     local actualName = name
     
     -- Check mapping in metadata
@@ -86,12 +90,17 @@ function Mega.GetRemote(name)
     if netManaged then
         local remote = netManaged:FindFirstChild(actualName)
         if remote then
+            remoteCache[name] = remote
             return remote
         end
     end
     
     -- Fallback: Search the whole ReplicatedStorage (slower)
-    return game:GetService("ReplicatedStorage"):FindFirstChild(actualName, true)
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild(actualName, true)
+    if remote then
+        remoteCache[name] = remote
+    end
+    return remote
 end
 
 -- Initialize immediately if module is loaded

@@ -68,20 +68,22 @@ local function GetHealingItem()
     return nil
 end
 
+local cachedConsumeRemote = nil
 local function ConsumeItem(item)
-    task.spawn(function()
+    if not cachedConsumeRemote then
+        cachedConsumeRemote = Mega.GetRemote("ConsumeItem")
+    end
+    
+    if cachedConsumeRemote then
         pcall(function()
-            local netManaged = ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-            local consumeEvent = netManaged:WaitForChild("ConsumeItem")
-            
-            local args = {
-                {
-                    item = item
-                }
-            }
-            consumeEvent:InvokeServer(unpack(args))
+            local args = { { item = item } }
+            if cachedConsumeRemote:IsA("RemoteEvent") then
+                cachedConsumeRemote:FireServer(unpack(args))
+            elseif cachedConsumeRemote:IsA("RemoteFunction") then
+                task.spawn(function() cachedConsumeRemote:InvokeServer(unpack(args)) end)
+            end
         end)
-    end)
+    end
 end
 
 function AutoHeal.OnHeartbeat()
