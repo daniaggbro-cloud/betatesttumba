@@ -60,16 +60,18 @@ local function GetHealingItem()
 end
 
 local function ConsumeItem(item)
-    pcall(function()
-        local netManaged = ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-        local consumeEvent = netManaged:WaitForChild("ConsumeItem")
-        
-        local args = {
-            {
-                item = item
+    task.spawn(function()
+        pcall(function()
+            local netManaged = ReplicatedStorage:WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
+            local consumeEvent = netManaged:WaitForChild("ConsumeItem")
+            
+            local args = {
+                {
+                    item = item
+                }
             }
-        }
-        consumeEvent:InvokeServer(unpack(args))
+            consumeEvent:InvokeServer(unpack(args))
+        end)
     end)
 end
 
@@ -90,8 +92,8 @@ function AutoHeal.OnHeartbeat()
         if currentTick - lastHealTick >= (settings.Delay / 1000) then
             local itemToConsume = GetHealingItem()
             if itemToConsume then
+                lastHealTick = tick() -- Update immediately to prevent duplicate fires before the remote yields
                 ConsumeItem(itemToConsume)
-                lastHealTick = tick()
             end
         end
     end
