@@ -113,7 +113,11 @@ function AutoDavey.OnLaunch()
                     local args = {
                         {
                             blockRef = {
-                                blockPosition = cannon.Position -- Using the cannon's exact grid position
+                                blockPosition = Vector3.new(
+                                    math.round(cannon.Position.X / 3),
+                                    math.round(cannon.Position.Y / 3),
+                                    math.round(cannon.Position.Z / 3)
+                                )
                             },
                             hitPosition = cannon.Position + Vector3.new(0, 0.5, 0),
                             hitNormal = Vector3.new(0, 1, 0)
@@ -140,7 +144,7 @@ function AutoDavey.OnLaunch()
                 if equipRemote then
                     local args = {
                         {
-                            item = pickaxe
+                            hand = pickaxe
                         }
                     }
                     if equipRemote:IsA("RemoteEvent") then
