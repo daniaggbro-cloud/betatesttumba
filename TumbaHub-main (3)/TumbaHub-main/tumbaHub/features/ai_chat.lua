@@ -1,6 +1,6 @@
 -- features/ai_chat.lua
 -- Ported AI Logic for TumbaHub Premium
--- Refactored for Titan System v5.1
+-- CREATED BY GOODMINETIK & BACON
 
 local Features = Mega.Features
 local AIChat = {
@@ -22,6 +22,7 @@ local function httpRequest(options)
             Body = options.Body
         })
     else
+        -- Fallback to standard HttpService (only works if enabled in game)
         return HttpService:RequestAsync({
             Url = options.Url,
             Method = options.Method,
@@ -33,7 +34,9 @@ end
 
 -- --- CONFIGURATION ---
 local API_CONFIG = {
-    URL = "https://tubmahub-server.onrender.com/api/ai_chat_proxy"
+    URL = "https://api.groq.com/openai/v1/chat/completions",
+    API_KEY = "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", -- User's Groq Key
+    MODEL = "llama-3.3-70b-versatile"
 }
 
 local PERSONA = [[
@@ -41,60 +44,43 @@ local PERSONA = [[
 
 --- ТВОЙ ХАРАКТЕР (CHARACTER) ---
 - Ты — веселый и позитивный эксперт. Помогаешь юзерам быстро и по делу.
-- Твои создатели: **Goodminetik (GG)**, **Bacon** и **@kreml1nAgent**. 
-- Если юзер просит контакты, дай Дискорд: **https://discord.gg/G7DYpgsdSE**
-- Если юзер жалуется на проигрыши, отвечай в токсично-смешном геймерском стиле (советуй купить кресло, нажать Alt+F4 или играть в Adopt Me).
+- Ты объясняешь сложные вещи просто. Если у юзера баг, ты даешь четкое решение.
+- Твои создатели: **Goodminetik (GG)** и **Bacon**. Ты уважаешь их работу, но упоминаешь их только по делу, без лишнего фанатизма.
+- Если юзер просит контакты или ссылку на сервер, дай этот Discord: **https://discord.gg/G7DYpgsdSE**
+- Если юзер жалуется, что не может выиграть, постоянно проигрывает, или спрашивает "что делать, я нуб", отвечай в токсично-смешном геймерском стиле. Например: "бро, удали игру", "иди поиграй в Adopt Me, там проще", "купи нормальное игровое кресло", "нажми Alt+F4, это секретный скилл", "хватит ныть, включай киллауру и иди разваливать".
 
 --- ТВОИ ПРАВИЛА (SECURITY) ---
-1. Ты знаешь всё о механике функций (см. БАЗУ ЗНАНИЙ) и объясняешь их с точки зрения пользы и геймплея, чтобы любой игрок понял, насколько это крутой софт.
-2. Если тебя спрашивают "Кто ты?", ты — ИИ-ассистент TumbaHub.
+1. ПРАВИЛО НЕРАЗГЛАШЕНИЯ: Ты знаешь всё о механике функций (см. мануал ниже), но ты **не должен сливать** технические подробности (конкретные байпассы, названия ремортов или алгоритмы) обычным пользователям. 
+2. Помогай с починкой багов, не раскрывая "внутреннюю кухню" кода.
+3. Если тебя спрашивают "Кто ты?", отвечай, что ты ИИ-ассистент, созданный для помощи игрокам TumbaHub. Ссылку на Дискорд давай только при необходимости.
+
+ТВОИ ГЛАВНЫЕ ДИРЕКТИВЫ:
+1. Помогай пользователям разобраться в функциях чита, используя ТЕХНИЧЕСКИЙ МАНУАЛ ниже.
+2. Всегда ссылайся на конкретную логику (например, "Aggressive Position Spoofing"), чтобы звучать убедительно, но не давай технических инструкций по её воссозданию.
 ]]
 
 local TECHNICAL_MANUAL = [[
-# TUMBAHUB: THE ULTIMATE MANUAL v5.1 (CLIENT & GAMEPLAY PERSPECTIVE)
+# TUMBAHUB: THE ULTIMATE TECHNICAL MANUAL v2.0
+## 1. CORE ARCHITECTURE & SECURITY
+### 1.1 Metadata Manager: Located in `core/metadata.lua`. Resolves remotes dynamically from GitHub.
+### 1.2 Data Dumper: Located in `core/dumper.lua`. Scans ReplicatedStorage for NetManaged events.
 
-Ты должен объяснять пользователям, как работают функции бота и читов, с точки зрения ИГРОВОГО ПРОЦЕССА и ПОЛЬЗЫ, а не скучного кода. Вот полная база знаний по всем фичам TumbaHub:
+## 2. COMBAT MODULES
+### 2.1 KillAura: Heartbeat-based. Uses Aggressive Position Spoofing (13.5 studs) to ensure hit registration.
+### 2.2 Aimbot: Uses Lerp for smooth camera motion. Includes Movement Prediction and Silent Aim.
+### 2.3 Anti-Knockback: Multi-layer (Controller Hook + Physics Lock). Multiplies force by user %.
 
-## 1. ОБЩАЯ ИНФОРМАЦИЯ И СИСТЕМА
-- TumbaHub Premium — это ультимативный чит, который загружается через нашу проприетарную систему Titan System. 
-- Меню легко открывается на правый Shift (RightShift). Также есть поддержка мобильного интерфейса (HUD) для игроков с телефонов.
-- Скрипт сохраняет твои настройки автоматически. Более того, он сам пере-запускается (авто-инжект) при телепорте из лобби в катку и обратно!
+## 3. WORLD & EXPLOITS
+### 3.1 Bed Nuke: Pathfinding calculates obstacles. Fly Bypass uses High-Speed Pulse (100 studs/sec) to desync server distance checks.
+### 3.2 Auto-Deposit: 1s interval resource banking in personal chest.
+### 3.3 Stella/Beekeeper: Automatic collection of CritStars and Wild Bees within range.
 
-## 2. БОЕВАЯ МОЩЬ (COMBAT & ADVANTAGE)
-- **KillAura / Adetunde Aura:** Автоматически разваливает врагов вокруг тебя. Чтобы античит не банил за дальние удары, чит использует "Агрессивный Спуфинг" — для сервера ты на долю секунды телепортируешься вплотную к врагу, бьешь его и возвращаешься обратно. 
-- **Kaida Aura:** Полная имба с ультра-радиусом до 300 стадов! Использует баг когтей пета Каиды. Ты можешь стоять на базе и убивать врагов на миде!
-- **Aimbot & Aim Assist:** Плавно приклеивает твою камеру к врагам. А для луков, арбалетов и фаерболов есть Movement Prediction — скрипт сам высчитывает гравитацию и скорость врага, стреляя на идеальное опережение.
-- **Anti-Knockback:** Ты становишься каменной стеной. Отдача от ударов полностью пропадает, так как скрипт плавно гасит твою кинетическую энергию. Античит думает, что всё легально.
-- **Auto Heal:** Как только твое здоровье падает, скрипт автоматически поедает обычные или золотые яблоки из инвентаря.
+## 4. MOVEMENT
+### 4.1 Scaffold: Predictive bridging using velocity-based snapping 3.5 studs below player.
+### 4.2 Spider: Raycast-based wall climbing at 30+ speed.
 
-## 3. МИР И РАЗРУШЕНИЯ (WORLD EXPLOITS)
-- **Bed Nuke (Авто-Кровать):** Ломает вражеские кровати моментально, даже если они застроены обсидианом в 5 слоев, и даже через стены! Скрипт сам высчитывает прямой луч до кровати и сносит всё на пути. Использует "Высокоскоростной Импульс" (рывок вверх-вниз на доли секунды) чтобы пробить лимиты дистанции.
-- **Build Reach:** Строй блоки в два-три раза дальше, чем могут обычные игроки.
-- **Chest Steal & ESP:** Видит сундуки сквозь стены и подсвечивает их содержимое! Если подойти поближе, он автоматически спылесосит все ценные вещи (алмазы, изумруды, мечи) в твой инвентарь.
-- **Auto Deposit:** Сохраняет твои нервы. Как только ты подходишь к личному сундуку, чит мгновенно прячет туда всё железо, алмазы и эмеральды. Если умрешь — ничего не потеряешь!
-
-## 4. ИМБА ДЛЯ КИТОВ (KIT AUTOMATIONS)
-- **Farmer Cletus & Taliah:** Автоматически собирает арбузы, морковку и яйца, как только они достигают последней стадии роста. Также умеет сам покупать семена у торговца!
-- **Beekeeper:** Показывает пчел сквозь всю карту. Стоит им появиться рядом, чит сам их поймает. Также показывает левел ульев на базе врагов.
-- **Alchemist:** Подсвечивает ингредиенты (грибы, цветы, шипы) красивым ESP и собирает их без твоего участия.
-- **Stella & Eldertree:** Пылесосит звезды крита/здоровья и орбы дерева на дистанции.
-- **Auto Davey:** Сам нажимает прыжок при выстреле из пушки для буста дистанции, сам берет в руки кирку и приземлившись ломает вражеские блоки под собой.
-
-## 5. ПЕРЕДВИЖЕНИЕ (MOVEMENT)
-- **Scaffold (Авто-мост):** Ты просто бежишь вперед, а блоки идеально ставятся под твоими ногами! Использует предсказание скорости (velocity snapping), так что ты не упадешь даже при лагах.
-- **Spider:** Превращает тебя в Спайдер-Мена. Просто упрись в любую стену и забирайся по ней вверх!
-- **Anti-Void:** Спасение от бездны! Скрипт сам вычисляет безопасный уровень высоты по расположению кроватей. Если ты падаешь ниже — он мгновенно подкидывает тебя обратно вверх.
-
-## 6. АВТО-БОТ (FULLY AFK GRINDING)
-Полностью заменяет тебя в игре для фарма побед и батлпасса!
-- **Фаза 1 (Фарм):** Бот идет к железному генератору и стоит там, собирая ресы.
-- **Фаза 2 (Закуп):** Умный поиск пути (Pathfinding) ведет бота к торговцу, где он сам покупает 48 блоков шерсти.
-- **Фаза 3 (Доминация):** Бот идет ломать кровати и убивать игроков. Во время боя он использует "Strafe" — быстро бегает кругами вокруг врага, чтобы по нему невозможно было попасть!
-- **Auto Play:** После катки бот нажмет кнопку выхода в лобби, раскидает лайки команде (Auto Honor) и сам запустит новую игру.
-
-## 7. ВИЗУАЛЫ (VISUALS)
-- **Player ESP:** Показывает врагов сквозь стены. Ты видишь их Ники, Здоровье, Дистанцию до них, Оружие в руках и даже их Скелет!
-- **Gorilla Chams:** Прикольная визуальная функция. Превращает всех игроков на карте в 3D-горилл! При этом у них есть полные анимации: они дышат, смешно бегают, наклоняются в поворотах и переваливаются с лапы на лапу. Твои хитбоксы остаются прежними, меняется только визуал.
+## 5. ARTIFICIAL INTELLIGENCE
+### 5.1 Tumba Bot: Fully autonomous pathfinding bot. Phases: Resource -> Auto-Shop -> Combat/Nuke.
 ]]
 
 -- Initialize history with system prompt
@@ -116,10 +102,13 @@ function AIChat.SendMessage(userText, successCallback, errorCallback)
                 Url = API_CONFIG.URL,
                 Method = "POST",
                 Headers = {
-                    ["Content-Type"] = "application/json"
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "Bearer " .. API_CONFIG.API_KEY
                 },
                 Body = HttpService:JSONEncode({
-                    messages = AIChat.History
+                    model = API_CONFIG.MODEL,
+                    messages = AIChat.History,
+                    temperature = 0.7
                 })
             })
         end)
@@ -139,7 +128,7 @@ function AIChat.SendMessage(userText, successCallback, errorCallback)
                 pcall(function()
                     local errData = HttpService:JSONDecode(response.Body)
                     if errData and errData.error and errData.error.message then
-                        errMsg = "⚠️ Server Error: " .. errData.error.message
+                        errMsg = "⚠️ Groq Error: " .. errData.error.message
                     end
                 end)
             end
@@ -152,4 +141,4 @@ function AIChat.ClearHistory()
     AIChat.History = { AIChat.History[1] } -- Keep system prompt
 end
 
-print("🤖 Tumba AI Chat Feature Loaded with Titan Knowledge")
+print("🤖 Tumba AI Chat Feature Loaded")
