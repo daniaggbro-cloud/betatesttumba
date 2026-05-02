@@ -185,7 +185,9 @@ InitializePhase("features", {
     "features/build_reach.lua",
     "features/killaura.lua",
     "features/bed_nuke.lua",
-    "features/gorilla_chams.lua"
+    "features/gorilla_chams.lua",
+    "features/kit_ban.lua",
+    "features/auto_davey.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE

@@ -168,10 +168,6 @@ end, {
 --#region -- Auto Davey
 UI.CreateSection(TabFrame, "section_combat_autodavey")
 
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/auto_davey.lua") end)
-end)
-
 UI.CreateToggleWithSettings(TabFrame, "toggle_autodavey", "Combat.AutoDavey.Enabled", function(state)
     Mega.States.Combat.AutoDavey.Enabled = state
     if Mega.Features.AutoDavey and Mega.Features.AutoDavey.SetEnabled then

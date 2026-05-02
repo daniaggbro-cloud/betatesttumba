@@ -189,7 +189,7 @@ function Mega.Features.KitBan.ExecuteBan()
     end
 end
 
-local function InitializeKitBanUI()
+function Mega.Features.KitBan.UpdateUI()
     local container = Mega.Objects.KitBanContainer
     if not container then return end
     
@@ -294,5 +294,5 @@ end
 
 task.spawn(function()
     while not Mega.Objects.KitBanContainer do task.wait(0.1) end
-    InitializeKitBanUI()
+    Mega.Features.KitBan.UpdateUI()
 end)

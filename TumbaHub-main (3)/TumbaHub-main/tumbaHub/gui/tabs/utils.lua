@@ -40,6 +40,11 @@ kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
 kitBanContainer.BackgroundTransparency = 1
 Mega.Objects.KitBanContainer = kitBanContainer
 
+-- Initialize/Update Kit Ban list if the feature is loaded
+if Mega.Features.KitBan and Mega.Features.KitBan.UpdateUI then
+    Mega.Features.KitBan.UpdateUI()
+end
+
 if not Mega.States.Misc.KitBan then Mega.States.Misc.KitBan = {} end
 Mega.States.Misc.KitBan.Enabled = false
 
