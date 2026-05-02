@@ -13,7 +13,7 @@ local States = Mega.States
 
 if not States.Misc then States.Misc = {} end
 if not States.Misc.AutoHonor then
-    States.Misc.AutoHonor = { Enabled = false }
+    States.Misc.AutoHonor = { Enabled = false, Target = "Teammate and Enemy" }
 end
 
 local teamChangeConnection
@@ -59,14 +59,23 @@ local function triggerAutoHonor()
         end
     end
 
-    local selectedTeammate = #teammates > 0 and teammates[math.random(1, #teammates)] or nil
-    local selectedEnemy = #enemies > 0 and enemies[math.random(1, #enemies)] or nil
+    local targetSetting = States.Misc.AutoHonor.Target or "Teammate and Enemy"
+    local selectedTeammate = nil
+    local selectedEnemy = nil
     
-    -- Если подходящих целей нет (например, все ливнули), пытаемся выдать хоть кому-то
-    if not selectedEnemy then
+    if targetSetting == "Teammate" or targetSetting == "Teammate and Enemy" then
+        selectedTeammate = #teammates > 0 and teammates[math.random(1, #teammates)] or nil
+    end
+    
+    if targetSetting == "Enemy" or targetSetting == "Teammate and Enemy" then
+        selectedEnemy = #enemies > 0 and enemies[math.random(1, #enemies)] or nil
+    end
+    
+    -- Если никого подходящего не нашли (например, все ливнули), выдаем рандомному игроку
+    if not selectedTeammate and not selectedEnemy then
         for _, p in ipairs(players) do
             if p ~= LocalPlayer and p ~= selectedTeammate then
-                selectedEnemy = p
+                if targetSetting == "Teammate" then selectedTeammate = p else selectedEnemy = p end
                 break
             end
         end
