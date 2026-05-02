@@ -52,7 +52,16 @@ local function GetHealingItem()
     for _, itemName in ipairs(healingItems) do
         local item = playerInventory:FindFirstChild(itemName)
         if item then
-            return item
+            -- Anti-Ghost Items: Check if the item actually has an amount > 0
+            local amountObj = item:FindFirstChild("Amount") or item:FindFirstChild("Value")
+            if amountObj and type(amountObj.Value) == "number" then
+                if amountObj.Value > 0 then
+                    return item
+                end
+            else
+                -- If there's no amount tracking object, just assume it's valid
+                return item
+            end
         end
     end
 

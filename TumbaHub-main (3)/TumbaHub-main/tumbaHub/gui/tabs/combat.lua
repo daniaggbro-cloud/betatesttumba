@@ -159,7 +159,7 @@ end, {
     UI.CreateSlider(nil, "slider_autoheal_threshold", "Combat.AutoHeal.Threshold", 1, 100, function(val)
         Mega.States.Combat.AutoHeal.Threshold = val
     end),
-    UI.CreateSlider(nil, "slider_autoheal_delay", "Combat.AutoHeal.Delay", 0, 5000, function(val)
+    UI.CreateSlider(nil, "slider_autoheal_delay", "Combat.AutoHeal.Delay", 200, 5000, function(val)
         Mega.States.Combat.AutoHeal.Delay = val
     end)
 })
