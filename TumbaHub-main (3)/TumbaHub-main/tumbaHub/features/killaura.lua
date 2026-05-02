@@ -22,8 +22,7 @@ if not States.Combat.Killaura then
         Range = 25, 
         Delay = 0, 
 
-        UseFOV = false, 
-        FOVAngle = 90, 
+        AimRadius = 95,
         OnlyOnClick = false, 
         AutoClick = false,
         AnimationEnabled = true,
@@ -36,8 +35,7 @@ else
         AnimationEnabled = true,
         AnimationMode = "Normal",
         AnimationSpeed = 1,
-        UseFOV = false,
-        FOVAngle = 90,
+        AimRadius = 95,
         OnlyOnClick = false,
         AutoClick = false
     }
@@ -346,7 +344,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                             
                             if tHrp and hum and hum.Health > 0 then
                                 local dist = (hrp.Position - tHrp.Position).Magnitude
-                                if dist < closestDist and dist > 0 and isWithinFOV(tHrp) and hasLineOfSight(tChar) and isAimingAt(tChar) then
+                                if dist < closestDist and dist > 0 and hasLineOfSight(tChar) and isAimingAt(tChar) then
                                     closestDist = dist
                                     closestTarget = tChar
                                 end
@@ -371,7 +369,7 @@ function Mega.Features.Killaura.SetEnabled(state)
 
                                     if isEnemy then
                                         local dist = (hrp.Position - tHrp.Position).Magnitude
-                                        if dist < closestDist and dist > 0 and isWithinFOV(tHrp) and hasLineOfSight(obj) and isAimingAt(obj) then
+                                        if dist < closestDist and dist > 0 and hasLineOfSight(obj) and isAimingAt(obj) then
                                             closestDist = dist
                                             closestTarget = obj
                                         end
