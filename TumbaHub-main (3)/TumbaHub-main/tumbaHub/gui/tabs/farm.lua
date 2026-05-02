@@ -17,6 +17,8 @@ if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false
 if not Mega.States.Misc then Mega.States.Misc = {} end
 if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = false, Range = 50, Delay = 0, TargetESP = true, Keybind = "None" } end
 if not Mega.States.Misc.Alchemist then Mega.States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true } end
+if not Mega.States.Combat then Mega.States.Combat = {} end
+if not Mega.States.Combat.AutoDavey then Mega.States.Combat.AutoDavey = { Enabled = false, JumpOnImpact = false, BreakOnImpact = false, LegitSwitch = false } end
 
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
@@ -265,5 +267,21 @@ end, {
     UI.CreateToggle(nil, "toggle_lucia_deposit", "Lucia.AutoDeposit"),
     UI.CreateToggle(nil, "toggle_lucia_legit", "Lucia.Legit"),
     UI.CreateSlider(nil, "slider_lucia_range", "Lucia.Range", 5, 50)
+})
+--#endregion
+
+--#region -- Auto Davey
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/auto_davey.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_autodavey", "Combat.AutoDavey.Enabled", function(state)
+    Mega.States.Combat.AutoDavey.Enabled = state
+    if Mega.Features.AutoDavey and Mega.Features.AutoDavey.SetEnabled then Mega.Features.AutoDavey.SetEnabled(state) end
+    notifyFeature("toggle_autodavey", state)
+end, {
+    UI.CreateToggle(nil, "toggle_autodavey_jump", "Combat.AutoDavey.JumpOnImpact"),
+    UI.CreateToggle(nil, "toggle_autodavey_break", "Combat.AutoDavey.BreakOnImpact"),
+    UI.CreateToggle(nil, "toggle_autodavey_legitswitch", "Combat.AutoDavey.LegitSwitch")
 })
 --#endregion
