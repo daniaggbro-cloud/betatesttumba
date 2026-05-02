@@ -165,4 +165,29 @@ end, {
 })
 --#endregion
 
+--#region -- Auto Davey
+UI.CreateSection(TabFrame, "section_combat_autodavey")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/auto_davey.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_autodavey", "Combat.AutoDavey.Enabled", function(state)
+    Mega.States.Combat.AutoDavey.Enabled = state
+    if Mega.Features.AutoDavey and Mega.Features.AutoDavey.SetEnabled then
+        Mega.Features.AutoDavey.SetEnabled(state)
+    end
+end, {
+    UI.CreateToggle(nil, "toggle_autodavey_jump", "Combat.AutoDavey.JumpOnImpact", function(state)
+        Mega.States.Combat.AutoDavey.JumpOnImpact = state
+    end),
+    UI.CreateToggle(nil, "toggle_autodavey_break", "Combat.AutoDavey.BreakOnImpact", function(state)
+        Mega.States.Combat.AutoDavey.BreakOnImpact = state
+    end),
+    UI.CreateToggle(nil, "toggle_autodavey_legitswitch", "Combat.AutoDavey.LegitSwitch", function(state)
+        Mega.States.Combat.AutoDavey.LegitSwitch = state
+    end)
+})
+--#endregion
+
 -- Removed Auto Buy Section (Not Implemented)

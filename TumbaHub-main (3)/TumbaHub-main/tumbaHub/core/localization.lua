@@ -124,6 +124,12 @@ Mega.Localization = {
         ["slider_autoheal_threshold"] = { ru = "Порог здоровья (HP)", en = "Health Threshold (HP)", es = "Umbral de Salud (HP)", pt = "Limite de Saúde (HP)", ko = "체력 임계값 (HP)", ja = "体力しきい値 (HP)", uk = "Поріг здоров'я (HP)" },
         ["slider_autoheal_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
 
+        ["section_combat_autodavey"] = { ru = "🏴‍☠️ AUTO DAVEY", en = "🏴‍☠️ AUTO DAVEY", es = "🏴‍☠️ AUTO DAVEY", pt = "🏴‍☠️ AUTO DAVEY", ko = "🏴‍☠️ AUTO DAVEY", ja = "🏴‍☠️ AUTO DAVEY", uk = "🏴‍☠️ AUTO DAVEY" },
+        ["toggle_autodavey"] = { ru = "Auto Davey", en = "Auto Davey", es = "Auto Davey", pt = "Auto Davey", ko = "Auto Davey", ja = "Auto Davey", uk = "Auto Davey" },
+        ["toggle_autodavey_jump"] = { ru = "Прыжок при ударе", en = "Jump on impact", es = "Saltar al impacto", pt = "Pular no impacto", ko = "타격 시 점프", ja = "インパクト時にジャンプ", uk = "Стрибок при ударі" },
+        ["toggle_autodavey_break"] = { ru = "Ломать ТНТ при ударе", en = "Break on impact", es = "Romper al impacto", pt = "Quebrar no impacto", ko = "타격 시 파괴", ja = "インパクト時に破壊", uk = "Ламати ТНТ при ударі" },
+        ["toggle_autodavey_legitswitch"] = { ru = "Легит свитч", en = "Legit switch", es = "Cambio legítimo", pt = "Troca legítima", ko = "합법적인 전환", ja = "合法的なスイッチ", uk = "Легіт світч" },
+
         ["toggle_killaura_use_fov"] = { ru = "👁️ Использовать FOV", en = "👁️ Use FOV", es = "👁️ Usar FOV", pt = "👁️ Usar FOV", ko = "👁️ FOV 사용", ja = "👁️ FOV使用", uk = "👁️ Використовувати FOV" },
         ["toggle_killaura_only_on_click"] = { ru = "⚔️ Только при ударе (Trigger)", en = "⚔️ Only on Click", es = "⚔️ Solo al hacer clic", pt = "⚔️ Apenas ao clicar", ko = "⚔️ 클릭 시에만 작동", ja = "⚔️ クリック時のみ", uk = "⚔️ Тільки при ударі" },
         ["toggle_killaura_autoclick"] = { ru = "🖱️ Авто-клик (Анимация удара)", en = "🖱️ Auto-Click (Swing Animation)", es = "🖱️ Auto-Click", pt = "🖱️ Auto-Click", ko = "🖱️ 자동 클릭", ja = "🖱️ オートクリック", uk = "🖱️ Авто-клік (Анімація)" },

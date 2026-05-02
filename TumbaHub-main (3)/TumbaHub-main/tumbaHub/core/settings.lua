@@ -196,6 +196,12 @@ Mega.States = {
             Enabled = false,
             Threshold = 35,
             Delay = 500
+        },
+        AutoDavey = {
+            Enabled = false,
+            JumpOnImpact = true,
+            BreakOnImpact = true,
+            LegitSwitch = true
         }
     },
     Misc = {
