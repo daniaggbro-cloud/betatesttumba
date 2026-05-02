@@ -78,8 +78,7 @@ end, {
     UI.CreateKeybindButton(nil, "keybind_killaura", "Keybinds.Killaura"),
     UI.CreateToggle(nil, "toggle_killaura_wallcheck", "Combat.Killaura.WallCheck"),
     UI.CreateToggle(nil, "toggle_killaura_require_aim", "Combat.Killaura.RequireAim"),
-    UI.CreateToggle(nil, "toggle_killaura_use_fov", "Combat.Killaura.UseFOV"),
-    UI.CreateSlider(nil, "slider_killaura_fov_angle", "Combat.Killaura.FOVAngle", 10, 360),
+    UI.CreateSlider(nil, "slider_killaura_aim_radius", "Combat.Killaura.AimRadius", 10, 500),
     UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
     UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
 
