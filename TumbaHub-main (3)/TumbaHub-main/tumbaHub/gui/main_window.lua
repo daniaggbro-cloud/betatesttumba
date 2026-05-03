@@ -583,12 +583,53 @@ function Mega.UpdateStatus()
         activeCount = activeCount + 1
     end
 
-    if States.ESP.Enabled then AddStatus("ESP", Settings.Menu.SecondaryColor) end
-    if States.KitESP.Enabled then AddStatus("Kit ESP", Color3.fromRGB(255, 165, 0)) end
-    if States.AimAssist.Enabled then AddStatus("Aim Assist", Settings.Menu.AccentColor) end
-    if States.Player.Speed then AddStatus("Speed", Color3.fromRGB(255, 220, 0)) end
-    if States.Player.Fly then AddStatus("Fly", Color3.fromRGB(100, 200, 255)) end
-    if States.Player.NoClip then AddStatus("NoClip", Color3.fromRGB(150, 255, 150)) end
+    -- Combat
+    if States.Combat and States.Combat.Killaura and States.Combat.Killaura.Enabled then AddStatus("Killaura", Color3.fromRGB(255, 50, 50)) end
+    if States.Kaida and States.Kaida.Enabled then AddStatus("Kaida Aura", Color3.fromRGB(180, 50, 255)) end
+    if States.Combat and States.Combat.BedNuke and States.Combat.BedNuke.Enabled then AddStatus("Bed Nuke", Color3.fromRGB(255, 0, 0)) end
+    if States.Combat and States.Combat.Reach and States.Combat.Reach.Enabled then AddStatus("Reach", Color3.fromRGB(255, 100, 100)) end
+    if States.Combat and States.Combat.AutoHeal and States.Combat.AutoHeal.Enabled then AddStatus("Auto Heal", Color3.fromRGB(50, 255, 100)) end
+    if States.Combat and States.Combat.AutoDavey and States.Combat.AutoDavey.Enabled then AddStatus("Auto Davey", Color3.fromRGB(150, 150, 150)) end
+
+    -- Player / Movement
+    if States.Player and States.Player.Speed then AddStatus("Speed", Color3.fromRGB(255, 220, 0)) end
+    if States.Player and States.Player.Fly then AddStatus("Fly", Color3.fromRGB(100, 200, 255)) end
+    if States.Player and States.Player.NoClip then AddStatus("NoClip", Color3.fromRGB(150, 255, 150)) end
+    if States.Player and States.Player.Scaffold and States.Player.Scaffold.Enabled then AddStatus("Scaffold", Color3.fromRGB(200, 200, 200)) end
+    if States.Player and States.Player.AntiVoid and States.Player.AntiVoid.Enabled then AddStatus("AntiVoid", Color3.fromRGB(255, 100, 255)) end
+    if States.Player and States.Player.Spider then AddStatus("Spider", Color3.fromRGB(150, 0, 255)) end
+    if States.Player and States.Player.HighJump then AddStatus("High Jump", Color3.fromRGB(0, 255, 200)) end
+    if States.Player and States.Player.LongJump then AddStatus("Long Jump", Color3.fromRGB(0, 200, 255)) end
+    if States.Player and States.Player.SpinBot then AddStatus("SpinBot", Color3.fromRGB(255, 150, 0)) end
+    if States.Player and States.Player.BuildReach and States.Player.BuildReach.Enabled then AddStatus("Build Reach", Color3.fromRGB(255, 255, 150)) end
+    if States.Player and States.Player.SpectateTarget then AddStatus("Spectating", Color3.fromRGB(255, 255, 255)) end
+
+    -- Visuals
+    if States.ESP and States.ESP.Enabled then AddStatus("ESP", Settings.Menu.SecondaryColor or Color3.fromRGB(0, 255, 150)) end
+    if States.KitESP and States.KitESP.Enabled then AddStatus("Kit ESP", Color3.fromRGB(255, 165, 0)) end
+    if States.AimAssist and States.AimAssist.Enabled then AddStatus("Aim Assist", Settings.Menu.AccentColor or Color3.fromRGB(200, 150, 50)) end
+    if States.Visuals and States.Visuals.GorillaMode then AddStatus("Gorilla Chams", Color3.fromRGB(100, 50, 20)) end
+    if States.Misc and States.Misc.ChestESP and States.Misc.ChestESP.Enabled then AddStatus("Chest ESP", Color3.fromRGB(200, 150, 50)) end
+
+    -- Misc & Bot
+    if States.Bot and States.Bot.Enabled then AddStatus("Auto-Bot", Color3.fromRGB(255, 50, 50)) end
+    if States.Bot and States.Bot.AutoPlay and States.Bot.AutoPlay.Enabled then AddStatus("Auto Play", Color3.fromRGB(50, 150, 255)) end
+    if States.Bot and States.Bot.AutoShop and States.Bot.AutoShop.Enabled then AddStatus("Auto Shop", Color3.fromRGB(50, 255, 150)) end
+    if States.Bot and States.Bot.AutoLobby and States.Bot.AutoLobby.Enabled then AddStatus("Auto Lobby", Color3.fromRGB(200, 50, 50)) end
+    if States.Misc and States.Misc.ChestSteal and States.Misc.ChestSteal.Enabled then AddStatus("Chest Steal", Color3.fromRGB(255, 200, 0)) end
+    if States.Misc and States.Misc.AutoDeposit and States.Misc.AutoDeposit.Enabled then AddStatus("Auto Deposit", Color3.fromRGB(100, 255, 100)) end
+    if States.Misc and States.Misc.AutoHonor and States.Misc.AutoHonor.Enabled then AddStatus("Auto Honor", Color3.fromRGB(255, 215, 0)) end
+    if States.Misc and States.Misc.Lani and States.Misc.Lani.Enabled then AddStatus("Lani Auto", Color3.fromRGB(0, 255, 255)) end
+
+    -- Kits
+    if States.Cletus and States.Cletus.Enabled then AddStatus("Farmer Cletus", Color3.fromRGB(50, 255, 50)) end
+    if States.Taliah and States.Taliah.Enabled then AddStatus("Taliah", Color3.fromRGB(255, 150, 0)) end
+    if States.Eldertree and States.Eldertree.Enabled then AddStatus("Eldertree", Color3.fromRGB(0, 200, 50)) end
+    if States.Beekeeper and States.Beekeeper.Enabled then AddStatus("Beekeeper", Color3.fromRGB(255, 230, 0)) end
+    if States.Metal and States.Metal.Enabled then AddStatus("Metal Detector", Color3.fromRGB(255, 170, 0)) end
+    if States.StarCollector and States.StarCollector.Enabled then AddStatus("Star Collector", Color3.fromRGB(255, 255, 100)) end
+    if States.Lucia and States.Lucia.Enabled then AddStatus("Lucia (Pinata)", Color3.fromRGB(255, 100, 200)) end
+    if States.Noelle and States.Noelle.Enabled then AddStatus("Noelle", Color3.fromRGB(50, 200, 255)) end
 end
 
 -- Auto-update status and apply UIScale
