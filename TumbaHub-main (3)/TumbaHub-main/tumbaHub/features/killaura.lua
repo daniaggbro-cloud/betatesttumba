@@ -54,12 +54,15 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
-local SwordHitRemote = Mega.GetRemote("AttackEntity")
+local SwordHitRemote = nil
 -- Periodically re-check the remote in case of game updates or late loading
 task.spawn(function()
-    while task.wait(5) do
-        if not SwordHitRemote then
-            SwordHitRemote = Mega.GetRemote("AttackEntity")
+    while task.wait(3) do
+        if not SwordHitRemote or not SwordHitRemote.Parent then
+            local net = Services.ReplicatedStorage:FindFirstChild("_NetManaged", true)
+            if net then
+                SwordHitRemote = net:FindFirstChild("AttackEntity") or net:FindFirstChild("SwordHit")
+            end
         end
     end
 end)
@@ -325,6 +328,7 @@ function Mega.Features.Killaura.SetEnabled(state)
 
         task.spawn(function()
             while States.Combat.Killaura.Enabled do
+                local success, err = pcall(function()
                 if Mega.Unloaded then break end
 
                 local char = LocalPlayer.Character
@@ -384,7 +388,7 @@ function Mega.Features.Killaura.SetEnabled(state)
 
 
                 -- 3. Attack Logic (Every Heartbeat for max Speed)
-                if closestTarget and weapon and SwordHitRemote then
+                if closestTarget and weapon and SwordHitRemote and SwordHitRemote.Parent then
                     States.Combat.Killaura.IsAttacking = true
                     local currentTime = tick()
                     local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
@@ -406,6 +410,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                         lastAttackTime = currentTime
                         
                         local tHrp = closestTarget:FindFirstChild("HumanoidRootPart") or closestTarget.PrimaryPart
+                        if not tHrp or not hrp then return end
                         local direction = (tHrp.Position - hrp.Position).Unit
                         local spoofedSelfPos = hrp.Position
                         
@@ -450,6 +455,10 @@ function Mega.Features.Killaura.SetEnabled(state)
                         end
                     end
                 else
+                    States.Combat.Killaura.IsAttacking = false
+                end
+                end)
+                if not success then
                     States.Combat.Killaura.IsAttacking = false
                 end
                 
