@@ -328,8 +328,8 @@ function Mega.Features.Killaura.SetEnabled(state)
 
         task.spawn(function()
             while States.Combat.Killaura.Enabled do
-                local success, err = pcall(function()
                 if Mega.Unloaded then break end
+                local success, err = pcall(function()
 
                 local char = LocalPlayer.Character
                 local hrp = char and char:FindFirstChild("HumanoidRootPart")
