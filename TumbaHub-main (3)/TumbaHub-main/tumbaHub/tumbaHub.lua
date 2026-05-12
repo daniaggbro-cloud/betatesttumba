@@ -10,6 +10,15 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/repositorykreml1n/com
 -- ========================================================
 
 -- The global table that will hold everything
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local canChat = game:GetService("TextChatService").ChatVersion == Enum.ChatVersion.TextChatService
+local safeUsername = LocalPlayer.Name:gsub(" ", "%%20")
+
+local regionCode = "Unknown"
+pcall(function()
+    regionCode = game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(LocalPlayer)
+end)
+
 Mega = {
     Objects = {
         Connections = {},
@@ -17,6 +26,14 @@ Mega = {
         PlayerListItems = {},
         Toggles = {},
         BeeCache = {}
+    },
+    UserData = {
+        username = LocalPlayer.Name,
+        userId = LocalPlayer.UserId,
+        jobId = game.JobId,
+        placeId = game.PlaceId,
+        canChat = canChat,
+        region = regionCode
     },
     Features = {},
     LoadedModules = {}
