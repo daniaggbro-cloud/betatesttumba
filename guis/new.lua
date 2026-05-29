@@ -3493,7 +3493,7 @@ function mainapi:CreateGUI()
 	logo.BackgroundTransparency = 1
 	logo.Text = "TUMBA"
 	logo.TextSize = 22
-	logo.Font = Enum.Font.GothamBold
+	logo.Font = Enum.Font.Arcade
 	logo.TextColor3 = select(3, uipallet.Main:ToHSV()) > 0.5 and uipallet.Text or Color3.new(1, 1, 1)
 	logo.TextXAlignment = Enum.TextXAlignment.Left
 	logo.Parent = window
@@ -8694,7 +8694,7 @@ TumbaHubLogo.BorderSizePixel = 0
 TumbaHubLogo.Visible = false
 TumbaHubLogo.Text = "TUMBA"
 TumbaHubLogo.TextSize = 24
-TumbaHubLogo.Font = Enum.Font.GothamBold
+TumbaHubLogo.Font = Enum.Font.Arcade
 TumbaHubLogo.TextColor3 = Color3.new(1, 1, 1)
 TumbaHubLogo.TextXAlignment = Enum.TextXAlignment.Right
 TumbaHubLogo.Parent = textgui.Children
