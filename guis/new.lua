@@ -3486,6 +3486,12 @@ function mainapi:CreateGUI()
 	addBlur(window)
 	addCorner(window)
 	makeDraggable(window)
+	local uistroke = Instance.new('UIStroke')
+	uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	uistroke.Color = Color3.fromRGB(255, 255, 255)
+	uistroke.Transparency = 0.88
+	uistroke.Thickness = 1
+	uistroke.Parent = window
 	local logo = Instance.new('TextLabel')
 	logo.Name = 'TumbaHubLogo'
 	logo.Size = UDim2.fromOffset(120, 30)
@@ -4649,6 +4655,12 @@ function mainapi:CreateCategory(categorysettings)
 	addBlur(window)
 	addCorner(window)
 	makeDraggable(window)
+	local uistroke = Instance.new('UIStroke')
+	uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	uistroke.Color = Color3.fromRGB(255, 255, 255)
+	uistroke.Transparency = 0.88
+	uistroke.Thickness = 1
+	uistroke.Parent = window
 
 	local accent = Instance.new('Frame')
 	accent.Name = 'AccentLine'
@@ -5422,6 +5434,12 @@ function mainapi:CreateCategoryList(categorysettings)
 	addBlur(window)
 	addCorner(window)
 	makeDraggable(window)
+	local uistroke = Instance.new('UIStroke')
+	uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	uistroke.Color = Color3.fromRGB(255, 255, 255)
+	uistroke.Transparency = 0.88
+	uistroke.Thickness = 1
+	uistroke.Parent = window
 
 	local accent = Instance.new('Frame')
 	accent.Name = 'AccentLine'
