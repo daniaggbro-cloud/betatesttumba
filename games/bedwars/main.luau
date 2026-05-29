@@ -9007,7 +9007,7 @@ run(function()
 
 	Cast = AutoFish:CreateToggle({
 		Name = 'Auto Cast',
-		Tooltip = 'Automatically casts ur fishng rod',
+		Tooltip = 'Automatically casts ur fishing rod',
 		Function = function(call)
 			pcall(function()
 				CastDelay.Object.Visible = call
