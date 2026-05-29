@@ -3503,6 +3503,12 @@ function mainapi:CreateGUI()
 	logo.TextColor3 = select(3, uipallet.Main:ToHSV()) > 0.5 and uipallet.Text or Color3.new(1, 1, 1)
 	logo.TextXAlignment = Enum.TextXAlignment.Left
 	logo.Parent = window
+	local logoGradient = Instance.new('UIGradient')
+	logoGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(170, 85, 255))
+	})
+	logoGradient.Parent = logo
 	local logov4 = Instance.new('ImageLabel')
 	logov4.Name = 'V4Logo'
 	logov4.Visible = false
@@ -8716,6 +8722,12 @@ TumbaHubLogo.Font = Enum.Font.Arcade
 TumbaHubLogo.TextColor3 = Color3.new(1, 1, 1)
 TumbaHubLogo.TextXAlignment = Enum.TextXAlignment.Right
 TumbaHubLogo.Parent = textgui.Children
+local watermarkGradient = Instance.new('UIGradient')
+watermarkGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(170, 85, 255))
+})
+watermarkGradient.Parent = TumbaHubLogo
 
 local lastside = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
 mainapi:Clean(textgui.Children:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
