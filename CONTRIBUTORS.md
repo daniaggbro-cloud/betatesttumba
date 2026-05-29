@@ -1,0 +1,1 @@
+# Thank you to @selunariorium (For helping with: Block-In, SilentAura, Projectile Trails, Bow Assist, AimAssist, etc, what im tryna say is majority of the modules of tumbahub wouldn't be possible without her!), @seven.https (Website Designer), and @apn9 (Authentication & Website Developer)

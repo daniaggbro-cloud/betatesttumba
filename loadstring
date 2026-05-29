@@ -1,0 +1,1 @@
+script_key = "KEY-HERE"; loadstring(game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/main/init.lua'), 'init.lua')({})
