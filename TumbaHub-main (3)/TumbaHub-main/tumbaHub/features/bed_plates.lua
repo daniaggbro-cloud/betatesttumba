@@ -1,6 +1,6 @@
 -- features/bed_plates.lua
--- Bed Plates - Shows block composition and layers over enemy beds
--- Ported from TumbaV6 with enhanced stability, modern styling, and robust fallbacks
+-- Bed Plates - EXACT replica of the TumbaV6 Bed Plates feature
+-- Replicates the exact UI layout, hierarchy, blur shadows, and scanning behavior of TumbaV6
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.BedPlates = {}
@@ -33,16 +33,58 @@ end
 local connections = {}
 local bedwars = {}
 
+-- Spaced 3 studs apart for exact Bedwars grid alignment
 local sides = {
-    Vector3.new(1, 0, 0),
-    Vector3.new(-1, 0, 0),
-    Vector3.new(0, 1, 0),
-    Vector3.new(0, -1, 0),
-    Vector3.new(0, 0, 1),
-    Vector3.new(0, 0, -1)
+    Vector3.new(3, 0, 0),
+    Vector3.new(-3, 0, 0),
+    Vector3.new(0, 3, 0),
+    Vector3.new(0, -3, 0),
+    Vector3.new(0, 0, 3),
+    Vector3.new(0, 0, -3)
 }
 
--- Initialize bedwars services lazily
+-- Ensure the exact TumbaV6 blur shadow asset is downloaded locally
+local function downloadBlurIcon()
+    local folderPath = "tumbascript/assets/new/"
+    local fullPath = folderPath .. "blur.png"
+    if isfile and not isfile(fullPath) then
+        pcall(function()
+            if not isfolder("tumbascript") then makefolder("tumbascript") end
+            if not isfolder("tumbascript/assets") then makefolder("tumbascript/assets") end
+            if not isfolder("tumbascript/assets/new") then makefolder("tumbascript/assets/new") end
+            local data = game:HttpGet("https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/main/assets/new/blur.png")
+            if data and #data > 0 then
+                writefile(fullPath, data)
+            end
+        end)
+    end
+end
+
+local function addBlur(parent)
+    downloadBlurIcon()
+    local blur = Instance.new("ImageLabel")
+    blur.Name = "Blur"
+    blur.Size = UDim2.new(1, 89, 1, 52)
+    blur.Position = UDim2.fromOffset(-48, -31)
+    blur.BackgroundTransparency = 1
+    
+    local assetPath = "tumbascript/assets/new/blur.png"
+    if isfile and isfile(assetPath) and getcustomasset then
+        pcall(function()
+            blur.Image = getcustomasset(assetPath)
+        end)
+    end
+    if not blur.Image or blur.Image == "" then
+        blur.Image = "rbxassetid://13388222306" -- fallback logo if failed
+    end
+    
+    blur.ScaleType = Enum.ScaleType.Slice
+    blur.SliceCenter = Rect.new(52, 31, 261, 502)
+    blur.Parent = parent
+    return blur
+end
+
+-- Lazy-load standard Bedwars metadata
 local function initBedwars()
     pcall(function()
         local lplr = Services.Players.LocalPlayer
@@ -70,7 +112,7 @@ local function getPlacedBlock(pos)
     end)
     if block then return block, blockPos end
     
-    -- Fallback: Raycast/Box overlap in Blocks folder
+    -- Fallback: Scan Map blocks directly
     local overlap = OverlapParams.new()
     overlap.FilterType = Enum.RaycastFilterType.Include
     local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
@@ -96,7 +138,7 @@ local function getBlockLayerHealth(blockName)
     end)
     if health > 0 then return health end
     
-    -- Fallback defaults for common block names
+    -- Fallbacks
     local healths = {
         wool = 10,
         wood = 20,
@@ -119,7 +161,6 @@ local function getBlockIcon(blockName)
     end)
     if icon and icon ~= "" then return icon end
     
-    -- High quality fallback images
     local icons = {
         wool = "rbxassetid://9166206875",
         wood = "rbxassetid://13388222306",
@@ -135,7 +176,7 @@ local function scanSide(selfPart, start, tab)
     for _, side in ipairs(sides) do
         local layers = {}
         for i = 1, 15 do
-            local block = getPlacedBlock(start + (side * (i * 3)))
+            local block = getPlacedBlock(start + (side * i))
             if not block or block == selfPart or block.Name == "bed" then break end
             if not block:GetAttribute("NoBreak") then
                 layers[block.Name] = (layers[block.Name] or 0) + 1
@@ -150,8 +191,9 @@ end
 local function refreshAdornee(v)
     if not v or not v:FindFirstChild("Frame") then return end
     
+    -- Clear old block image elements (exactly matching TumbaV6: Name ~= 'Blur')
     for _, obj in ipairs(v.Frame:GetChildren()) do
-        if obj:IsA("ImageLabel") then
+        if obj:IsA("ImageLabel") and obj.Name ~= "Blur" then
             obj:Destroy()
         end
     end
@@ -177,6 +219,7 @@ local function refreshAdornee(v)
     
     v.Enabled = #alreadygot > 0
 
+    -- Build the elements exactly matching the TumbaV6 format
     for _, blockData in ipairs(alreadygot) do
         local block, amount = blockData[1], blockData[2]
         
@@ -193,9 +236,9 @@ local function refreshAdornee(v)
             amounttext.BackgroundTransparency = 1
             amounttext.Text = tostring(amount)
             amounttext.TextColor3 = Color3.fromRGB(255, 255, 255)
-            amounttext.TextSize = 14
-            amounttext.Font = Enum.Font.GothamBold
-            amounttext.TextStrokeTransparency = 0.2
+            amounttext.TextSize = 16
+            amounttext.TextStrokeTransparency = 0.3
+            amounttext.Font = Enum.Font.Arial
             amounttext.Parent = blockimage
         end
     end
@@ -207,6 +250,7 @@ local function refreshAll()
     end
 end
 
+-- EXACT TumbaV6 Added implementation
 local function Added(v)
     if not v then return end
     if Reference[v] then return end
@@ -216,17 +260,22 @@ local function Added(v)
 
     local billboard = Instance.new("BillboardGui")
     billboard.Parent = Folder
-    billboard.Name = "BedPlateESP"
-    billboard.StudsOffsetWorldSpace = Vector3.new(0, 4, 0)
+    billboard.Name = "bed"
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 0)
     billboard.Size = UDim2.fromOffset(36, 36)
     billboard.AlwaysOnTop = true
     billboard.ClipsDescendants = false
     billboard.Adornee = root
     
+    -- Exact Blur shadow placement as child of billboard
+    local blur = addBlur(billboard)
+    blur.Visible = States.Render.BedPlatesBackground
+    
+    -- Exact Frame placement
     local frame = Instance.new("Frame")
     frame.Size = UDim2.fromScale(1, 1)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    frame.BackgroundTransparency = States.Render.BedPlatesBackground and 0.3 or 1
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30) -- Dark, beautiful Tumba style
+    frame.BackgroundTransparency = States.Render.BedPlatesBackground and 0.5 or 1
     frame.Parent = billboard
     
     local layout = Instance.new("UIListLayout")
@@ -235,20 +284,13 @@ local function Added(v)
     layout.VerticalAlignment = Enum.VerticalAlignment.Center
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        billboard.Size = UDim2.fromOffset(math.max(layout.AbsoluteContentSize.X + 8, 36), 36)
+        billboard.Size = UDim2.fromOffset(math.max(layout.AbsoluteContentSize.X + 4, 36), 36)
     end)
     layout.Parent = frame
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = frame
-    
-    -- Subtly style border
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(80, 80, 100)
-    stroke.Thickness = 1
-    stroke.Transparency = States.Render.BedPlatesBackground and 0.5 or 1
-    stroke.Parent = frame
     
     Reference[v] = billboard
     pcall(refreshAdornee, billboard)
@@ -295,11 +337,11 @@ function Mega.Features.BedPlates.SetEnabled(state)
             end
         end))
         
-        -- Listen for blocks folder changes
+        -- Listen for blocks folder changes to trigger live refresh
         local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
         if blocksFolder then
             table.insert(connections, blocksFolder.ChildAdded:Connect(function(child)
-                task.wait(0.1) -- wait slightly for properties to replication
+                task.wait(0.1)
                 pcall(refreshNear, child)
             end))
             table.insert(connections, blocksFolder.ChildRemoved:Connect(function(child)
@@ -309,7 +351,7 @@ function Mega.Features.BedPlates.SetEnabled(state)
     end
 end
 
--- Initialize
+-- Initialize on load
 if States.Render.BedPlates then
     Mega.Features.BedPlates.SetEnabled(true)
 end
