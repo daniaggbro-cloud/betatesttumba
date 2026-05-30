@@ -122,11 +122,15 @@ elseif not shared.TumbaHubDeveloper then
 	end
 end
 
--- ── Pre-fetch known files in PARALLEL (only downloads missing ones) ───
+-- ── Pre-fetch ALL known heavy files in PARALLEL ─────────────────────
 local gui = 'new'
 if isfile('tumbascript/profiles/gui.txt') then
 	local g = readfile('tumbascript/profiles/gui.txt'):gsub('%s', '')
 	if g == 'rise' or g == 'old' or g == 'new' then gui = g end
+end
+
+if not isfolder('tumbascript/games/bedwars') then
+	makefolder('tumbascript/games/bedwars')
 end
 
 local threads = {
@@ -134,10 +138,13 @@ local threads = {
 	fetchParallel('tumbascript/guis/' .. gui .. '.lua'),
 	fetchParallel('tumbascript/games/universal.lua'),
 	fetchParallel('tumbascript/profiles/supported.json'),
+	fetchParallel('tumbascript/games/bedwars/main.luau'),
+	fetchParallel('tumbascript/games/bedwars/premium.luau'),
+	fetchParallel('tumbascript/games/bedwars/engine.luau'),
 }
 
--- Wait for all parallel downloads to finish
-local deadline = tick() + 10
+-- Wait for downloads to finish (max 12 seconds)
+local deadline = tick() + 12
 repeat
 	task.wait(0.02)
 	local done = true
@@ -146,6 +153,36 @@ repeat
 	end
 	if done then break end
 until tick() > deadline
+
+-- ── Background pre-compile the heaviest files ─────────────────────────
+-- Stores compiled chunks in getgenv() so main.lua can reuse them
+-- without calling loadstring again (saves 1-2 seconds of compilation).
+local precompiled = {}
+getgenv()._tumbaPrecompiled = precompiled
+
+local compileThreads = {}
+local function precompile(path, key)
+	if not isfile(path) then return end
+	local t = task.spawn(function()
+		local src = readfile(path)
+		if src and #src > 0 then
+			local chunk = loadstring(src, key)
+			if chunk then
+				precompiled[key] = chunk
+			end
+		end
+	end)
+	table.insert(compileThreads, t)
+end
+
+precompile('tumbascript/guis/' .. gui .. '.lua',            'gui')
+precompile('tumbascript/games/universal.lua',               'universal')
+precompile('tumbascript/games/bedwars/main.luau',           'bedwars_main')
+precompile('tumbascript/games/bedwars/premium.luau',        'bedwars_premium')
+
+-- Give compilers a head start before main.lua execution begins
+-- (main.lua still works even if not done; precompiled table just stays empty)
+task.wait(0.05)
 
 downloader.Text = ''
 return loadstring(downloadFile('tumbascript/main.lua'), 'main')()

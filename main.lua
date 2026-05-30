@@ -267,7 +267,11 @@ if not isfolder('tumbascript/assets/'..gui) then
 end
 
 updateProgress(35, 'Loading Core GUI components...')
-tumbahub = loadstring(downloadFile('tumbascript/guis/'..gui..'.lua'), 'gui')()
+do
+	local _pre = getgenv()._tumbaPrecompiled
+	local chunk = _pre and _pre['gui']
+	tumbahub = (chunk or loadstring(downloadFile('tumbascript/guis/'..gui..'.lua'), 'gui'))()
+end
 shared.tumbahub = tumbahub
 shared.vape = tumbahub
 _G.tumbahub = tumbahub
@@ -276,7 +280,11 @@ getgenv().vape = tumbahub
 getgenv().canDebug = not table.find({'Xeno', 'Solara'}, ({identifyexecutor()})[1]) and debug.getconstant and debug.getproto and true or false
 if not shared.TumbaHubIndependent then
 	updateProgress(65, 'Loading Universal Module definitions...')
-	loadstring(downloadFile('tumbascript/games/universal.lua'), 'universal')()
+	do
+		local _pre = getgenv()._tumbaPrecompiled
+		local chunk = _pre and _pre['universal']
+		(chunk or loadstring(downloadFile('tumbascript/games/universal.lua'), 'universal'))()
+	end
 
 	local found = false
 	local callback = shared.TumbaHubDeveloper and readfile or downloadFile
@@ -293,8 +301,15 @@ if not shared.TumbaHubIndependent then
 						makefolder('tumbascript/games/'.. i)
 					end
 					
-					loadstring(callback('tumbascript/games/'.. i.. '/'.. i2.. '.luau'), tostring(game.PlaceId))(...)
-					loadstring(callback('tumbascript/games/'.. i.. '/'.. 'premium'.. '.luau'), 'paid '.. tostring(game.PlaceId))(...)
+					do
+						local _pre = getgenv()._tumbaPrecompiled
+						local src1 = callback('tumbascript/games/'.. i.. '/'.. i2.. '.luau')
+						local src2 = callback('tumbascript/games/'.. i.. '/premium.luau')
+						local chunk1 = _pre and _pre['bedwars_main'] or loadstring(src1, tostring(game.PlaceId))
+						local chunk2 = _pre and _pre['bedwars_premium'] or loadstring(src2, 'paid '.. tostring(game.PlaceId))
+						if chunk1 then chunk1(...) end
+						if chunk2 then chunk2(...) end
+					end
 					break
 				end
 			end
