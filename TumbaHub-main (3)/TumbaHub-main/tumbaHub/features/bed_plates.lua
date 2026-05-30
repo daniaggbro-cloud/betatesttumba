@@ -228,19 +228,6 @@ local function refreshAdornee(v)
         blockimage.BackgroundTransparency = 1
         blockimage.Image = getBlockIcon(block)
         blockimage.Parent = v.Frame
-        
-        if amount > 1 and States.Render.BedPlatesCounter then
-            local amounttext = Instance.new("TextLabel")
-            amounttext.Name = "Amount"
-            amounttext.Size = UDim2.fromScale(1, 1)
-            amounttext.BackgroundTransparency = 1
-            amounttext.Text = tostring(amount)
-            amounttext.TextColor3 = Color3.fromRGB(255, 255, 255)
-            amounttext.TextSize = 16
-            amounttext.TextStrokeTransparency = 0.3
-            amounttext.Font = Enum.Font.Arial
-            amounttext.Parent = blockimage
-        end
     end
 end
 
@@ -348,6 +335,14 @@ function Mega.Features.BedPlates.SetEnabled(state)
                 pcall(refreshNear, child)
             end))
         end
+        
+        -- Background auto-refresh loop to ensure 100% accurate real-time block state
+        task.spawn(function()
+            while States.Render.BedPlates do
+                pcall(refreshAll)
+                task.wait(1)
+            end
+        end)
     end
 end
 
