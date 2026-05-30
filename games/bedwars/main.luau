@@ -795,9 +795,10 @@ run(function()
 	local Client = require(replicatedStorage.TS.remotes).default.Client
 	local OldGet, OldBreak, OldHit = Client.Get, nil, nil
 
+	local t0 = tick()
 	repeat
 		task.wait()
-	until Knit.Controllers and Knit.Controllers.BlockBreakController and Knit.Controllers.DamageIndicatorController
+	until (Knit.Controllers and Knit.Controllers.NotificationController) or (tick() - t0 > 5)
 
 	bedwars = setmetatable({
 		AbilityController = Flamework.resolveDependency('@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController'),
@@ -812,12 +813,12 @@ run(function()
 		StatusEffectMeta = require(replicatedStorage.TS['status-effect']['status-effect-meta']).StatusEffectMeta,
         BedwarsKitSkin = canDebug and debug.getupvalue(require(replicatedStorage.TS.games.bedwars['kit-skin']['bedwars-kit-skin-meta']).getKitSkinMetadata, 1) or {},
         BlockBreakController = Knit.Controllers.BlockBreakController,
-        BlockBreaker = Knit.Controllers.BlockBreakController.blockBreaker,
+        BlockBreaker = Knit.Controllers.BlockBreakController and Knit.Controllers.BlockBreakController.blockBreaker or nil,
         BlockController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out).BlockEngine,
         BlockEngine = require(lplr.PlayerScripts.TS.lib['block-engine']['client-block-engine']).ClientBlockEngine,
         BlockPlacer = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out.client.placement['block-placer']).BlockPlacer,
         BlockSelector = require(replicatedStorage.rbxts_include.node_modules['@easy-games']['block-engine'].out.client.select['block-selector']).BlockSelector,
-        BowConstantsTable = canDebug and debug.getupvalue(Knit.Controllers.ProjectileController.enableBeam, 8) or {RelX = 0, RelY = 0, RelZ = 0},
+        BowConstantsTable = canDebug and Knit.Controllers.ProjectileController and debug.getupvalue(Knit.Controllers.ProjectileController.enableBeam, 8) or {RelX = 0, RelY = 0, RelZ = 0},
         SharedConstants = canDebug and require(replicatedStorage.TS['shared-constants']).CpsConstants or {},
         ClickHold = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out.client.ui.lib.util['click-hold']).ClickHold,
         Client = Client,
@@ -825,7 +826,7 @@ run(function()
         GamePlayer = require(replicatedStorage.TS.player['game-player']),
         ClientDamageBlock = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out.shared.remotes).BlockEngineRemotes.Client,
         CombatConstant = require(replicatedStorage.TS.combat['combat-constant']).CombatConstant,
-        DamageIndicator = Knit.Controllers.DamageIndicatorController.spawnDamageIndicator,
+        DamageIndicator = Knit.Controllers.DamageIndicatorController and Knit.Controllers.DamageIndicatorController.spawnDamageIndicator or nil,
         DefaultKillEffect = require(lplr.PlayerScripts.TS.controllers.global.locker['kill-effect'].effects['default-kill-effect']),
         EmoteType = require(replicatedStorage.TS.locker.emote['emote-type']).EmoteType,
         RankMeta = require(replicatedStorage.TS.rank['rank-meta']).RankMeta,
