@@ -84,140 +84,146 @@ local function getPinatas()
 end
 
 local lastCheck = 0
-connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Lucia.Enabled then 
-        espFolder:ClearAllChildren()
-        for _, pinata in ipairs(getPinatas()) do
-            local hl = pinata:FindFirstChild("LuciaHighlight")
-            if hl then hl:Destroy() end
-        end
-        return 
-    end
-    
-    -- Логика ESP Пиньяты
-    local activePinatas = {}
-    local pinatas = getPinatas()
-    for _, pinata in ipairs(pinatas) do
-        local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
-        if pinataPart then
-            if States.Lucia.ESP then
-                activePinatas[pinataPart] = true
-                local hl = pinata:FindFirstChild("LuciaHighlight")
-                if not hl then
-                    hl = Instance.new("Highlight")
-                    hl.Name = "LuciaHighlight"
-                    hl.FillColor = Color3.fromRGB(255, 100, 200)
-                    hl.OutlineColor = Color3.new(1, 1, 1)
-                    hl.Parent = pinata
-                end
-                
-                local espName = "ESP_" .. pinata:GetDebugId()
-                if not espFolder:FindFirstChild(espName) then
-                    local b = Instance.new("BillboardGui")
-                    b.Name = espName
-                    b.Adornee = pinataPart
-                    b.Size = UDim2.new(0, 100, 0, 30)
-                    b.StudsOffset = Vector3.new(0, 3, 0)
-                    b.AlwaysOnTop = true
-                    local txt = Instance.new("TextLabel", b)
-                    txt.Size = UDim2.new(1, 0, 1, 0)
-                    txt.BackgroundTransparency = 1
-                    txt.Text = "Piñata"
-                    txt.TextColor3 = Color3.fromRGB(255, 100, 200)
-                    txt.Font = Enum.Font.GothamBold
-                    txt.TextStrokeTransparency = 0
-                    b.Parent = espFolder
-                end
-            else
-                local hl = pinata:FindFirstChild("LuciaHighlight")
-                if hl then hl:Destroy() end
-            end
-        end
-    end
-    
-    -- Очистка старого ESP
-    for _, child in ipairs(espFolder:GetChildren()) do
-        if child:IsA("BillboardGui") and child.Adornee then
-            if not activePinatas[child.Adornee] then
-                child:Destroy()
-            end
-        else
-            child:Destroy()
-        end
-    end
 
-    if not States.Lucia.AutoDeposit then return end
-    
-    if tick() - lastCheck < 0.5 then return end
-    lastCheck = tick()
-    
-    if getCandyCount() == 0 then return end
-    
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    for _, pinata in ipairs(pinatas) do
-        local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
-        if pinataPart then
-            local dist = (root.Position - pinataPart.Position).Magnitude
-            local targetRange = States.Lucia.Legit and States.Lucia.Range or math.huge
-            
-            if dist <= targetRange then
-                
-                if States.Lucia.Legit then
-                    -- 1. Метод через ProximityPrompt (Легитный)
-                    local prompt = pinata:FindFirstChildWhichIsA("ProximityPrompt", true)
-                    if prompt and prompt.Enabled then
-                        if fireproximityprompt then
-                            fireproximityprompt(prompt)
-                        else
-                            task.spawn(function()
-                                pcall(function()
-                                    prompt:InputHoldBegin()
-                                    task.wait(prompt.HoldDuration or 0)
-                                    prompt:InputHoldEnd()
-                                end)
-                            end)
+local function startLoop()
+    if not connections.AutoDepositLoop then
+        connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
+            -- ESP Highlight Logic
+            local activePinatas = {}
+            local pinatas = getPinatas()
+            for _, pinata in ipairs(pinatas) do
+                local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
+                if pinataPart then
+                    if States.Lucia.ESP then
+                        activePinatas[pinataPart] = true
+                        local hl = pinata:FindFirstChild("LuciaHighlight")
+                        if not hl then
+                            hl = Instance.new("Highlight")
+                            hl.Name = "LuciaHighlight"
+                            hl.FillColor = Color3.fromRGB(255, 100, 200)
+                            hl.OutlineColor = Color3.new(1, 1, 1)
+                            hl.Parent = pinata
                         end
-                        return 
+                        
+                        local espName = "ESP_" .. pinata:GetDebugId()
+                        if not espFolder:FindFirstChild(espName) then
+                            local b = Instance.new("BillboardGui")
+                            b.Name = espName
+                            b.Adornee = pinataPart
+                            b.Size = UDim2.new(0, 100, 0, 30)
+                            b.StudsOffset = Vector3.new(0, 3, 0)
+                            b.AlwaysOnTop = true
+                            local txt = Instance.new("TextLabel", b)
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.BackgroundTransparency = 1
+                            txt.Text = "Piñata"
+                            txt.TextColor3 = Color3.fromRGB(255, 100, 200)
+                            txt.Font = Enum.Font.GothamBold
+                            txt.TextStrokeTransparency = 0
+                            b.Parent = espFolder
+                        end
+                    else
+                        local hl = pinata:FindFirstChild("LuciaHighlight")
+                        if hl then hl:Destroy() end
                     end
                 end
+            end
+            
+            -- Clean old ESP
+            for _, child in ipairs(espFolder:GetChildren()) do
+                if child:IsA("BillboardGui") and child.Adornee then
+                    if not activePinatas[child.Adornee] then
+                        child:Destroy()
+                    end
+                else
+                    child:Destroy()
+                end
+            end
 
-                -- 2. Метод через Ремоут (Уязвимость сервера BedWars - дистанция не проверяется)
-                if DepositPinataRemote then
-                    task.spawn(function()
-                        pcall(function()
-                            if DepositPinataRemote:IsA("RemoteEvent") then
-                                DepositPinataRemote:FireServer(pinata)
-                            elseif DepositPinataRemote:IsA("RemoteFunction") then
-                                DepositPinataRemote:InvokeServer(pinata)
+            if not States.Lucia.AutoDeposit then return end
+            
+            if tick() - lastCheck < 0.5 then return end
+            lastCheck = tick()
+            
+            if getCandyCount() == 0 then return end
+            
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+
+            for _, pinata in ipairs(pinatas) do
+                local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
+                if pinataPart then
+                    local dist = (root.Position - pinataPart.Position).Magnitude
+                    local targetRange = States.Lucia.Legit and States.Lucia.Range or math.huge
+                    
+                    if dist <= targetRange then
+                        
+                        if States.Lucia.Legit then
+                            -- 1. Метод через ProximityPrompt (Легитный)
+                            local prompt = pinata:FindFirstChildWhichIsA("ProximityPrompt", true)
+                            if prompt and prompt.Enabled then
+                                if fireproximityprompt then
+                                    fireproximityprompt(prompt)
+                                else
+                                    task.spawn(function()
+                                        pcall(function()
+                                            prompt:InputHoldBegin()
+                                            task.wait(prompt.HoldDuration or 0)
+                                            prompt:InputHoldEnd()
+                                        end)
+                                    end)
+                                end
+                                return 
                             end
-                        end)
-                        -- Дублирующие аргументы на случай других проверок
-                        local possibleArgs = {
-                            { ["piggyBank"] = pinata },
-                            {}
-                        }
-                        for _, arg in ipairs(possibleArgs) do
-                            pcall(function()
-                                if DepositPinataRemote:IsA("RemoteEvent") then
-                                    DepositPinataRemote:FireServer(arg)
-                                elseif DepositPinataRemote:IsA("RemoteFunction") then
-                                    DepositPinataRemote:InvokeServer(arg)
+                        end
+
+                        -- 2. Метод через Ремоут (Уязвимость сервера BedWars - дистанция не проверяется)
+                        if DepositPinataRemote then
+                            task.spawn(function()
+                                pcall(function()
+                                    if DepositPinataRemote:IsA("RemoteEvent") then
+                                        DepositPinataRemote:FireServer(pinata)
+                                    elseif DepositPinataRemote:IsA("RemoteFunction") then
+                                        DepositPinataRemote:InvokeServer(pinata)
+                                    end
+                                end)
+                                -- Дублирующие аргументы на случай других проверок
+                                local possibleArgs = {
+                                    { ["piggyBank"] = pinata },
+                                    {}
+                                }
+                                for _, arg in ipairs(possibleArgs) do
+                                    pcall(function()
+                                        if DepositPinataRemote:IsA("RemoteEvent") then
+                                            DepositPinataRemote:FireServer(arg)
+                                        elseif DepositPinataRemote:IsA("RemoteFunction") then
+                                            DepositPinataRemote:InvokeServer(arg)
+                                        end
+                                    end)
                                 end
                             end)
                         end
-                    end)
+                    end
                 end
             end
-        end
+        end)
     end
-end)
+end
+
+local function stopLoop()
+    if connections.AutoDepositLoop then
+        connections.AutoDepositLoop:Disconnect()
+        connections.AutoDepositLoop = nil
+    end
+end
 
 function Mega.Features.Lucia.SetEnabled(state)
     States.Lucia.Enabled = state
-    if not state then 
+    if state then
+        startLoop()
+    else
+        stopLoop()
         if espFolder then espFolder:ClearAllChildren() end 
         for _, pinata in ipairs(getPinatas()) do
             local hl = pinata:FindFirstChild("LuciaHighlight")
@@ -225,3 +231,8 @@ function Mega.Features.Lucia.SetEnabled(state)
         end
     end
 end
+
+-- Initialize loop on load
+if States.Lucia.Enabled then
+    startLoop()
+end

@@ -155,24 +155,36 @@ local function performReach()
     end
 end
 
--- Listener for manual clicks
-if not Mega.Objects.ReachConnections then Mega.Objects.ReachConnections = {} end
-local connections = Mega.Objects.ReachConnections
-
-for _, conn in pairs(connections) do 
-    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
-end
-table.clear(connections)
-
-connections.ReachInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    -- Trigger on click, but not if typing in chat
-    if not gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
-        performReach()
+local function connectReach()
+    if not connections.ReachInput then
+        connections.ReachInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            -- Trigger on click, but not if typing in chat
+            if not gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                performReach()
+            end
+        end)
     end
-end)
+end
+
+local function disconnectReach()
+    if connections.ReachInput then
+        connections.ReachInput:Disconnect()
+        connections.ReachInput = nil
+    end
+end
 
 function Mega.Features.Reach.SetEnabled(state)
     States.Combat.Reach.Enabled = state
+    if state then
+        connectReach()
+    else
+        disconnectReach()
+    end
+end
+
+-- Initialize if enabled on load
+if States.Combat.Reach.Enabled then
+    connectReach()
 end
 
 -- Cleanup if module reloaded
@@ -183,3 +195,4 @@ if Mega.UnloadedSignal then
 end
 
 return Mega.Features.Reach
+

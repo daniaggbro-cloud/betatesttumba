@@ -88,98 +88,110 @@ end
 local isClicking = false
 local lastShoot = 0
 
-connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
-    if Mega.Unloaded then
-        if isClicking then
-            isClicking = false
-            if type(mouse1release) == "function" then pcall(mouse1release) end
-        end
-        if connections.AimbotLoop then connections.AimbotLoop:Disconnect() end
-        return
-    end
-
+local function updateAimbotLoopState()
     local aimbotEnabled = States.Combat.Aimbot.Enabled
     local autoShootEnabled = States.Combat.AutoShoot.Enabled
     local aimAssistEnabled = States.AimAssist and States.AimAssist.Enabled
-
+    
     if aimbotEnabled or autoShootEnabled or aimAssistEnabled then
-        local target = getClosestPlayerToCursor()
-        if target and target.Character then
-            Mega.Features.Aimbot.Target = target.Character:FindFirstChild("HumanoidRootPart") or target.Character:FindFirstChild("Head")
-        else
-            Mega.Features.Aimbot.Target = nil
-        end
-    else
-        Mega.Features.Aimbot.Target = nil
-    end
-    
-    local aimbotTarget = Mega.Features.Aimbot.Target
-    
-    -- [NEW] Manual Camera Aimbot for Free Executors (Aim Assist)
-    if aimAssistEnabled and aimbotTarget then
-        local currentCamera = Services.Workspace.CurrentCamera
-        local targetPos = aimbotTarget.Position
-        local smooth = (States.AimAssist and States.AimAssist.Smoothness) or 0.5
-        
-        local currentCFrame = currentCamera.CFrame
-        local newCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
-        
-        currentCamera.CFrame = currentCFrame:Lerp(newCFrame, smooth)
-    end
-    
-    if autoShootEnabled and aimbotTarget then
-        local windowActive = (type(iswindowactive) == "function") and iswindowactive() or true
-        if windowActive then
-            local bwRemote = getBedwarsRemote()
-            
-            if bwRemote and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HandInvItem") then
-                local delaySec = (States.Combat.AutoShoot.Delay or 500) / 1000
-                if tick() - lastShoot > delaySec then
-                    local tool = LocalPlayer.Character.HandInvItem.Value
-                    if tool and (tool.Name:lower():find("bow") or tool.Name:lower():find("fireball") or tool.Name:lower():find("snowball") or tool.Name:lower():find("crossbow") or tool.Name:lower():find("headhunter")) then
-                        lastShoot = tick()
+        if not connections.AimbotLoop then
+            connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
+                if Mega.Unloaded then
+                    if isClicking then
+                        isClicking = false
+                        if type(mouse1release) == "function" then pcall(mouse1release) end
+                    end
+                    if connections.AimbotLoop then connections.AimbotLoop:Disconnect() end
+                    return
+                end
+
+                local target = getClosestPlayerToCursor()
+                if target and target.Character then
+                    Mega.Features.Aimbot.Target = target.Character:FindFirstChild("HumanoidRootPart") or target.Character:FindFirstChild("Head")
+                else
+                    Mega.Features.Aimbot.Target = nil
+                end
+                
+                local aimbotTarget = Mega.Features.Aimbot.Target
+                
+                -- Aim Assist
+                if aimAssistEnabled and aimbotTarget then
+                    local currentCamera = Services.Workspace.CurrentCamera
+                    local targetPos = aimbotTarget.Position
+                    local smooth = (States.AimAssist and States.AimAssist.Smoothness) or 0.5
+                    
+                    local currentCFrame = currentCamera.CFrame
+                    local newCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
+                    
+                    currentCamera.CFrame = currentCFrame:Lerp(newCFrame, smooth)
+                end
+                
+                if autoShootEnabled and aimbotTarget then
+                    local windowActive = (type(iswindowactive) == "function") and iswindowactive() or true
+                    if windowActive then
+                        local bwRemote = getBedwarsRemote()
                         
-                        local ammo = "arrow"
-                        local proj = "arrow"
-                        if tool.Name:lower():find("fireball") then ammo = "fireball"; proj = "fireball" end
-                        if tool.Name:lower():find("snowball") then ammo = "snowball"; proj = "snowball" end
-                        
-                        local origin = LocalPlayer.Character.PrimaryPart and LocalPlayer.Character.PrimaryPart.Position or LocalPlayer.Character:GetPivot().Position
-                        local shootPos = origin + Vector3.new(0, 2, 0)
-                        local speed = tool.Name:lower():find("crossbow") and 180 or 130
-                        
-                        local dist = (aimbotTarget.Position - shootPos).Magnitude
-                        local timeToHit = dist / speed
-                        local drop = 0.5 * 196.2 * (timeToHit ^ 2)
-                        local targetVelocity = aimbotTarget.AssemblyLinearVelocity or Vector3.new(0,0,0)
-                        local predictedPos = aimbotTarget.Position + (targetVelocity * timeToHit) + Vector3.new(0, drop, 0)
-                        local dir = (predictedPos - shootPos).Unit
-                        
-                        local args = {
-                            tool, ammo, proj, shootPos, origin, dir * speed, genId(),
-                            { shotId = genId(), drawDurationSec = delaySec + 0.1 },
-                            workspace:GetServerTimeNow() - 0.045
-                        }
-                        
-                        task.spawn(function()
-                            pcall(function() bwRemote:InvokeServer(unpack(args)) end)
-                        end)
+                        if bwRemote and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HandInvItem") then
+                            local delaySec = (States.Combat.AutoShoot.Delay or 500) / 1000
+                            if tick() - lastShoot > delaySec then
+                                local tool = LocalPlayer.Character.HandInvItem.Value
+                                if tool and (tool.Name:lower():find("bow") or tool.Name:lower():find("fireball") or tool.Name:lower():find("snowball") or tool.Name:lower():find("crossbow") or tool.Name:lower():find("headhunter")) then
+                                    lastShoot = tick()
+                                    
+                                    local ammo = "arrow"
+                                    local proj = "arrow"
+                                    if tool.Name:lower():find("fireball") then ammo = "fireball"; proj = "fireball" end
+                                    if tool.Name:lower():find("snowball") then ammo = "snowball"; proj = "snowball" end
+                                    
+                                    local origin = LocalPlayer.Character.PrimaryPart and LocalPlayer.Character.PrimaryPart.Position or LocalPlayer.Character:GetPivot().Position
+                                    local shootPos = origin + Vector3.new(0, 2, 0)
+                                    local speed = tool.Name:lower():find("crossbow") and 180 or 130
+                                    
+                                    local dist = (aimbotTarget.Position - shootPos).Magnitude
+                                    local timeToHit = dist / speed
+                                    local drop = 0.5 * 196.2 * (timeToHit ^ 2)
+                                    local targetVelocity = aimbotTarget.AssemblyLinearVelocity or Vector3.new(0,0,0)
+                                    local predictedPos = aimbotTarget.Position + (targetVelocity * timeToHit) + Vector3.new(0, drop, 0)
+                                    local dir = (predictedPos - shootPos).Unit
+                                    
+                                    local args = {
+                                        tool, ammo, proj, shootPos, origin, dir * speed, genId(),
+                                        { shotId = genId(), drawDurationSec = delaySec + 0.1 },
+                                        workspace:GetServerTimeNow() - 0.045
+                                    }
+                                    
+                                    task.spawn(function()
+                                        pcall(function() bwRemote:InvokeServer(unpack(args)) end)
+                                    end)
+                                end
+                            end
+                        else
+                            if not isClicking then
+                                isClicking = true
+                                if type(mouse1press) == "function" then pcall(mouse1press) end
+                            end
+                        end
+                    end
+                else
+                    if isClicking then
+                        isClicking = false
+                        if type(mouse1release) == "function" then pcall(mouse1release) end
                     end
                 end
-            else
-                if not isClicking then
-                    isClicking = true
-                    if type(mouse1press) == "function" then pcall(mouse1press) end
-                end
-            end
+            end)
         end
     else
+        if connections.AimbotLoop then
+            connections.AimbotLoop:Disconnect()
+            connections.AimbotLoop = nil
+        end
         if isClicking then
             isClicking = false
             if type(mouse1release) == "function" then pcall(mouse1release) end
         end
+        Mega.Features.Aimbot.Target = nil
     end
-end)
+end
 
 local execName = (type(identifyexecutor) == "function" and identifyexecutor()) or "Unknown"
 local canHook = type(hookmetamethod) == "function" and type(newcclosure) == "function" and type(getnamecallmethod) == "function"
@@ -250,8 +262,13 @@ end
 
 function Mega.Features.Aimbot.SetEnabled(state)
     States.Combat.Aimbot.Enabled = state
+    updateAimbotLoopState()
 end
 
 function Mega.Features.Aimbot.SetAutoShoot(state)
     States.Combat.AutoShoot.Enabled = state
+    updateAimbotLoopState()
 end
+
+-- Initialize loop on load
+updateAimbotLoopState()

@@ -107,27 +107,44 @@ local isSimulatingClick = false
 -- Лимит убран для синхронизации с каждым кадром игры (Heartbeat)
 
 -- Отслеживание кликов игрока с фильтром интерфейса
-if not Mega.Objects.KillauraInputConnections then
-    Mega.Objects.KillauraInputConnections = {}
-    
-    table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputBegan:Connect(function(input, processed)
-        if processed then return end -- Игнорируем клики по интерфейсу (меню, ползунки)
-        if isSimulatingClick then return end -- Игнорируем наши собственные авто-клики
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isManualAttacking = true
-            clickTriggered = true
-            if States.Combat.Killaura.OnlyOnClick then
-                lastAttackTime = 0 -- Сброс таймера для моментального удара
+local function connectKillauraInputs()
+    if not Mega.Objects.KillauraInputConnections then
+        Mega.Objects.KillauraInputConnections = {}
+        
+        table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputBegan:Connect(function(input, processed)
+            if processed then return end -- Игнорируем клики по интерфейсу (меню, ползунки)
+            if isSimulatingClick then return end -- Игнорируем наши собственные авто-клики
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isManualAttacking = true
+                clickTriggered = true
+                if States.Combat.Killaura.OnlyOnClick then
+                    lastAttackTime = 0 -- Сброс таймера для моментального удара
+                end
             end
-        end
-    end))
-    
-    table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isManualAttacking = false
-        end
-    end))
+        end))
+        
+        table.insert(Mega.Objects.KillauraInputConnections, Services.UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isManualAttacking = false
+            end
+        end))
+    end
 end
+
+local function disconnectKillauraInputs()
+    if Mega.Objects.KillauraInputConnections then
+        for _, conn in ipairs(Mega.Objects.KillauraInputConnections) do
+            pcall(function() conn:Disconnect() end)
+        end
+        table.clear(Mega.Objects.KillauraInputConnections)
+        Mega.Objects.KillauraInputConnections = nil
+    end
+end
+
+if Mega.UnloadedSignal then
+    Mega.UnloadedSignal:Connect(disconnectKillauraInputs)
+end
+
 
 
 
@@ -253,8 +270,10 @@ local AnimTween = nil
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
-    if not state then
-
+    if state then
+        connectKillauraInputs()
+    else
+        disconnectKillauraInputs()
         if AnimTween then AnimTween:Cancel() end
         local wrist = getArmWrist()
         if wrist and armC0 then
@@ -464,3 +483,11 @@ function Mega.Features.Killaura.SetEnabled(state)
         end)
     end
 end
+
+-- Initialize if enabled on load
+if States.Combat.Killaura.Enabled then
+    Mega.Features.Killaura.SetEnabled(true)
+end
+
+return Mega.Features.Killaura
+

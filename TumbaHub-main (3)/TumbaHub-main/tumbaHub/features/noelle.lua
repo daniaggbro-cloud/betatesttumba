@@ -35,28 +35,39 @@ task.spawn(function()
 end)
 
 local lastBindTick = 0
-connections.NoelleBindLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Noelle.Enabled then return end
-    if not RequestMoveSlime then return end
-    if tick() - lastBindTick < 1 then return end
-    lastBindTick = tick()
-    
-    if not SlimeDataFolder then return end
-    local myName = LocalPlayer.Name
-    
-    for slimeType, targetId in pairs(States.Noelle.Binds) do
-        local slimeName = myName .. "_Slime_" .. slimeType
-        local slimeObj = SlimeDataFolder:FindFirstChild(slimeName)
-        if slimeObj then
-            local slimeId = slimeObj:GetAttribute("Id")
-            if not slimeId and slimeObj:FindFirstChild("Id") then slimeId = slimeObj.Id.Value end
-            if slimeId then
-                local args = {{ slimeId = slimeId, targetPlayerUserId = targetId }}
-                task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
+local function startLoop()
+    if not connections.NoelleBindLoop then
+        connections.NoelleBindLoop = Services.RunService.Heartbeat:Connect(function()
+            if not RequestMoveSlime then return end
+            if tick() - lastBindTick < 1 then return end
+            lastBindTick = tick()
+            
+            if not SlimeDataFolder then return end
+            local myName = LocalPlayer.Name
+            
+            for slimeType, targetId in pairs(States.Noelle.Binds) do
+                local slimeName = myName .. "_Slime_" .. slimeType
+                local slimeObj = SlimeDataFolder:FindFirstChild(slimeName)
+                if slimeObj then
+                    local slimeId = slimeObj:GetAttribute("Id")
+                    if not slimeId and slimeObj:FindFirstChild("Id") then slimeId = slimeObj.Id.Value end
+                    if slimeId then
+                        local args = {{ slimeId = slimeId, targetPlayerUserId = targetId }}
+                        task.spawn(function() pcall(function() RequestMoveSlime:InvokeServer(unpack(args)) end) end)
+                    end
+                end
             end
-        end
+        end)
     end
-end)
+end
+
+local function stopLoop()
+    if connections.NoelleBindLoop then
+        connections.NoelleBindLoop:Disconnect()
+        connections.NoelleBindLoop = nil
+    end
+end
+
 
 local RefreshPlayerList = function() end
 
@@ -274,5 +285,16 @@ end)
 
 function Mega.Features.Noelle.SetEnabled(state)
     States.Noelle.Enabled = state
-    if state then RefreshPlayerList() end
+    if state then 
+        startLoop()
+        RefreshPlayerList() 
+    else
+        stopLoop()
+    end
 end
+
+-- Initialize loop on load
+if States.Noelle.Enabled then
+    startLoop()
+end
+

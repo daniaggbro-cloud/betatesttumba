@@ -119,21 +119,41 @@ end
 table.clear(connections)
 
 local lastPlaceTime = 0
-connections.BuildLoop = game:GetService("RunService").RenderStepped:Connect(function()
-    if States.Player.BuildReach.Enabled then
-        if Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-            local delayMs = States.Player.BuildReach.Delay or 150
-            local delaySec = delayMs / 1000.0
-            if tick() - lastPlaceTime > delaySec then
-                performBuildReach()
-                lastPlaceTime = tick()
+
+local function startLoop()
+    if not connections.BuildLoop then
+        connections.BuildLoop = game:GetService("RunService").RenderStepped:Connect(function()
+            if Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+                local delayMs = States.Player.BuildReach.Delay or 150
+                local delaySec = delayMs / 1000.0
+                if tick() - lastPlaceTime > delaySec then
+                    performBuildReach()
+                    lastPlaceTime = tick()
+                end
             end
-        end
+        end)
     end
-end)
+end
+
+local function stopLoop()
+    if connections.BuildLoop then
+        connections.BuildLoop:Disconnect()
+        connections.BuildLoop = nil
+    end
+end
 
 function Mega.Features.BuildReach.SetEnabled(state)
     States.Player.BuildReach.Enabled = state
+    if state then
+        startLoop()
+    else
+        stopLoop()
+    end
+end
+
+-- Initialize if enabled on load
+if States.Player.BuildReach.Enabled then
+    startLoop()
 end
 
 if Mega.UnloadedSignal then
@@ -143,3 +163,4 @@ if Mega.UnloadedSignal then
 end
 
 return Mega.Features.BuildReach
+

@@ -143,7 +143,11 @@ DistanceLabel.Parent = PlayerItemTemplate
 
 local function StartSpectate(player)
     if player == Services.LocalPlayer then return end
-    Mega.States.Player.SpectateTarget = player
+    if Mega.Features.SpectatePlayers and Mega.Features.SpectatePlayers.Spectate then
+        Mega.Features.SpectatePlayers.Spectate(player)
+    else
+        Mega.States.Player.SpectateTarget = player
+    end
     if Mega.ShowNotification then
         Mega.ShowNotification(Mega.GetText("notify_spectate_start", player.Name))
     end

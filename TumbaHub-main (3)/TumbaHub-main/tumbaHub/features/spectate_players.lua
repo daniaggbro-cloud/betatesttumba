@@ -18,29 +18,54 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
+local function startLoop()
+    if not connections.SpectateLoop then
+        connections.SpectateLoop = Services.RunService.Heartbeat:Connect(function()
+            if States.Player.SpectateTarget then
+                local target = States.Player.SpectateTarget
+                if target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                    local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+                    if targetRoot then
+                        Services.Workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+                        Services.Workspace.CurrentCamera.CFrame = targetRoot.CFrame * CFrame.new(0, 5, 15)
+                    end
+
+                    if target.Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
+                        Mega.Features.SpectatePlayers.StopSpectate()
+                    end
+                else
+                    Mega.Features.SpectatePlayers.StopSpectate()
+                end
+            end
+        end)
+    end
+end
+
+local function stopLoop()
+    if connections.SpectateLoop then
+        connections.SpectateLoop:Disconnect()
+        connections.SpectateLoop = nil
+    end
+end
+
+function Mega.Features.SpectatePlayers.Spectate(targetPlayer)
+    States.Player.SpectateTarget = targetPlayer
+    if targetPlayer then
+        startLoop()
+    else
+        stopLoop()
+        Services.Workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+    end
+end
+
 function Mega.Features.SpectatePlayers.StopSpectate()
-    States.Player.SpectateTarget = nil
-    Services.Workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+    Mega.Features.SpectatePlayers.Spectate(nil)
     if Mega.ShowNotification then
         Mega.ShowNotification(Mega.GetText("notify_spectate_stop"))
     end
 end
 
-connections.SpectateLoop = Services.RunService.Heartbeat:Connect(function()
-    if States.Player.SpectateTarget then
-        local target = States.Player.SpectateTarget
-        if target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
-            local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
-            if targetRoot then
-                Services.Workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-                Services.Workspace.CurrentCamera.CFrame = targetRoot.CFrame * CFrame.new(0, 5, 15)
-            end
-
-            if target.Character:FindFirstChildOfClass("Humanoid").Health <= 0 then
-                Mega.Features.SpectatePlayers.StopSpectate()
-            end
-        else
-            Mega.Features.SpectatePlayers.StopSpectate()
-        end
-    end
-end)
+-- Initialize loop on load
+if States.Player.SpectateTarget then
+    startLoop()
+end

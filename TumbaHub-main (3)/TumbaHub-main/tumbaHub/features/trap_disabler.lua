@@ -34,7 +34,7 @@ local function hookTrapRemote()
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
         local method = getnamecallmethod()
         
-        if not checkcaller() and (method == "FireServer" or method == "InvokeServer") then
+        if (method == "FireServer" or method == "InvokeServer") and not checkcaller() then
             -- Block snap traps from registering our character stepping on them
             if States.Utility.TrapDisabler and self.Name == "StepOnSnapTrap" then
                 return nil
