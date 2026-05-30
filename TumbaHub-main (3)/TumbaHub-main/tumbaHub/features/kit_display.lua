@@ -15,8 +15,8 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
 if not States.Render then States.Render = {} end
-if not States.Render.KitDisplay then
-    States.Render.KitDisplay = { Enabled = false }
+if States.Render.KitDisplay == nil or type(States.Render.KitDisplay) ~= "boolean" then
+    States.Render.KitDisplay = false
 end
 
 local connections = {}
@@ -201,7 +201,7 @@ local function setup5v5(DraftApp)
             hooked = true
             table.insert(connections, dtc.ChildAdded:Connect(function(child)
                 task.delay(0.2, function()
-                    if States.Render.KitDisplay.Enabled then
+                    if States.Render.KitDisplay then
                         callback5v5(getDraftCard(child))
                     end
                 end)
@@ -235,7 +235,7 @@ local function setup5v5(DraftApp)
                     for _ = 1, 3 do
                         container = container and container.Parent
                     end
-                    if States.Render.KitDisplay.Enabled and container then
+                    if States.Render.KitDisplay and container then
                         callback5v5(getDraftCard(container))
                     end
                 end)
@@ -269,7 +269,7 @@ local function setupSquad(DraftApp)
 end
 
 function Mega.Features.KitDisplay.SetEnabled(state)
-    States.Render.KitDisplay.Enabled = state
+    States.Render.KitDisplay = state
     
     for _, conn in ipairs(connections) do
         pcall(function() conn:Disconnect() end)
@@ -288,7 +288,7 @@ function Mega.Features.KitDisplay.SetEnabled(state)
 end
 
 -- Initialize if enabled in config
-if States.Render.KitDisplay.Enabled then
+if States.Render.KitDisplay then
     Mega.Features.KitDisplay.SetEnabled(true)
 end
 

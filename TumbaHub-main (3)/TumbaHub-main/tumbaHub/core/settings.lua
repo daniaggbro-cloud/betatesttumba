@@ -205,9 +205,7 @@ Mega.States = {
         }
     },
     Render = {
-        KitDisplay = {
-            Enabled = false
-        }
+        KitDisplay = false
     },
     Misc = {
         FameSpam = false,
