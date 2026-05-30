@@ -94,13 +94,18 @@ StatsLabel.TextXAlignment = Enum.TextXAlignment.Left
 StatsLabel.TextYAlignment = Enum.TextYAlignment.Top
 StatsLabel.Parent = TabFrame
 
+local lastStatsUpdate = 0
 Mega.Objects.Connections.HomeStatsUpdate = Mega.Services.RunService.Stepped:Connect(function()
     if TabFrame.Visible then
-        StatsLabel.Text = GetText("stats_label", 
-            Mega.Database.Stats.Kills, 
-            Mega.Database.Stats.Deaths, 
-            math.floor(Mega.Database.Stats.PlayTime / 60)
-        )
+        local now = tick()
+        if now - lastStatsUpdate >= 1 then
+            lastStatsUpdate = now
+            StatsLabel.Text = GetText("stats_label", 
+                Mega.Database.Stats.Kills, 
+                Mega.Database.Stats.Deaths, 
+                math.floor(Mega.Database.Stats.PlayTime / 60)
+            )
+        end
     end
 end)
 --#endregion

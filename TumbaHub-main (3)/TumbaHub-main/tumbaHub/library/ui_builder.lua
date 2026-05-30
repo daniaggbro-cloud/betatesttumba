@@ -8,6 +8,39 @@ local ShowNotification = Mega.ShowNotification
 local TweenService = Mega.Services.TweenService
 local UserInputService = Mega.Services.UserInputService
 
+local activeDraggingSlider = nil
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        activeDraggingSlider = nil
+    end
+end)
+
+Mega.Services.RunService.RenderStepped:Connect(function()
+    if activeDraggingSlider then
+        local slider = activeDraggingSlider
+        local mousePos = UserInputService:GetMouseLocation()
+        local framePos = slider.Track.AbsolutePosition
+        local frameSize = slider.Track.AbsoluteSize
+        local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
+        local newValue = math.floor(slider.min + relativeX * (slider.max - slider.min) + 0.5)
+
+        local path = slider.statePath
+        local tbl = Mega.States
+        local key
+        for part in path:gmatch("[^%.]+") do
+            key = part
+            if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
+        end
+        tbl[key] = newValue
+
+        slider.Fill.Size = UDim2.new(relativeX, 0, 1, 0)
+        slider.Button.Position = UDim2.new(relativeX, -8, 0.5, -8)
+        slider.Label.Text = GetText("slider_label", slider.translatedText, newValue)
+        if slider.callback then pcall(slider.callback, newValue) end
+    end
+end)
+
 function Mega.UI.CreateSection(parent, titleKey)
     local Section = Instance.new("Frame")
     Section.Name = titleKey .. "Section"
@@ -267,32 +300,18 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
     ButtonCorner.CornerRadius = UDim.new(1, 0)
     ButtonCorner.Parent = SliderButton
 
-    local dragging = false
-    SliderButton.MouseButton1Down:Connect(function() dragging = true end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-
-    Mega.Services.RunService.RenderStepped:Connect(function()
-        if dragging then
-            local mousePos = UserInputService:GetMouseLocation()
-            local framePos = SliderTrack.AbsolutePosition
-            local frameSize = SliderTrack.AbsoluteSize
-            local relativeX = math.clamp((mousePos.X - framePos.X) / frameSize.X, 0, 1)
-            local newValue = math.floor(min + relativeX * (max - min) + 0.5)
-
-            local path = statePath
-            local tbl = Mega.States
-            local key
-            for part in path:gmatch("[^%.]+") do
-                key = part
-                if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
-            end
-            tbl[key] = newValue
-
-            SliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-            SliderButton.Position = UDim2.new(relativeX, -8, 0.5, -8)
-            SliderLabel.Text = GetText("slider_label", translatedText, newValue)
-            if callback then pcall(callback, newValue) end
-        end
+    SliderButton.MouseButton1Down:Connect(function()
+        activeDraggingSlider = {
+            Track = SliderTrack,
+            Fill = SliderFill,
+            Button = SliderButton,
+            Label = SliderLabel,
+            min = min,
+            max = max,
+            statePath = statePath,
+            translatedText = translatedText,
+            callback = callback
+        }
     end)
 
     return SliderFrame

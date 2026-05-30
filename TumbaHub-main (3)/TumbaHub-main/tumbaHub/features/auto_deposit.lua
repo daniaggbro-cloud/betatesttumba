@@ -53,41 +53,62 @@ local function getPersonalChestPart()
 end
 
 local lastDepositCheck = 0
-connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
-    if not States.Misc.AutoDeposit.Enabled then return end
-    if not ChestGiveItem then return end
-    if tick() - lastDepositCheck < 1 then return end -- Задержка 1 секунда
-    lastDepositCheck = tick()
 
-    local char = LocalPlayer.Character
-    if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+local function startLoop()
+    if not connections.AutoDepositLoop then
+        connections.AutoDepositLoop = Services.RunService.Heartbeat:Connect(function()
+            if not ChestGiveItem then return end
+            if tick() - lastDepositCheck < 1 then return end -- Задержка 1 секунда
+            lastDepositCheck = tick()
 
-    local chestPart = getPersonalChestPart()
-    if not chestPart then return end
-    
-    if (chestPart.Position - root.Position).Magnitude > States.Misc.AutoDeposit.Range then
-        return
+            local char = LocalPlayer.Character
+            if not char then return end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+
+            local chestPart = getPersonalChestPart()
+            if not chestPart then return end
+            
+            if (chestPart.Position - root.Position).Magnitude > States.Misc.AutoDeposit.Range then
+                return
+            end
+
+            local myInventory = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name)
+            local personalInventory = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name .. "_personal")
+
+            if not myInventory or not personalInventory then return end
+
+            for _, item in pairs(myInventory:GetChildren()) do
+                if States.Misc.AutoDeposit.Resources[item.Name] then
+                    task.spawn(function()
+                        pcall(function()
+                            ChestGiveItem:InvokeServer(personalInventory, item)
+                        end)
+                    end)
+                    task.wait(0.1) -- Небольшая задержка, чтобы не кикнуло за спам
+                end
+            end
+        end)
     end
+end
 
-    local myInventory = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name)
-    local personalInventory = Services.ReplicatedStorage:FindFirstChild("Inventories") and Services.ReplicatedStorage.Inventories:FindFirstChild(LocalPlayer.Name .. "_personal")
-
-    if not myInventory or not personalInventory then return end
-
-    for _, item in pairs(myInventory:GetChildren()) do
-        if States.Misc.AutoDeposit.Resources[item.Name] then
-            task.spawn(function()
-                pcall(function()
-                    ChestGiveItem:InvokeServer(personalInventory, item)
-                end)
-            end)
-            task.wait(0.1) -- Небольшая задержка, чтобы не кикнуло за спам
-        end
+local function stopLoop()
+    if connections.AutoDepositLoop then
+        connections.AutoDepositLoop:Disconnect()
+        connections.AutoDepositLoop = nil
     end
-end)
+end
 
 function Mega.Features.AutoDeposit.SetEnabled(state)
     States.Misc.AutoDeposit.Enabled = state
+    if state then
+        startLoop()
+    else
+        stopLoop()
+    end
 end
+
+-- Initialize if enabled on load
+if States.Misc.AutoDeposit.Enabled then
+    startLoop()
+end
