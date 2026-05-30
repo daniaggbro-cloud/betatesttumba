@@ -83,12 +83,37 @@ function Mega.LoadModule(path)
     
     -- 1. Сначала пробуем загрузить локальный файл (для тестов в VS Code)
     if isfile and readfile then
+        -- Динамическое определение локальной папки в workspace эксплоита
+        local localBaseDir = nil
+        if listfiles then
+            local function findTumbaHubDir(dir)
+                dir = dir or ""
+                local ok, files = pcall(listfiles, dir)
+                if not ok or not files then return nil end
+                for _, f in ipairs(files) do
+                    f = f:gsub("\\", "/")
+                    local name = f:match("([^/]+)$") or f
+                    if name == "tumbaHub" and isfolder(f) then
+                        return f .. "/"
+                    end
+                    if isfolder(f) and not f:find("%.git") and not f:find("%.github") then
+                        local found = findTumbaHubDir(f)
+                        if found then return found end
+                    end
+                end
+                return nil
+            end
+            localBaseDir = findTumbaHubDir()
+        end
+
         -- Список возможных путей для поиска локального файла
-        local possiblePaths = {
-            "tumbaHub/" .. path,
-            path,
-            "betatesttumba-main/TumbaHub-main (3)/TumbaHub-main/tumbaHub/" .. path
-        }
+        local possiblePaths = {}
+        if localBaseDir then
+            table.insert(possiblePaths, localBaseDir .. path)
+        end
+        table.insert(possiblePaths, "tumbaHub/" .. path)
+        table.insert(possiblePaths, path)
+        table.insert(possiblePaths, "betatesttumba-main/TumbaHub-main (3)/TumbaHub-main/tumbaHub/" .. path)
         
         for _, p in ipairs(possiblePaths) do
             if isfile(p) then
