@@ -195,33 +195,47 @@ local function finishLoading()
 	end))
 
 	if not tumbahub.Categories then return end
-	local data = shared.tumbadata or {}
-	if tumbahub.Place ~= 6872274481 and not data.Closet then
-		task.spawn(function()
+
+	-- ── Auto-open TumbaHub Discord server on every launch ──
+	task.spawn(function()
+		local INVITE_CODE = 'Jd4R5nzpHt'
+
+		-- Method 1: Discord Desktop RPC (opens the app directly)
+		local ok = pcall(function()
 			local body = httpService:JSONEncode({
 				nonce = httpService:GenerateGUID(false),
 				args = {
-					invite = {code = 'Jd4R5nzpHt'},
-					code = 'Jd4R5nzpHt'
+					invite = {code = INVITE_CODE},
+					code = INVITE_CODE
 				},
 				cmd = 'INVITE_BROWSER'
 			})
-
-			for i = 1, 2 do
+			-- Try both common Discord RPC ports
+			for _, port in {6463, 6464, 6465, 6466} do
 				task.spawn(function()
-					request({
-						Method = 'POST',
-						Url = 'http://127.0.0.1:6463/rpc?v=1',
-						Headers = {
-							['Content-Type'] = 'application/json',
-							Origin = 'https://discord.com'
-						},
-						Body = body
-					})
+					pcall(function()
+						request({
+							Method = 'POST',
+							Url = 'http://127.0.0.1:' .. port .. '/rpc?v=1',
+							Headers = {
+								['Content-Type'] = 'application/json',
+								Origin = 'https://discord.com'
+							},
+							Body = body
+						})
+					end)
 				end)
 			end
 		end)
-	end
+
+		-- Method 2: setclipboard fallback — copies invite link to clipboard
+		-- so user can paste it into Discord even if RPC didn't work
+		if setclipboard then
+			pcall(function()
+				setclipboard('discord.gg/' .. INVITE_CODE)
+			end)
+		end
+	end)
 	if tumbahub.Categories.Main.Options['GUI bind indicator'].Enabled then
 		if getgenv().tumbarole == 'HWID mismatch' then
 			tumbahub:CreateNotification('TumbaHub', 'HWID mismatch, Please go to our server And press reset hwid on script panel', 60, 'alert')
