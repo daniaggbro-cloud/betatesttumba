@@ -285,7 +285,9 @@ InitializePhase("features", {
     "features/gorilla_chams.lua",
     "features/kit_ban.lua",
     "features/auto_davey.lua",
-    "features/kit_display.lua"
+    "features/kit_display.lua",
+    "features/trap_disabler.lua",
+    "features/bed_plates.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE

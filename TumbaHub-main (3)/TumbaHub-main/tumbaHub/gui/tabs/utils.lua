@@ -145,3 +145,14 @@ end, {
     UI.CreateToggle(nil, "toggle_deposit_stone", "Misc.AutoDeposit.Resources.stone")
 })
 --#endregion
+
+--#region -- Trap Disabler
+UI.CreateSection(TabFrame, "toggle_trap_disabler")
+
+UI.CreateToggle(TabFrame, "toggle_trap_disabler", "Utility.TrapDisabler", function(state)
+    if Mega.Features.TrapDisabler and Mega.Features.TrapDisabler.SetEnabled then
+        Mega.Features.TrapDisabler.SetEnabled(state)
+    end
+end)
+--#endregion
+

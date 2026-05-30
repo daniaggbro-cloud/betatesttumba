@@ -310,3 +310,14 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
     end
 end, {})
 --#endregion
+
+--#region -- Trap ESP
+UI.CreateSection(TabFrame, "toggle_trap_esp")
+
+UI.CreateToggle(TabFrame, "toggle_trap_esp", "Render.TrapESP", function(state)
+    if Mega.Features.TrapESP and Mega.Features.TrapESP.SetEnabled then
+        Mega.Features.TrapESP.SetEnabled(state)
+    end
+end)
+--#endregion
+

@@ -205,7 +205,14 @@ Mega.States = {
         }
     },
     Render = {
-        KitDisplay = false
+        KitDisplay = false,
+        TrapESP = false,
+        BedPlates = false,
+        BedPlatesBackground = true,
+        BedPlatesCounter = true
+    },
+    Utility = {
+        TrapDisabler = false
     },
     Misc = {
         FameSpam = false,

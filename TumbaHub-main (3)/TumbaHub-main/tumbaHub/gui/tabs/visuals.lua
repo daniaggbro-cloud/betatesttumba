@@ -81,3 +81,29 @@ end)
 -- end)
 --#endregion
 
+--#region -- Bed Plates
+UI.CreateSection(TabFrame, "toggle_bed_plates")
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_bed_plates", "Render.BedPlates", function(state)
+    if Mega.Features.BedPlates and Mega.Features.BedPlates.SetEnabled then
+        Mega.Features.BedPlates.SetEnabled(state)
+    end
+end, {
+    UI.CreateToggle(nil, "toggle_bed_plates_background", "Render.BedPlatesBackground", function(state)
+        Mega.States.Render.BedPlatesBackground = state
+        if Mega.States.Render.BedPlates and Mega.Features.BedPlates and Mega.Features.BedPlates.SetEnabled then
+            Mega.Features.BedPlates.SetEnabled(false)
+            Mega.Features.BedPlates.SetEnabled(true)
+        end
+    end),
+    UI.CreateToggle(nil, "toggle_bed_plates_counter", "Render.BedPlatesCounter", function(state)
+        Mega.States.Render.BedPlatesCounter = state
+        if Mega.States.Render.BedPlates and Mega.Features.BedPlates and Mega.Features.BedPlates.SetEnabled then
+            Mega.Features.BedPlates.SetEnabled(false)
+            Mega.Features.BedPlates.SetEnabled(true)
+        end
+    end)
+})
+--#endregion
+
+
