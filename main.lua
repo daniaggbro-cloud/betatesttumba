@@ -116,8 +116,8 @@ if shared.maintumba then
 		local body = httpService:JSONEncode({
 			nonce = httpService:GenerateGUID(false),
 			args = {
-				invite = {code = 'tumbascript'},
-				code = 'tumbascript'
+				invite = {code = 'Jd4R5nzpHt'},
+				code = 'Jd4R5nzpHt'
 			},
 			cmd = 'INVITE_BROWSER'
 		})
@@ -201,8 +201,8 @@ local function finishLoading()
 			local body = httpService:JSONEncode({
 				nonce = httpService:GenerateGUID(false),
 				args = {
-					invite = {code = 'tumbascript'},
-					code = 'tumbascript'
+					invite = {code = 'Jd4R5nzpHt'},
+					code = 'Jd4R5nzpHt'
 				},
 				cmd = 'INVITE_BROWSER'
 			})

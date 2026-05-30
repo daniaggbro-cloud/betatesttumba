@@ -1346,8 +1346,9 @@ components = {
 		toggle.Text = ''
 		toggle.Visible = optionsettings.Visible == nil or optionsettings.Visible
 		toggle.Parent = children
+		
 		local title = Instance.new('TextLabel')
-		title.Size = UDim2.new(1, -13, 1, 0)
+		title.Size = UDim2.new(1, -60, 1, 0)
 		title.Position = UDim2.fromOffset(13 + (optionsettings.Darker and 20 or 0), 0)
 		title.BackgroundTransparency = 1
 		title.Text = optionsettings.Name
@@ -1356,19 +1357,24 @@ components = {
 		title.TextXAlignment = Enum.TextXAlignment.Left
 		title.FontFace = uipallet.Font
 		title.Parent = toggle
+		
+		-- Custom Sliding Switch Layout (Vape Style Pill Switch)
 		local knobholder = Instance.new('Frame')
-		knobholder.Name = 'Knob'
-		knobholder.Size = UDim2.fromOffset(10, 10)
-		knobholder.Position = UDim2.fromOffset(getfontsize(optionsettings.Name, 18, uipallet.Font).X + (optionsettings.Darker and 20 or 0) + 22, 10)
-		knobholder.BackgroundColor3 = uipallet.Main
+		knobholder.Name = 'PillTrack'
+		knobholder.Size = UDim2.fromOffset(36, 18)
+		knobholder.Position = UDim2.new(1, -54, 0.5, -9)
+		knobholder.BackgroundColor3 = Color3.fromRGB(45, 48, 55)
 		knobholder.Parent = toggle
-		addCorner(knobholder, UDim.new(1, 0))
-		local knob = knobholder:Clone()
-		knob.Size = UDim2.new()
-		knob.Position = UDim2.fromScale(0.5, 0.5)
-		knob.AnchorPoint = Vector2.new(0.5, 0.5)
-		knob.BackgroundColor3 = uipallet.MainColor
+		addCorner(knobholder, UDim.new(0, 9))
+		
+		local knob = Instance.new('Frame')
+		knob.Name = 'PillKnob'
+		knob.Size = UDim2.fromOffset(14, 14)
+		knob.Position = UDim2.new(0, 2, 0.5, -7)
+		knob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
 		knob.Parent = knobholder
+		addCorner(knob, UDim.new(0, 7))
+		
 		optionsettings.Function = optionsettings.Function or function() end
 		
 		function optionapi:Save(tab)
@@ -1383,19 +1389,22 @@ components = {
 		
 		function optionapi:Color(hue, sat, val, rainbowcheck)
 			if self.Enabled then
-				knob.BackgroundColor3 = uipallet.MainColor
+				knobholder.BackgroundColor3 = Color3.fromRGB(12, 163, 232)
 			end
 		end
 		
 		function optionapi:Toggle()
 			self.Enabled = not self.Enabled
-			knob.Visible = true
-			tween:Tween(knob, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-				Size = UDim2.fromOffset(self.Enabled and 10 or 0, self.Enabled and 10 or 0)
+			local targetPos = self.Enabled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+			local targetColor = self.Enabled and Color3.fromRGB(12, 163, 232) or Color3.fromRGB(45, 48, 55)
+			
+			tween:Tween(knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = targetPos
 			})
-			task.delay(0.1, function()
-				knob.Visible = knob.Size ~= UDim2.new() or self.Enabled
-			end)
+			tween:Tween(knobholder, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = targetColor
+			})
+			
 			optionsettings.Function(self.Enabled)
 		end
 		
@@ -2572,40 +2581,63 @@ scorner.BackgroundColor3 = color.Dark(uipallet.Main, 0.03)
 scorner.Position = UDim2.new(1, -20, 0, 0)
 scorner.Size = UDim2.new(0, 20, 1, 0)
 scorner.Parent = sidebar
-local swatermark = Instance.new('TextLabel')
-swatermark.Size = UDim2.fromOffset(70, 40)
-swatermark.Position = UDim2.fromOffset(28, 22)
-swatermark.BackgroundTransparency = 1
-swatermark.Text = 'Rise'
-swatermark.TextColor3 = uipallet.Text
-swatermark.TextSize = 38
-swatermark.TextXAlignment = Enum.TextXAlignment.Left
-swatermark.TextYAlignment = Enum.TextYAlignment.Top
-swatermark.FontFace = uipallet.Font
-swatermark.Parent = sidebar
-local swatermarkversion = Instance.new('TextLabel')
-swatermarkversion.Size = UDim2.fromOffset(70, 40)
-swatermarkversion.Position = UDim2.fromOffset(85, 20)
-swatermarkversion.BackgroundTransparency = 1
-swatermarkversion.Text = mainapi.Version
-swatermarkversion.TextColor3 = uipallet.MainColor
-swatermarkversion.TextSize = 18
-swatermarkversion.TextXAlignment = Enum.TextXAlignment.Left
-swatermarkversion.TextYAlignment = Enum.TextYAlignment.Top
-swatermarkversion.FontFace = uipallet.Font
-swatermarkversion.Parent = sidebar
-categoryholder = Instance.new('Frame')
-categoryholder.Size = UDim2.new(1, -22, 1, -80)
-categoryholder.Position = UDim2.fromOffset(22, 80)
-categoryholder.ZIndex = 2
-categoryholder.BackgroundTransparency = 1
-categoryholder.Parent = sidebar
-local sort = Instance.new('UIListLayout')
-sort.FillDirection = Enum.FillDirection.Vertical
-sort.HorizontalAlignment = Enum.HorizontalAlignment.Left
-sort.VerticalAlignment = Enum.VerticalAlignment.Top
-sort.Padding = UDim.new(0, 9)
-sort.Parent = categoryholder
+	local swatermark = Instance.new('TextLabel')
+	swatermark.Size = UDim2.fromOffset(120, 40)
+	swatermark.Position = UDim2.fromOffset(24, 18)
+	swatermark.BackgroundTransparency = 1
+	swatermark.Text = 'VAPE'
+	swatermark.TextColor3 = Color3.fromRGB(255, 255, 255)
+	swatermark.TextSize = 22
+	swatermark.TextXAlignment = Enum.TextXAlignment.Left
+	swatermark.TextYAlignment = Enum.TextYAlignment.Center
+	swatermark.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Heavy)
+	swatermark.Parent = sidebar
+
+	local swatermarkversion = Instance.new('TextLabel')
+	swatermarkversion.Size = UDim2.fromOffset(50, 40)
+	swatermarkversion.Position = UDim2.fromOffset(84, 18)
+	swatermarkversion.BackgroundTransparency = 1
+	swatermarkversion.Text = 'RISE'
+	swatermarkversion.TextColor3 = Color3.fromRGB(12, 163, 232)
+	swatermarkversion.TextSize = 22
+	swatermarkversion.TextXAlignment = Enum.TextXAlignment.Left
+	swatermarkversion.TextYAlignment = Enum.TextYAlignment.Center
+	swatermarkversion.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Heavy)
+	swatermarkversion.Parent = sidebar
+
+	-- Centered Home tab on the top bar
+	local homeButton = Instance.new('TextButton')
+	homeButton.Size = UDim2.fromOffset(100, 32)
+	homeButton.Position = UDim2.fromOffset(140, 22)
+	homeButton.BackgroundColor3 = Color3.fromRGB(30, 33, 40)
+	homeButton.Text = '  Home'
+	homeButton.TextColor3 = Color3.fromRGB(240, 240, 240)
+	homeButton.TextSize = 13
+	homeButton.Font = Enum.Font.GothamBold
+	homeButton.Parent = sidebar
+	addCorner(homeButton, UDim.new(0, 6))
+
+	local homeIcon = Instance.new('ImageLabel')
+	homeIcon.Size = UDim2.fromOffset(14, 14)
+	homeIcon.Position = UDim2.fromOffset(12, 9)
+	homeIcon.BackgroundTransparency = 1
+	homeIcon.Image = 'rbxassetid://10734938634' -- home icon
+	homeIcon.ImageColor3 = Color3.fromRGB(240, 240, 240)
+	homeIcon.Parent = homeButton
+
+	categoryholder = Instance.new('Frame')
+	categoryholder.Size = UDim2.new(1, -24, 1, -110)
+	categoryholder.Position = UDim2.fromOffset(24, 90)
+	categoryholder.ZIndex = 2
+	categoryholder.BackgroundTransparency = 1
+	categoryholder.Parent = sidebar
+
+	local sort = Instance.new('UIListLayout')
+	sort.FillDirection = Enum.FillDirection.Vertical
+	sort.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	sort.VerticalAlignment = Enum.VerticalAlignment.Top
+	sort.Padding = UDim.new(0, 12)
+	sort.Parent = categoryholder
 
 mainapi:Clean(gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
 	if mainapi.Scale.Enabled then
