@@ -113,14 +113,7 @@ Mega.States = {
         FullBright = false,
         Chams = false,
         NightMode = false,
-        RemoveShadows = false,
-        FOVZoom = {
-            Enabled = false,
-            FOV = 70,
-            ZoomEnabled = false,
-            ZoomKey = "C",
-            ZoomFOV = 30
-        }
+        RemoveShadows = false
     },
     Player = {
         Fly = false,
