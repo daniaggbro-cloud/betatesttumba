@@ -1,5 +1,5 @@
 -- features/bed_plates.lua
--- Bed Plates - EXACT replica of the TumbaV6 Bed Plates feature
+-- Bed Plates - EXACT replica of the TumbaV6 Bed Plates feature with bulletproof real-time auto-updates
 -- Replicates the exact UI layout, hierarchy, blur shadows, and scanning behavior of TumbaV6
 
 if not Mega.Features then Mega.Features = {} end
@@ -75,7 +75,7 @@ local function addBlur(parent)
         end)
     end
     if not blur.Image or blur.Image == "" then
-        blur.Image = "rbxassetid://13388222306" -- fallback logo if failed
+        blur.Image = "rbxassetid://14898786664" -- Direct high quality Roblox blur asset ID from TumbaV6
     end
     
     blur.ScaleType = Enum.ScaleType.Slice
@@ -231,12 +231,6 @@ local function refreshAdornee(v)
     end
 end
 
-local function refreshAll()
-    for _, v in pairs(Reference) do
-        pcall(refreshAdornee, v)
-    end
-end
-
 -- EXACT TumbaV6 Added implementation
 local function Added(v)
     if not v then return end
@@ -283,12 +277,21 @@ local function Added(v)
     pcall(refreshAdornee, billboard)
 end
 
-local function refreshNear(blockPart)
-    if not blockPart or not blockPart.Position then return end
-    local pos = blockPart.Position
-    for i, v in pairs(Reference) do
-        if i.Parent and (pos - i.Position).Magnitude <= 30 then
-            pcall(refreshAdornee, v)
+local function refreshAll()
+    -- Dynamic auto-discovery of new beds (super robust fallback)
+    for _, bed in ipairs(Services.CollectionService:GetTagged("bed")) do
+        if bed and not Reference[bed] then
+            pcall(Added, bed)
+        end
+    end
+    
+    -- Sync and refresh all active billboards
+    for bed, billboard in pairs(Reference) do
+        if not bed or not bed.Parent then
+            Reference[bed] = nil
+            pcall(function() billboard:Destroy() end)
+        else
+            pcall(refreshAdornee, billboard)
         end
     end
 end
@@ -324,23 +327,11 @@ function Mega.Features.BedPlates.SetEnabled(state)
             end
         end))
         
-        -- Listen for blocks folder changes to trigger live refresh
-        local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
-        if blocksFolder then
-            table.insert(connections, blocksFolder.ChildAdded:Connect(function(child)
-                task.wait(0.1)
-                pcall(refreshNear, child)
-            end))
-            table.insert(connections, blocksFolder.ChildRemoved:Connect(function(child)
-                pcall(refreshNear, child)
-            end))
-        end
-        
-        -- Background auto-refresh loop to ensure 100% accurate real-time block state
+        -- Background auto-refresh loop (every 0.5s for instant updates and live discovery)
         task.spawn(function()
             while States.Render.BedPlates do
                 pcall(refreshAll)
-                task.wait(1)
+                task.wait(0.5)
             end
         end)
     end
