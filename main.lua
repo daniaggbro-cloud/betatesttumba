@@ -144,7 +144,8 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/'..readfile('tumbascript/profiles/commit.txt')..'/'..select(1, path:gsub('tumbascript/', '')), true)
+			local commit = isfile('tumbascript/profiles/commit.txt') and readfile('tumbascript/profiles/commit.txt') or 'main'
+			return game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/'..commit..'/'..select(1, path:gsub('tumbascript/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -329,7 +330,8 @@ if not shared.TumbaHubIndependent then
 
 	if not found then
 		local suc, res = pcall(function()
-			return not shared.TumbaHubDeveloper and game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/'..readfile('tumbascript/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true) or '404: Not Found'
+			local commit = isfile('tumbascript/profiles/commit.txt') and readfile('tumbascript/profiles/commit.txt') or 'main'
+			return not shared.TumbaHubDeveloper and game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/'..commit..'/games/'..game.PlaceId..'.lua', true) or '404: Not Found'
 		end)
 		if suc and res ~= '404: Not Found' then
 			loadstring(downloadFile('tumbascript/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)

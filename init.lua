@@ -29,7 +29,8 @@ local function downloadFile(path, func)
 	if not isfile(path) then
 		downloader.Text = 'Downloading '.. path
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/'..readfile('tumbascript/profiles/commit.txt')..'/'..select(1, path:gsub('tumbascript/', '')), true)
+			local commit = isfile('tumbascript/profiles/commit.txt') and readfile('tumbascript/profiles/commit.txt') or 'main'
+			return game:HttpGet('https://raw.githubusercontent.com/zxcbest957-pixel/TumbaV6/'..commit..'/'..select(1, path:gsub('tumbascript/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
