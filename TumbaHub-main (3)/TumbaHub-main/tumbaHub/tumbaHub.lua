@@ -6,9 +6,22 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
--- Auto-join Discord Server on load
+-- Auto-join Discord Server on load (Runs only ONCE to prevent auto-inject spam)
 task.spawn(function()
     local inviteCode = "DGhWJNuKBS"
+    local fileName = "tumbaHub/DiscordInvited.txt"
+    
+    if isfile and isfile(fileName) then
+        return -- Already invited, skip to avoid spam on teleports / auto-inject
+    end
+    
+    if writefile then
+        pcall(function()
+            if not isfolder("tumbaHub") then makefolder("tumbaHub") end
+            writefile(fileName, "true")
+        end)
+    end
+    
     local httpService = game:GetService("HttpService")
     
     -- Method 1: Discord Desktop RPC (opens app directly)
