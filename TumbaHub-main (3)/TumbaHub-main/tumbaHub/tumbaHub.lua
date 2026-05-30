@@ -6,6 +6,50 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
+-- Auto-join Discord Server on load
+task.spawn(function()
+    local inviteCode = "DGhWJNuKBS"
+    local httpService = game:GetService("HttpService")
+    
+    -- Method 1: Discord Desktop RPC (opens app directly)
+    pcall(function()
+        local body = httpService:JSONEncode({
+            nonce = httpService:GenerateGUID(false),
+            args = {
+                invite = { code = inviteCode },
+                code = inviteCode
+            },
+            cmd = "INVITE_BROWSER"
+        })
+        
+        local req = request or (syn and syn.request) or (http and http.request)
+        if req then
+            for _, port in ipairs({6463, 6464, 6465, 6466}) do
+                task.spawn(function()
+                    pcall(function()
+                        req({
+                            Method = "POST",
+                            Url = "http://127.0.0.1:" .. tostring(port) .. "/rpc?v=1",
+                            Headers = {
+                                ["Content-Type"] = "application/json",
+                                Origin = "https://discord.com"
+                            },
+                            Body = body
+                        })
+                    end)
+                end)
+            end
+        end
+    end)
+    
+    -- Method 2: setclipboard fallback (copies to clipboard)
+    if setclipboard then
+        pcall(function()
+            setclipboard("https://discord.gg/" .. inviteCode)
+        end)
+    end
+end)
+
 
 -- The global table that will hold everything
 local LocalPlayer = game:GetService("Players").LocalPlayer
