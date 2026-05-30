@@ -89,10 +89,17 @@ local waitForChild = function(start, ...)
     return parent
 end
 
+local function removeTags(str)
+    if not str then return "" end
+    str = str:gsub("<br%s*/>", "\n")
+    return (str:gsub("<[^<>]->", ""))
+end
+
 local function getPlayerName(card)
     local textbar = card and card:FindFirstChild("TextBackgroundBar")
     local label = textbar and textbar:FindFirstChild("PlayerName") or card and card:FindFirstChild("PlayerName", true)
-    return label and label.Text or ""
+    local text = label and label.Text or ""
+    return removeTags(text)
 end
 
 local function getDraftCard(container)
