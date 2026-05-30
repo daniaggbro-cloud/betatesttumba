@@ -32,16 +32,30 @@ for k, conn in pairs(connections) do
 end
 table.clear(connections)
 
-connections.AdetundeInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode.Name == States.Misc.Adetunde.Keybind and input.KeyCode.Name ~= "None" then
-        local newState = not States.Misc.Adetunde.Enabled
-        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_adetunde"] then
-            Mega.Objects.Toggles["toggle_adetunde"](newState)
-        else
-            Mega.Features.Adetunde.SetEnabled(newState)
-        end
+local function updateKeybindConnection()
+    if connections.AdetundeInput then
+        connections.AdetundeInput:Disconnect()
+        connections.AdetundeInput = nil
     end
-end)
+    
+    local bind = States.Misc.Adetunde.Keybind
+    if bind and bind ~= "None" then
+        connections.AdetundeInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+            if not gameProcessed and input.KeyCode.Name == bind then
+                local newState = not States.Misc.Adetunde.Enabled
+                if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_adetunde"] then
+                    Mega.Objects.Toggles["toggle_adetunde"](newState)
+                else
+                    Mega.Features.Adetunde.SetEnabled(newState)
+                end
+            end
+        end)
+    end
+end
+
+Mega.Features.Adetunde.UpdateKeybind = updateKeybindConnection
+updateKeybindConnection()
 
 local SwordHitRemote
 task.spawn(function()

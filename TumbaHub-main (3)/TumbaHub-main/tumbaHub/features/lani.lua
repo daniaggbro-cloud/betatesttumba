@@ -27,15 +27,29 @@ task.spawn(function()
     end)
 end)
 
-connections.LaniInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode.Name == States.Misc.Lani.Keybind and States.Misc.Lani.Enabled then
-        if States.Misc.Lani.Target and States.Misc.Lani.Target.Parent then
-            if PaladinAbilityRequestRemote then
-                PaladinAbilityRequestRemote:FireServer({ ["target"] = States.Misc.Lani.Target })
-            end
-        end
+local function updateKeybindConnection()
+    if connections.LaniInput then
+        connections.LaniInput:Disconnect()
+        connections.LaniInput = nil
     end
-end)
+    
+    local bind = States.Misc.Lani.Keybind
+    if bind and bind ~= "None" then
+        connections.LaniInput = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+            if not gameProcessed and input.KeyCode.Name == bind and States.Misc.Lani.Enabled then
+                if States.Misc.Lani.Target and States.Misc.Lani.Target.Parent then
+                    if PaladinAbilityRequestRemote then
+                        PaladinAbilityRequestRemote:FireServer({ ["target"] = States.Misc.Lani.Target })
+                    end
+                end
+            end
+        end)
+    end
+end
+
+Mega.Features.Lani.UpdateKeybind = updateKeybindConnection
+updateKeybindConnection()
 
 local function InitializeLaniUI()
     local LaniContainer = Mega.Objects.LaniContainer

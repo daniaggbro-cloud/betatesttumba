@@ -46,6 +46,7 @@ end
 
 function Mega.InitializeMainGUI()
 
+local ToggleButton, btnStroke, MobileGUI
 -- Main GUI container
 local TumbaGUI = Instance.new("ScreenGui")
 TumbaGUI.Name = "TumbaMegaSystem"
@@ -287,6 +288,18 @@ local function ToggleMenu(state)
             Position = originalPos
         }):Play()
         Services.TweenService:Create(WindowCanvas, TweenInfo.new(0.5), { GroupTransparency = 0 }):Play()
+        
+        -- ToggleButton animation when menu opens
+        if btnStroke and ToggleButton then
+            btnStroke.Transparency = 0.4
+            Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 180, ImageTransparency = 0 }):Play()
+        end
+    else
+        -- ToggleButton animation when menu closes
+        if btnStroke and ToggleButton then
+            btnStroke.Transparency = 0.7
+            Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 0, ImageTransparency = 0.2 }):Play()
+        end
     end
 end
 
@@ -476,6 +489,7 @@ end)
 
 -- Keybinds Logic
 Mega.Objects.Connections.MainWindowKeybinds = Services.UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
     if gameProcessed then return end
     local key = input.KeyCode.Name
     
@@ -635,12 +649,11 @@ end
 -- Auto-update status and apply UIScale (Throttled for maximum performance and FPS)
 local lastStatusUpdate = 0
 Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
+    if not TumbaGUI.Enabled then return end
     local now = tick()
     if now - lastStatusUpdate >= 0.15 then
         lastStatusUpdate = now
-        if TumbaGUI.Enabled then
-            Mega.UpdateStatus()
-        end
+        Mega.UpdateStatus()
         
         -- Smart UI Scaling for Main Menu
         if workspace.CurrentCamera then
@@ -661,12 +674,13 @@ if Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
 end
 
 -- Premium Mobile Button GUI
-local MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
+-- Premium Mobile Button GUI
+MobileGUI = Instance.new("ScreenGui", Services.CoreGui)
 MobileGUI.Name = "TumbaMobileToggle"
 MobileGUI.ResetOnSpawn = false
 MobileGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-local ToggleButton = Instance.new("ImageButton", MobileGUI)
+ToggleButton = Instance.new("ImageButton", MobileGUI)
 ToggleButton.Name = "TumbaMenuIcon"
 ToggleButton.Size = UDim2.new(0, 42, 0, 42) -- Slightly larger for accessibility
 ToggleButton.AnchorPoint = Vector2.new(1, 0)
@@ -678,7 +692,7 @@ ToggleButton.Active = true
 
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0) -- Circular
 
-local btnStroke = Instance.new("UIStroke", ToggleButton)
+btnStroke = Instance.new("UIStroke", ToggleButton)
 btnStroke.Color = Settings.Menu.AccentColor
 btnStroke.Thickness = 1.5 -- Slightly thicker for premium feel
 btnStroke.Transparency = 0.6
@@ -691,56 +705,69 @@ local dragStart = nil
 local startPos = nil
 local hasDragged = false
 
+local dragChangedConn = nil
+local dragEndedConn = nil
+
+local function stopDraggingToggle()
+    if dragChangedConn then
+        dragChangedConn:Disconnect()
+        dragChangedConn = nil
+    end
+    if dragEndedConn then
+        dragEndedConn:Disconnect()
+        dragEndedConn = nil
+    end
+    dragging = false
+end
+
 ToggleButton.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         hasDragged = false
         dragStart = input.Position
         startPos = ToggleButton.Position
-    end
-end)
-
-Services.UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        if delta.Magnitude > 5 then
-            hasDragged = true
-        end
-        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.08, Enum.EasingStyle.Sine), {
-            Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        }):Play()
-    end
-end)
-
-Services.UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        if dragging then
-            dragging = false
-            if not hasDragged then
-                -- Register as a click if we didn't drag it!
-                ToggleMenu()
+        
+        stopDraggingToggle()
+        
+        dragChangedConn = Services.UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                if delta.Magnitude > 5 then
+                    hasDragged = true
+                end
+                Services.TweenService:Create(ToggleButton, TweenInfo.new(0.08, Enum.EasingStyle.Sine), {
+                    Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                }):Play()
             end
-        end
+        end)
+        
+        dragEndedConn = Services.UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging then
+                    stopDraggingToggle()
+                    if not hasDragged then
+                        -- Register as a click if we didn't drag it!
+                        ToggleMenu()
+                    end
+                end
+            end
+        end)
     end
 end)
 
--- Dynamic Updater
+-- Dynamic Updater (Throttled, Tweens removed to prevent frame loop overhead)
+local lastMobileUpdate = 0
 Mega.Objects.Connections.MobileColorUpdate = Services.RunService.RenderStepped:Connect(function()
-    btnStroke.Color = Settings.Menu.AccentColor
-    ToggleButton.ImageColor3 = Settings.Menu.AccentColor
-    
-    -- Sync visibility with Settings
-    local showBtn = Settings.Menu.ShowMenuIcon
-    if showBtn == nil then showBtn = false end -- Default to false
-    MobileGUI.Enabled = showBtn
-    
-    -- Visual feedback based on open state
-    if TumbaGUI.Enabled then
-        btnStroke.Transparency = 0.4 -- Glow bit more when open
-        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 180, ImageTransparency = 0 }):Play()
-    else
-        btnStroke.Transparency = 0.7 
-        Services.TweenService:Create(ToggleButton, TweenInfo.new(0.3), { Rotation = 0, ImageTransparency = 0.2 }):Play()
+    local now = tick()
+    if now - lastMobileUpdate >= 0.2 then
+        lastMobileUpdate = now
+        btnStroke.Color = Settings.Menu.AccentColor
+        ToggleButton.ImageColor3 = Settings.Menu.AccentColor
+        
+        -- Sync visibility with Settings
+        local showBtn = Settings.Menu.ShowMenuIcon
+        if showBtn == nil then showBtn = false end -- Default to false
+        MobileGUI.Enabled = showBtn
     end
 end)
 

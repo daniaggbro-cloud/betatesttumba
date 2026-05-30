@@ -239,27 +239,34 @@ end
 if States.Player.LongJump then
     Mega.Features.LongJump.SetEnabled(true)
 end
-
-if not connections.Keybind then
-    connections.Keybind = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        local bindString = Mega.States.Player.LongJumpKeybind or "None"
-        if bindString == "None" then return end
-        
+local function updateKeybindConnection()
+    if connections.Keybind then
+        connections.Keybind:Disconnect()
+        connections.Keybind = nil
+    end
+    
+    local bindString = Mega.States.Player.LongJumpKeybind or "None"
+    if bindString and bindString ~= "None" then
         local success, bindEnum = pcall(function() return Enum.KeyCode[bindString] end)
-        if not success or not bindEnum then return end
-        
-        if not gameProcessed and input.KeyCode == bindEnum then
-            local newState = not States.Player.LongJump
-            States.Player.LongJump = newState
-            if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
-                Mega.Objects.Toggles["toggle_long_jump"](newState)
-            else
-                Mega.Features.LongJump.SetEnabled(newState)
-            end
+        if success and bindEnum then
+            connections.Keybind = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+                if not gameProcessed and input.KeyCode == bindEnum then
+                    local newState = not States.Player.LongJump
+                    States.Player.LongJump = newState
+                    if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_long_jump"] then
+                        Mega.Objects.Toggles["toggle_long_jump"](newState)
+                    else
+                        Mega.Features.LongJump.SetEnabled(newState)
+                    end
+                end
+            end)
         end
-    end)
+    end
 end
 
+Mega.Features.LongJump.UpdateKeybind = updateKeybindConnection
+updateKeybindConnection()
 if Mega.UnloadedSignal then
     if not connections.Unload then
         connections.Unload = Mega.UnloadedSignal:Connect(function()

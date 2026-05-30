@@ -187,7 +187,12 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_adetunde", "Misc.Adetunde.Enabled"
     if Mega.Features.Adetunde and Mega.Features.Adetunde.SetEnabled then Mega.Features.Adetunde.SetEnabled(state) end
     notifyFeature("toggle_adetunde", state)
 end, {
-    UI.CreateKeybindButton(nil, "keybind_adetunde", "Misc.Adetunde.Keybind", function(key) Mega.States.Misc.Adetunde.Keybind = key end),
+    UI.CreateKeybindButton(nil, "keybind_adetunde", "Misc.Adetunde.Keybind", function(key)
+        Mega.States.Misc.Adetunde.Keybind = key
+        if Mega.Features.Adetunde and Mega.Features.Adetunde.UpdateKeybind then
+            Mega.Features.Adetunde.UpdateKeybind()
+        end
+    end),
     UI.CreateToggle(nil, "toggle_adetunde_target_esp", "Misc.Adetunde.TargetESP"),
     UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 5, 50),
     UI.CreateSlider(nil, "slider_adetunde_delay", "Misc.Adetunde.Delay", 0, 1000)
@@ -248,7 +253,12 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_lani", "Misc.Lani.Enabled", functi
     if Mega.Features.Lani and Mega.Features.Lani.RefreshPlayers then Mega.Features.Lani.RefreshPlayers() end
     notifyFeature("toggle_lani", state)
 end, {
-    UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind", function(key) Mega.States.Misc.Lani.Keybind = key end),
+    UI.CreateKeybindButton(nil, "keybind_lani", "Misc.Lani.Keybind", function(key)
+        Mega.States.Misc.Lani.Keybind = key
+        if Mega.Features.Lani and Mega.Features.Lani.UpdateKeybind then
+            Mega.Features.Lani.UpdateKeybind()
+        end
+    end),
     laniContainer
 })
 --#endregion
