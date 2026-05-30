@@ -203,7 +203,8 @@ InitializePhase("features", {
     "features/gorilla_chams.lua",
     "features/kit_ban.lua",
     "features/auto_davey.lua",
-    "features/kit_display.lua"
+    "features/kit_display.lua",
+    "features/fov_zoom.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE

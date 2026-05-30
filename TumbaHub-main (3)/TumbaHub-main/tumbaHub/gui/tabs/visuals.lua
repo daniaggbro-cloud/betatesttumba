@@ -70,6 +70,33 @@ UI.CreateToggle(TabFrame, "toggle_kit_display", "Render.KitDisplay", function(st
         Mega.Features.KitDisplay.SetEnabled(state)
     end
 end)
+
+if not Mega.Localization.Strings["toggle_fov_zoom"] then
+    Mega.Localization.Strings["toggle_fov_zoom"] = { ru = "FOV & Приближение", en = "FOV & Zoom" }
+end
+if not Mega.Localization.Strings["slider_fov"] then
+    Mega.Localization.Strings["slider_fov"] = { ru = "Угол обзора (FOV)", en = "Field of View (FOV)" }
+end
+if not Mega.Localization.Strings["toggle_zoom"] then
+    Mega.Localization.Strings["toggle_zoom"] = { ru = "Включить приближение", en = "Enable Zoom" }
+end
+if not Mega.Localization.Strings["button_zoom_key"] then
+    Mega.Localization.Strings["button_zoom_key"] = { ru = "Клавиша зума", en = "Zoom Key" }
+end
+if not Mega.Localization.Strings["slider_zoom_fov"] then
+    Mega.Localization.Strings["slider_zoom_fov"] = { ru = "FOV при зуме", en = "Zoom FOV" }
+end
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_fov_zoom", "Visuals.FOVZoom.Enabled", function(state)
+    if Mega.Features.FOVZoom and Mega.Features.FOVZoom.SetEnabled then
+        Mega.Features.FOVZoom.SetEnabled(state)
+    end
+end, {
+    UI.CreateSlider(nil, "slider_fov", "Visuals.FOVZoom.FOV", 30, 120),
+    UI.CreateToggle(nil, "toggle_zoom", "Visuals.FOVZoom.ZoomEnabled"),
+    UI.CreateKeybindButton(nil, "button_zoom_key", "Visuals.FOVZoom.ZoomKey"),
+    UI.CreateSlider(nil, "slider_zoom_fov", "Visuals.FOVZoom.ZoomFOV", 10, 60)
+})
 --#endregion
 -- Restore settings on script unload/cleanup
 -- This would be connected in a main cleanup function
