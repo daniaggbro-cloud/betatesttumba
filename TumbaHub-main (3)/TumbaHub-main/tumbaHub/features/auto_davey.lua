@@ -98,7 +98,6 @@ function AutoDavey.SetEnabled(state)
     if not oldNamecall then
         oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
             local method = getnamecallmethod()
-            local args = {...}
             
             if not checkcaller() and (method == "FireServer" or method == "InvokeServer") then
                 -- Check if this is the cannon launch remote
