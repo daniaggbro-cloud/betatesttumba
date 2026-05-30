@@ -73,7 +73,7 @@ Status.BackgroundTransparency = 1
 Status.TextColor3 = Color3.fromRGB(180, 180, 190)
 Status.Font = Enum.Font.GothamMedium
 Status.TextSize = 13
-Status.TextAlignment = Enum.TextAlignment.Center
+Status.TextXAlignment = Enum.TextXAlignment.Center
 Status.Text = 'Connecting to TumbaHub...'
 Status.Parent = MainFrame
 
