@@ -632,20 +632,25 @@ function Mega.UpdateStatus()
     if States.Noelle and States.Noelle.Enabled then AddStatus("Noelle", Color3.fromRGB(50, 200, 255)) end
 end
 
--- Auto-update status and apply UIScale
+-- Auto-update status and apply UIScale (Throttled for maximum performance and FPS)
+local lastStatusUpdate = 0
 Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
-    if TumbaGUI.Enabled then
-        Mega.UpdateStatus()
-    end
-    
-    -- Smart UI Scaling for Main Menu
-    if workspace.CurrentCamera then
-        local vp = workspace.CurrentCamera.ViewportSize
-        -- If width < 1200 or height < 700 we need to scale down
-        if vp.X > 0 and vp.Y > 0 then
-            local scaleX = (vp.X * 0.95) / 1100
-            local scaleY = (vp.Y * 0.90) / 650
-            MenuScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.3, 1)
+    local now = tick()
+    if now - lastStatusUpdate >= 0.15 then
+        lastStatusUpdate = now
+        if TumbaGUI.Enabled then
+            Mega.UpdateStatus()
+        end
+        
+        -- Smart UI Scaling for Main Menu
+        if workspace.CurrentCamera then
+            local vp = workspace.CurrentCamera.ViewportSize
+            -- If width < 1200 or height < 700 we need to scale down
+            if vp.X > 0 and vp.Y > 0 then
+                local scaleX = (vp.X * 0.95) / 1100
+                local scaleY = (vp.Y * 0.90) / 650
+                MenuScale.Scale = math.clamp(math.min(scaleX, scaleY), 0.3, 1)
+            end
         end
     end
 end)

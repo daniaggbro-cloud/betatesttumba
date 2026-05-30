@@ -464,6 +464,36 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
 end
 
 
+local activeListeningKeybind = nil
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed or not activeListeningKeybind then return end
+    local key = input.KeyCode.Name
+    if key == "Unknown" then return end
+    
+    local listeningData = activeListeningKeybind
+    activeListeningKeybind = nil
+    
+    -- Reset to None if same key is pressed again
+    if key == listeningData.currentKey then
+        key = "None"
+    end
+    
+    listeningData.KeybindButton.Text = key
+    
+    local path = listeningData.statePath
+    local tbl = Mega.States
+    for part in path:gmatch("[^%.]+") do
+        if tbl[part] == nil and part ~= path:match("([^%.]+)$") then tbl[part] = {} end
+        if part ~= path:match("([^%.]+)$") then tbl = tbl[part] else tbl[part] = key end
+    end
+
+    if listeningData.callback then pcall(listeningData.callback, key) end
+    
+    local notifyText = (key == "None") and Mega.GetText("notify_keybind_removed", GetText(listeningData.textKey)) or GetText("notify_keybind_set", GetText(listeningData.textKey), key)
+    ShowNotification(notifyText, 3)
+end)
+
 function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
     local function getState()
         local path = statePath
@@ -502,40 +532,18 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
     KeybindCorner.CornerRadius = UDim.new(0, 6)
     KeybindCorner.Parent = KeybindButton
 
-    local listening = false
     KeybindButton.MouseButton1Click:Connect(function()
         if UserInputService.TouchEnabled then
             ShowNotification("📱 На телефоне лучше включи галочку 'Показывать на экране' в самом низу!", 5)
         end
-        listening = true
+        activeListeningKeybind = {
+            KeybindButton = KeybindButton,
+            statePath = statePath,
+            callback = callback,
+            textKey = textKey,
+            currentKey = currentKey
+        }
         KeybindButton.Text = GetText("keybind_listening")
-    end)
-
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed or not listening then return end
-        local key = input.KeyCode.Name
-        if key == "Unknown" then return end
-        listening = false
-        
-        -- Логика: если нажата та же клавиша, сбрасываем в None
-        if key == currentKey then
-            key = "None"
-        end
-        currentKey = key -- Обновляем текущий ключ для следующего сравнения
-
-        KeybindButton.Text = key
-        
-        local path = statePath
-        local tbl = Mega.States
-        for part in path:gmatch("[^%.]+") do
-            if tbl[part] == nil and part ~= path:match("([^%.]+)$") then tbl[part] = {} end
-            if part ~= path:match("([^%.]+)$") then tbl = tbl[part] else tbl[part] = key end
-        end
-
-        if callback then pcall(callback, key) end
-        
-        local notifyText = (key == "None") and Mega.GetText("notify_keybind_removed", GetText(textKey)) or GetText("notify_keybind_set", GetText(textKey), key)
-        ShowNotification(notifyText, 3)
     end)
     return KeybindFrame
 end
