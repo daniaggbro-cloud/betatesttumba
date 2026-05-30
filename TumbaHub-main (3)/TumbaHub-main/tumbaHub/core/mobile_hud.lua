@@ -23,6 +23,21 @@ Mega.Settings.MobileHUD = Mega.Settings.MobileHUD or {
     Positions = {} -- To save their locations if dragged
 }
 
+-- Global autosave debounce: prevent writefile from being called more than once per 5 seconds
+-- This is critical to prevent FPS drops from rapid autoclicker/game clicks
+local lastMobileAutosaveTime = 0
+local AUTOSAVE_COOLDOWN = 5 -- seconds
+
+local function throttledAutosave()
+    local now = tick()
+    if now - lastMobileAutosaveTime >= AUTOSAVE_COOLDOWN then
+        lastMobileAutosaveTime = now
+        if Mega.ConfigSystem and Mega.ConfigSystem.Save then
+            task.spawn(function() Mega.ConfigSystem.Save("autosave") end)
+        end
+    end
+end
+
 -- Create a single button
 function Mega.MobileHUD.CreateActionButton(id, tooltip, imageId, toggleCallback, getStateFunc)
     if Mega.Objects.MobileButtons[id] then
@@ -67,10 +82,12 @@ function Mega.MobileHUD.CreateActionButton(id, tooltip, imageId, toggleCallback,
     shadow.ZIndex = -1
 
     -- Smooth Drag Logic
-    local dragging, dragStart, startPos
+    -- FIX: Track if button was actually pressed to avoid responding to external clicks
+    local dragging, dragStart, startPos, buttonWasPressed
     Button.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
+            buttonWasPressed = true
             dragStart = input.Position
             startPos = Button.Position
         end
@@ -82,16 +99,21 @@ function Mega.MobileHUD.CreateActionButton(id, tooltip, imageId, toggleCallback,
                 Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             })
             moveTween:Play()
-            -- Save new position
+            -- Save new position (only in memory, disk save happens on release)
             Mega.Settings.MobileHUD.Positions[id] = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
     Services.UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-            -- Safe save after drag
-            if Mega.ConfigSystem and Mega.ConfigSystem.Save then
-                task.spawn(function() Mega.ConfigSystem.Save("autosave") end)
+            -- FIX: Only save if THIS button was actually being dragged.
+            -- Without this check, every autoclicker release triggers a writefile() call!
+            if dragging and buttonWasPressed then
+                dragging = false
+                buttonWasPressed = false
+                throttledAutosave() -- throttled, max once per 5s
+            else
+                dragging = false
+                buttonWasPressed = false
             end
         end
     end)
@@ -106,18 +128,23 @@ function Mega.MobileHUD.CreateActionButton(id, tooltip, imageId, toggleCallback,
     end)
 
     -- Dynamic State Updater (glowing when enabled)
-    Mega.Objects.Connections["MobileBtnUpdate_"..id] = Services.RunService.RenderStepped:Connect(function()
+    -- FIX: Use Heartbeat with throttle instead of RenderStepped every frame
+    local lastBtnUpdate = 0
+    Mega.Objects.Connections["MobileBtnUpdate_"..id] = Services.RunService.Heartbeat:Connect(function()
         if not Button or not Button.Parent then return end
-        
+        local now = tick()
+        if now - lastBtnUpdate < 0.1 then return end -- max 10 updates/sec
+        lastBtnUpdate = now
+
         btnStroke.Color = Settings.Menu.AccentColor
         shadow.ImageColor3 = Settings.Menu.AccentColor
-        
+
         -- Default to checking the function if it exists
         local isActive = false
         if getStateFunc then
             isActive = getStateFunc()
         end
-        
+
         if isActive then
             btnStroke.Transparency = 0.1
             shadow.ImageTransparency = 0.4
