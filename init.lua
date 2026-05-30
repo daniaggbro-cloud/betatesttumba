@@ -185,4 +185,23 @@ precompile('tumbascript/games/bedwars/premium.luau',        'bedwars_premium')
 task.wait(0.05)
 
 downloader.Text = ''
-return loadstring(downloadFile('tumbascript/main.lua'), 'main')()
+local mainSrc = downloadFile('tumbascript/main.lua')
+local mainChunk, err = loadstring(mainSrc, 'main')
+if not mainChunk then
+	-- Cache is broken or outdated. Clear cache files and force update.
+	downloader.Text = 'TumbaHub: repairing cache...'
+	if isfile('tumbascript/main.lua') then delfile('tumbascript/main.lua') end
+	if isfile('tumbascript/profiles/lastcheck.txt') then delfile('tumbascript/profiles/lastcheck.txt') end
+	if isfile('tumbascript/profiles/commit.txt') then delfile('tumbascript/profiles/commit.txt') end
+	task.wait(0.5)
+	
+	-- Re-download main.lua from GitHub
+	mainSrc = downloadFile('tumbascript/main.lua')
+	mainChunk, err = loadstring(mainSrc, 'main')
+	downloader.Text = ''
+end
+
+if not mainChunk then
+	error('TumbaHub: Failed to load main.lua - ' .. tostring(err or 'unknown error'))
+end
+return mainChunk()
