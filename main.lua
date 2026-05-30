@@ -237,7 +237,10 @@ end
 if not isfile('tumbascript/profiles/gui.txt') then
 	writefile('tumbascript/profiles/gui.txt', 'new')
 end
-local gui = 'new'
+local gui = readfile('tumbascript/profiles/gui.txt')
+if gui ~= 'new' and gui ~= 'old' and gui ~= 'rise' then
+	gui = 'new'
+end
 
 if not isfile('tumbascript/profiles/language.txt') then
 	writefile('tumbascript/profiles/language.txt', 'English')
