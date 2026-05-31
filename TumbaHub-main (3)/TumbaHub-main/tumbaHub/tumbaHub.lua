@@ -288,6 +288,7 @@ InitializePhase("features", {
     "features/kit_display.lua",
     "features/trap_disabler.lua",
     "features/bed_plates.lua",
+    "features/bed_defend.lua",
     "features/wall_hop.lua"
 })
 

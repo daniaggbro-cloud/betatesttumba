@@ -154,6 +154,9 @@ Mega.Localization = {
         ["slider_wall_hop_force"] = { ru = "Сила прыжка (Force)", en = "Jump Force", uk = "Сила стрибка" },
         ["toggle_wall_hop_limit_fps"] = { ru = "Ограничить FPS до 60 (Рекомендуется)", en = "Limit FPS to 60 (Recommended)", uk = "Обмежити FPS до 60" },
         ["toggle_wall_hop_stabilize"] = { ru = "Стабилизация камеры (Без тряски)", en = "Camera Stabilization (No Shake)", uk = "Стабілізація камери (Без тряски)" },
+        ["toggle_bed_defend"] = { ru = "Авто-Защита кровати (Bed Defend)", en = "Auto Bed Defend", uk = "Авто-Захист ліжка (Bed Defend)" },
+        ["dropdown_bed_defend_block"] = { ru = "Тип блока", en = "Block Type", uk = "Тип блоку" },
+        ["slider_bed_defend_layer"] = { ru = "Слои защиты", en = "Defense Layers", uk = "Шари захисту" },
 
         ["toggle_long_jump"] = { ru = "Длинный прыжок (LongJump)", en = "Long Jump", uk = "Довгий стрибок (LongJump)" },
         ["dropdown_long_jump_key"] = { ru = "Клавиша активации", en = "Activation Key", uk = "Клавіша активації" },

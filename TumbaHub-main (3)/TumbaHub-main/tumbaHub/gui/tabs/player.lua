@@ -275,6 +275,22 @@ end, {
     UI.CreateSlider(nil, "slider_build_reach_range", "Player.BuildReach.Range", 10, 500),
     UI.CreateSlider(nil, "slider_build_reach_delay", "Player.BuildReach.Delay", 50, 1000)
 })
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/bed_defend.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_bed_defend", "Player.BedDefend", function(state)
+    Mega.States.Player.BedDefend = state
+    if Mega.Features.BedDefend and Mega.Features.BedDefend.SetEnabled then Mega.Features.BedDefend.SetEnabled(state) end
+end, {
+    UI.CreateDropdown(nil, "dropdown_bed_defend_block", "Player.BedDefendBlock", {"wool", "wood", "stone"}, function(val)
+        Mega.States.Player.BedDefendBlock = val
+    end),
+    UI.CreateSlider(nil, "slider_bed_defend_layer", "Player.BedDefendLayer", 1, 2, function(val)
+        Mega.States.Player.BedDefendLayer = val
+    end)
+})
 --#endregion
 
 
