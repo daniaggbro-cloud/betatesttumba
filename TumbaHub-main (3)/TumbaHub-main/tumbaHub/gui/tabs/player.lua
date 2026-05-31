@@ -33,11 +33,35 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_speed", "Player.Speed", function(s
     Mega.States.Player.Speed = state
     if Mega.Features.Speed and Mega.Features.Speed.SetEnabled then Mega.Features.Speed.SetEnabled(state) end
 end, {
-    UI.CreateDropdown(nil, "dropdown_speed_mode", "Player.SpeedMode", {"CFrame", "Bhop"}, function(val)
+    UI.CreateDropdown(nil, "dropdown_speed_mode", "Player.SpeedMode", {"Velocity", "Impulse", "CFrame", "TP", "WalkSpeed", "Pulse"}, function(val)
         Mega.States.Player.SpeedMode = val
     end),
-    UI.CreateSlider(nil, "slider_speed", "Player.SpeedValue", 16, 25, function(val)
+    UI.CreateDropdown(nil, "dropdown_speed_move_mode", "Player.SpeedMoveMode", {"MoveDirection", "Direct"}, function(val)
+        Mega.States.Player.SpeedMoveMode = val
+    end),
+    UI.CreateSlider(nil, "slider_speed", "Player.SpeedValue", 1, 150, function(val)
         Mega.States.Player.SpeedValue = val
+    end),
+    UI.CreateSlider(nil, "slider_speed_tp_frequency", "Player.SpeedTPFrequency", 0, 100, function(val)
+        Mega.States.Player.SpeedTPFrequency = val / 100
+    end),
+    UI.CreateSlider(nil, "slider_speed_pulse_length", "Player.SpeedPulseLength", 0, 100, function(val)
+        Mega.States.Player.SpeedPulseLength = val / 100
+    end),
+    UI.CreateSlider(nil, "slider_speed_pulse_delay", "Player.SpeedPulseDelay", 0, 100, function(val)
+        Mega.States.Player.SpeedPulseDelay = val / 100
+    end),
+    UI.CreateToggle(nil, "toggle_speed_wall_check", "Player.SpeedWallCheck", function(state)
+        Mega.States.Player.SpeedWallCheck = state
+    end),
+    UI.CreateToggle(nil, "toggle_speed_autojump", "Player.SpeedAutoJump", function(state)
+        Mega.States.Player.SpeedAutoJump = state
+    end),
+    UI.CreateToggle(nil, "toggle_speed_customjump", "Player.SpeedCustomJump", function(state)
+        Mega.States.Player.SpeedCustomJump = state
+    end),
+    UI.CreateSlider(nil, "slider_speed_jumppower", "Player.SpeedJumpPower", 1, 100, function(val)
+        Mega.States.Player.SpeedJumpPower = val
     end)
 })
 
