@@ -1,5 +1,6 @@
 -- features/bed_nuke.lua
--- Logic for Bed Nuker
+-- Breaker - EXACT replica of the TumbaV6 / Vape Bed Breaker & Nuker module
+-- Automatically breaks beds, lucky blocks, beehives, iron ores, and tesla traps around you
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.BedNuke = {}
@@ -8,33 +9,34 @@ local Services = Mega.Services or {
     Players = game:GetService("Players"),
     ReplicatedStorage = game:GetService("ReplicatedStorage"),
     CollectionService = game:GetService("CollectionService"),
-    RunService = game:GetService("RunService"),
-    CoreGui = game:GetService("CoreGui")
+    RunService = game:GetService("RunService")
 }
+
 local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 
--- Гарантируем, что настройки существуют
+-- Ensure settings exist exactly matching TumbaV6
 if not States.Combat then States.Combat = {} end
 if type(States.Combat.BedNuke) ~= "table" then
-    States.Combat.BedNuke = { Enabled = (States.Combat.BedNuke == true), Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0, Bypass = false }
+    States.Combat.BedNuke = {
+        Enabled = false,
+        Sorting = "Health",
+        Range = 25,
+        BreakSpeed = 0.25,
+        MaxAngle = 360,
+        UpdateRate = 60,
+        BreakBed = true,
+        BreakTesla = true,
+        BreakHive = true,
+        BreakLuckyBlock = true,
+        BreakIronOre = true,
+        LimitItem = false,
+        SelfBreak = false,
+        InstantBreak = false
+    }
 end
-if not States.Combat.BedNuke then
-    States.Combat.BedNuke = { Enabled = false, Range = 25, MinRange = 1, PacketsPerTick = 1, Delay = 0, Bypass = false }
-elseif States.Combat.BedNuke.Bypass == nil then
-    States.Combat.BedNuke.Bypass = false
-end
-
-if not Mega.Objects.BedNukeConnections then Mega.Objects.BedNukeConnections = {} end
-local connections = Mega.Objects.BedNukeConnections
-
-for k, conn in pairs(connections) do
-    if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
-end
-table.clear(connections)
 
 local DamageBlockRemote = Mega.GetRemote("MinerDig")
--- Periodically re-check the remote
 task.spawn(function()
     while task.wait(5) do
         if not DamageBlockRemote then
@@ -43,266 +45,121 @@ task.spawn(function()
     end
 end)
 
-
 local vector = vector or {create = function(x, y, z) return Vector3.new(x, y, z) end}
-local lastCheck = 0
-local lastBreakTime = 0
-local lastBypassTime = 0
-local isBypassing = false
+local active = false
 
-local espFolder = Services.CoreGui:FindFirstChild("BedNukeESP")
-if not espFolder then
-    espFolder = Instance.new("Folder")
-    espFolder.Name = "BedNukeESP"
-    espFolder.Parent = Services.CoreGui
-end
-
-local espPool = {}
-
-local function ClearESP()
-    for _, box in ipairs(espPool) do
-        if box.Visible then
-            box.Visible = false
-        end
-    end
-end
-
-local function DrawESP(blocks)
-    for i, bPos in ipairs(blocks) do
-        local box = espPool[i]
-        if not box then
-            box = Instance.new("BoxHandleAdornment")
-            box.Size = Vector3.new(3.1, 3.1, 3.1)
-            box.AlwaysOnTop = true
-            box.ZIndex = 5
-            box.Transparency = 0.5
-            box.Color3 = Color3.fromRGB(255, 50, 50)
-            box.Adornee = game.Workspace.Terrain -- Привязываем к террейну
-            box.Parent = espFolder
-            espPool[i] = box
-        end
-        box.CFrame = CFrame.new(bPos * 3)
-        box.Visible = true
-    end
+local function attemptBreak(tab, localPosition)
+    if not tab then return false end
     
-    -- Скрываем остальные, которые не используются в этом кадре
-    for i = #blocks + 1, #espPool do
-        if espPool[i].Visible then
-            espPool[i].Visible = false
-        end
-    end
-end
-
-local function GetBlocksToBreak(hrpPos, bedPart, bedsList)
-    local blocksList = {}
-    local seen = {}
-    local bedPos = bedPart.Position
+    local myTeam = LocalPlayer:GetAttribute("Team")
+    local validTargets = {}
     
-    local dir = (bedPos - hrpPos).Unit
-    local dist = (bedPos - hrpPos).Magnitude
-    
-    local overlap = OverlapParams.new()
-    overlap.FilterType = Enum.RaycastFilterType.Whitelist
-    local whitelist = {}
-    
-    -- Ищем папку с блоками на карте
-    local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
-    if blocksFolder then table.insert(whitelist, blocksFolder) end
-    
-    -- Добавляем в whitelist все кровати
-    for _, b in ipairs(bedsList) do
-        if b then table.insert(whitelist, b) end
-    end
-    overlap.FilterDescendantsInstances = whitelist
-
-    -- Построение маршрута (в линию)
-    for i = 0, dist, 1.5 do
-        local point = hrpPos + dir * i
-        
-        -- Ограничение: на уровне OY кровати и выше
-        if point.Y >= (bedPos.Y - 1.5) then
-            local bPos = Vector3.new(
-                math.round(point.X / 3),
-                math.round(point.Y / 3),
-                math.round(point.Z / 3)
-            )
-            
-            local key = bPos.X .. "," .. bPos.Y .. "," .. bPos.Z
-            if not seen[key] then
-                seen[key] = true
-                
-                local realPos = bPos * 3
-                local parts = game.Workspace:GetPartBoundsInBox(CFrame.new(realPos), Vector3.new(2.5, 2.5, 2.5), overlap)
-                local hasTarget = false
-                for _, p in ipairs(parts) do
-                    if p.CanCollide or p.Name:lower():find("bed") then
-                        hasTarget = true
-                        break
-                    end
+    for _, v in ipairs(tab) do
+        if v and v.Parent then
+            local pos = v:IsA("Model") and (v.PrimaryPart and v.PrimaryPart.Position or v:GetPivot().Position) or v.Position
+            local dist = (pos - localPosition).Magnitude
+            if dist < States.Combat.BedNuke.Range then
+                -- Self break check for traps / hives
+                local plId = v:GetAttribute("PlacedByUserId")
+                if plId == LocalPlayer.UserId and not States.Combat.BedNuke.SelfBreak then
+                    continue
                 end
                 
-                if hasTarget then
-                    table.insert(blocksList, bPos)
+                -- Check for own bed protection
+                if v.Name == "bed" and (v:GetAttribute("TeamId") == myTeam or v:GetAttribute("Team") == myTeam) then
+                    continue
                 end
+                
+                table.insert(validTargets, {Instance = v, Position = pos, Distance = dist})
             end
         end
     end
     
-    -- Всегда добавляем кровать
-    local bedBPos = Vector3.new(
-        math.round(bedPos.X / 3),
-        math.round(bedPos.Y / 3),
-        math.round(bedPos.Z / 3)
+    if #validTargets == 0 then return false end
+    
+    -- Sorting
+    if States.Combat.BedNuke.Sorting == "Distance" then
+        table.sort(validTargets, function(a, b)
+            return a.Distance < b.Distance
+        end)
+    end
+    
+    local target = validTargets[1]
+    local dpos = Vector3.new(
+        math.round(target.Position.X / 3),
+        math.round(target.Position.Y / 3),
+        math.round(target.Position.Z / 3)
     )
-    local bedKey = bedBPos.X .. "," .. bedBPos.Y .. "," .. bedBPos.Z
-    if not seen[bedKey] then
-        table.insert(blocksList, bedBPos)
-    end
     
-    return blocksList
+    local posArg = vector.create(dpos.X, dpos.Y, dpos.Z)
+    local hitPosArg = vector.create(target.Position.X, target.Position.Y, target.Position.Z)
+    
+    local args = {
+        {
+            ["blockRef"] = {
+                ["blockPosition"] = posArg
+            },
+            ["hitPosition"] = hitPosArg,
+            ["hitNormal"] = vector.create(0, 1, 0)
+        }
+    }
+    
+    pcall(function()
+        if DamageBlockRemote:IsA("RemoteEvent") then
+            DamageBlockRemote:FireServer(unpack(args))
+        elseif DamageBlockRemote:IsA("RemoteFunction") then
+            DamageBlockRemote:InvokeServer(unpack(args))
+        end
+    end)
+    
+    return true
 end
 
-local function BedNukeLoop()
-    if not States.Combat.BedNuke.Enabled or not DamageBlockRemote then 
-        ClearESP()
-        return 
+local function breakerLoop()
+    active = true
+    
+    while States.Combat.BedNuke.Enabled do
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and DamageBlockRemote then
+            local localPosition = hrp.Position
+            
+            -- Query tagged items matching TumbaV6 collections
+            local beds = States.Combat.BedNuke.BreakBed and Services.CollectionService:GetTagged("bed") or {}
+            local teslas = States.Combat.BedNuke.BreakTesla and Services.CollectionService:GetTagged("tesla-trap") or {}
+            local hives = States.Combat.BedNuke.BreakHive and Services.CollectionService:GetTagged("beehive") or {}
+            local luckyblocks = States.Combat.BedNuke.BreakLuckyBlock and Services.CollectionService:GetTagged("LuckyBlock") or {}
+            local ironores = States.Combat.BedNuke.BreakIronOre and Services.CollectionService:GetTagged("iron_ore_mesh_block") or {}
+            
+            local broken = false
+            if attemptBreak(teslas, localPosition) then broken = true end
+            if not broken and attemptBreak(beds, localPosition) then broken = true end
+            if not broken and attemptBreak(hives, localPosition) then broken = true end
+            if not broken and attemptBreak(luckyblocks, localPosition) then broken = true end
+            if not broken and attemptBreak(ironores, localPosition) then broken = true end
+            
+            if broken then
+                task.wait(States.Combat.BedNuke.InstantBreak and 0.05 or States.Combat.BedNuke.BreakSpeed)
+            end
+        end
+        task.wait(1 / States.Combat.BedNuke.UpdateRate)
     end
     
-    -- Троттлинг
-    if tick() - lastCheck < 0.05 then return end
-    lastCheck = tick()
-
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    local myTeamId = LocalPlayer:GetAttribute("Team")
-    local beds = Services.CollectionService:GetTagged("bed")
-    local closestBed = nil
-    local closestDist = States.Combat.BedNuke.Range
-    local minAllowedDist = States.Combat.BedNuke.MinRange or 1
-
-    for _, bed in ipairs(beds) do
-        if bed:IsA("BasePart") or bed:IsA("Model") then
-            local bedPart = bed:IsA("BasePart") and bed or bed.PrimaryPart
-            if bedPart then
-                local bedTeamId = bed:GetAttribute("TeamId") or bed:GetAttribute("Team")
-                local health = bed:GetAttribute("Health")
-                
-                if bedTeamId ~= myTeamId and (not health or health > 0) then
-                    local dist = (bedPart.Position - hrp.Position).Magnitude
-                    if dist <= closestDist and dist >= minAllowedDist then
-                        closestDist = dist
-                        closestBed = bed
-                    end
-                end
-            end
-        end
-    end
-
-    if closestBed then
-        local bedPart = closestBed:IsA("BasePart") and closestBed or closestBed.PrimaryPart
-        if not bedPart then 
-            ClearESP()
-            return 
-        end
-
-        -- Вычисляем оптимальный прямой маршрут до кровати
-        local blocksToBreak = GetBlocksToBreak(hrp.Position, bedPart, beds)
-        
-        -- Рендер ESP (красных блоков)
-        DrawESP(blocksToBreak)
-        
-        local delayMs = States.Combat.BedNuke.Delay or 0
-        local delaySec = delayMs / 1000
-
-        if #blocksToBreak > 0 and (tick() - lastBreakTime >= delaySec) then
-            -- Античит байпасс: сброс кулдауна сервера через полет
-            if States.Combat.BedNuke.Bypass and not isBypassing then
-                if tick() - lastBypassTime > 4 then
-                    isBypassing = true
-                    task.spawn(function()
-                        if not hrp then return end
-                        local bv = Instance.new("BodyVelocity")
-                        bv.Name = "BedNukeBypass"
-                        bv.MaxForce = Vector3.new(0, 9e9, 0)
-                        bv.Velocity = Vector3.new(0, 100, 0) -- Очень высокая скорость (100 стадов/сек)
-                        bv.Parent = hrp
-                        
-                        task.wait(0.2) -- 100 * 0.2 = ровно 20 стадов вверх
-                        if bv.Parent then bv.Velocity = Vector3.new(0, 0, 0) end
-                        
-                        task.wait(0.5)
-                        if bv.Parent then bv.Velocity = Vector3.new(0, -100, 0) end -- Быстрый спуск
-                        
-                        task.wait(0.2) -- Возвращаемся те же 20 стадов
-                        if bv.Parent then bv:Destroy() end
-                        
-                        lastBypassTime = tick()
-                        isBypassing = false
-                    end)
-                end
-            end
-
-            local packetsFired = 0
-            
-            for _, blockPos in ipairs(blocksToBreak) do
-                if packetsFired >= States.Combat.BedNuke.PacketsPerTick then break end
-                
-                local posArg = vector.create(blockPos.X, blockPos.Y, blockPos.Z)
-                local hitPosArg = vector.create(blockPos.X * 3, blockPos.Y * 3, blockPos.Z * 3)
-                
-                local args = {
-                    {
-                        ["blockRef"] = {
-                            ["blockPosition"] = posArg
-                        },
-                        ["hitPosition"] = hitPosArg,
-                        ["hitNormal"] = vector.create(0, 1, 0)
-                    }
-                }
-                
-                task.spawn(function()
-                    pcall(function()
-                        if DamageBlockRemote:IsA("RemoteEvent") then
-                            DamageBlockRemote:FireServer(unpack(args))
-                        elseif DamageBlockRemote:IsA("RemoteFunction") then
-                            DamageBlockRemote:InvokeServer(unpack(args))
-                        end
-                    end)
-                end)
-                
-                packetsFired = packetsFired + 1
-            end
-            
-            lastBreakTime = tick()
-        end
-    else
-        ClearESP()
-    end
+    active = false
 end
 
 function Mega.Features.BedNuke.SetEnabled(state)
     States.Combat.BedNuke.Enabled = state
+    
     if state then
-        if not connections.BedNukeLoop then
-            connections.BedNukeLoop = Services.RunService.Heartbeat:Connect(BedNukeLoop)
+        if not active then
+            task.spawn(breakerLoop)
         end
-    else
-        if connections.BedNukeLoop then
-            connections.BedNukeLoop:Disconnect()
-            connections.BedNukeLoop = nil
-        end
-        isBypassing = false
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp and hrp:FindFirstChild("BedNukeBypass") then
-            hrp.BedNukeBypass:Destroy()
-        end
-        ClearESP()
     end
 end
 
 if States.Combat.BedNuke.Enabled then
     Mega.Features.BedNuke.SetEnabled(true)
 end
+
+return Mega.Features.BedNuke

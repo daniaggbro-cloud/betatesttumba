@@ -111,27 +111,25 @@ end
 UI.CreateSection(TabFrame, "section_combat_bednuke")
 
 local bedNukeSettings = {
-    -- Максимальная дистанция
-    UI.CreateSlider(nil, "slider_bednuke_range", "Combat.BedNuke.Range", 5, 50, function(val) 
+    UI.CreateDropdown(nil, "dropdown_bednuke_sorting", "Combat.BedNuke.Sorting", {"Distance", "Health"}, function(val)
+        Mega.States.Combat.BedNuke.Sorting = val
+    end),
+    UI.CreateSlider(nil, "slider_bednuke_range", "Combat.BedNuke.Range", 1, 30, function(val) 
         Mega.States.Combat.BedNuke.Range = val 
     end),
-    
-    -- Минимальная дистанция (чтобы не ломать блоки прямо под собой)
-    UI.CreateSlider(nil, "slider_bednuke_min_range", "Combat.BedNuke.MinRange", 1, 15, function(val) 
-        Mega.States.Combat.BedNuke.MinRange = val 
+    UI.CreateSlider(nil, "slider_bednuke_break_speed", "Combat.BedNuke.BreakSpeed", 0, 30, function(val) 
+        Mega.States.Combat.BedNuke.BreakSpeed = val / 100 
     end),
-    
-    UI.CreateToggle(nil, "toggle_bednuke_bypass", "Combat.BedNuke.Bypass"),
-    
-    -- Задержка (мс) - Скорость ломания
-    UI.CreateSlider(nil, "slider_bednuke_delay", "Combat.BedNuke.Delay", 0, 1000, function(val) 
-        Mega.States.Combat.BedNuke.Delay = val 
+    UI.CreateSlider(nil, "slider_bednuke_update_rate", "Combat.BedNuke.UpdateRate", 1, 120, function(val) 
+        Mega.States.Combat.BedNuke.UpdateRate = val 
     end),
-    
-    -- Пакетов за тик (мощность нюка)
-    UI.CreateSlider(nil, "slider_bednuke_packets", "Combat.BedNuke.PacketsPerTick", 1, 10, function(val) 
-        Mega.States.Combat.BedNuke.PacketsPerTick = val 
-    end)
+    UI.CreateToggle(nil, "toggle_bednuke_break_bed", "Combat.BedNuke.BreakBed"),
+    UI.CreateToggle(nil, "toggle_bednuke_break_tesla", "Combat.BedNuke.BreakTesla"),
+    UI.CreateToggle(nil, "toggle_bednuke_break_hive", "Combat.BedNuke.BreakHive"),
+    UI.CreateToggle(nil, "toggle_bednuke_break_lucky", "Combat.BedNuke.BreakLuckyBlock"),
+    UI.CreateToggle(nil, "toggle_bednuke_break_iron", "Combat.BedNuke.BreakIronOre"),
+    UI.CreateToggle(nil, "toggle_bednuke_self_break", "Combat.BedNuke.SelfBreak"),
+    UI.CreateToggle(nil, "toggle_bednuke_instant", "Combat.BedNuke.InstantBreak")
 }
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_bednuke", "Combat.BedNuke.Enabled", function(state)
