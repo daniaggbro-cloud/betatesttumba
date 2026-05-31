@@ -67,20 +67,23 @@ local function performWallHop()
             task.spawn(function()
                 local camera = Services.Workspace.CurrentCamera
                 if camera then
-                    local originalCFrame = camera.CFrame
                     local angleRad = math.rad(States.Player.WallHopAngle or 80)
                     
-                    -- Flick camera to the right
-                    camera.CFrame = originalCFrame * CFrame.Angles(0, -angleRad, 0)
-                    
-                    -- Trigger jump state
+                    -- Trigger jump state at the start of the flick
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     
-                    -- Wait one frame / very short time
-                    Services.RunService.RenderStepped:Wait()
+                    local steps = 4 -- Number of frames to flick to the side
+                    -- Smoothly rotate camera to the side
+                    for i = 1, steps do
+                        camera.CFrame = camera.CFrame * CFrame.Angles(0, -angleRad / steps, 0)
+                        Services.RunService.RenderStepped:Wait()
+                    end
                     
-                    -- Restore camera CFrame
-                    camera.CFrame = originalCFrame
+                    -- Smoothly rotate camera back
+                    for i = 1, steps do
+                        camera.CFrame = camera.CFrame * CFrame.Angles(0, angleRad / steps, 0)
+                        Services.RunService.RenderStepped:Wait()
+                    end
                 end
                 isFlicking = false
             end)
