@@ -55,7 +55,7 @@ local function performWallHop()
     
     if raycastResult and raycastResult.Instance then
         local now = os.clock()
-        if now - lastHopTime < 0.45 then return end -- Cooldown between hops to match natural jump rhythm
+        if now - lastHopTime < 0.18 then return end -- Cooldown between hops to maintain rhythm
         lastHopTime = now
 
         local mode = States.Player.WallHopMode or "Flick"
@@ -80,42 +80,22 @@ local function performWallHop()
                         directionSign = -1 -- Flick Right
                     end
                     
-                    local steps = 12 -- Slower and smoother human-like rotation
-                    local originalCamCFrame = camera.CFrame
-                    
-                    -- Smoothly rotate character's physical root part to the side
+                    local steps = 8 -- More frames for a smooth human-like swipe
+                    -- Smoothly rotate camera to the side
                     for i = 1, steps do
-                        if not hrp or not camera then break end
-                        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
-                        
-                        -- Keep camera 100% stable if stabilization is toggled on
-                        if States.Player.WallHopStabilize then
-                            camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
-                        end
+                        camera.CFrame = camera.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
                         Services.RunService.RenderStepped:Wait()
                     end
                     
                     -- Trigger jump state at the peak of the flick (most realistic timing)
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     
-                    -- Brief pause at the peak of the turn (stabilize camera if needed)
-                    for i = 1, 4 do
-                        if not camera then break end
-                        if States.Player.WallHopStabilize then
-                            camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
-                        end
-                        Services.RunService.RenderStepped:Wait()
-                    end
+                    -- Brief pause at the peak of the turn to ensure Roblox replicates the rotation to other players
+                    task.wait(0.04)
                     
-                    -- Smoothly rotate character's physical root part back
+                    -- Smoothly rotate camera back
                     for i = 1, steps do
-                        if not hrp or not camera then break end
-                        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, -directionSign * (angleRad / steps), 0)
-                        
-                        -- Keep camera 100% stable if stabilization is toggled on
-                        if States.Player.WallHopStabilize then
-                            camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
-                        end
+                        camera.CFrame = camera.CFrame * CFrame.Angles(0, -directionSign * (angleRad / steps), 0)
                         Services.RunService.RenderStepped:Wait()
                     end
                 end
