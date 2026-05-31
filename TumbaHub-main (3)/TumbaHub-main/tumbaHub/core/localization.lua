@@ -139,6 +139,10 @@ Mega.Localization = {
         ["dropdown_high_jump_mode"] = { ru = "Метод прыжка", en = "Jump Mode", uk = "Метод стрибка" },
         ["slider_high_jump_power"] = { ru = "Сила прыжка", en = "Jump Power", uk = "Сила стрибка" },
         ["toggle_high_jump_autodisable"] = { ru = "Авто-выключение", en = "Auto Disable", uk = "Авто-вимкнення" },
+        ["toggle_wall_hop"] = { ru = "Авто Wall Hop", en = "Auto Wall Hop", uk = "Авто Wall Hop" },
+        ["dropdown_wall_hop_mode"] = { ru = "Метод Wall Hop", en = "Wall Hop Mode", uk = "Метод Wall Hop" },
+        ["slider_wall_hop_angle"] = { ru = "Угол флика (Flick Angle)", en = "Flick Angle", uk = "Кут фліка" },
+        ["slider_wall_hop_force"] = { ru = "Сила прыжка (Force)", en = "Jump Force", uk = "Сила стрибка" },
 
         ["toggle_long_jump"] = { ru = "Длинный прыжок (LongJump)", en = "Long Jump", uk = "Довгий стрибок (LongJump)" },
         ["dropdown_long_jump_key"] = { ru = "Клавиша активации", en = "Activation Key", uk = "Клавіша активації" },

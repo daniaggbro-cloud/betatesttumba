@@ -287,7 +287,8 @@ InitializePhase("features", {
     "features/auto_davey.lua",
     "features/kit_display.lua",
     "features/trap_disabler.lua",
-    "features/bed_plates.lua"
+    "features/bed_plates.lua",
+    "features/wall_hop.lua"
 })
 
 -- PHASE 4: FINALIZING INTERFACE

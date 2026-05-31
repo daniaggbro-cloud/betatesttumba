@@ -69,6 +69,25 @@ end, {
 })
 
 task.spawn(function()
+    pcall(function() Mega.LoadModule("features/wall_hop.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_wall_hop", "Player.WallHop", function(state)
+    Mega.States.Player.WallHop = state
+    if Mega.Features.WallHop and Mega.Features.WallHop.SetEnabled then Mega.Features.WallHop.SetEnabled(state) end
+end, {
+    UI.CreateDropdown(nil, "dropdown_wall_hop_mode", "Player.WallHopMode", {"Flick", "Velocity"}, function(val)
+        Mega.States.Player.WallHopMode = val
+    end),
+    UI.CreateSlider(nil, "slider_wall_hop_angle", "Player.WallHopAngle", 45, 120, function(val)
+        Mega.States.Player.WallHopAngle = val
+    end),
+    UI.CreateSlider(nil, "slider_wall_hop_force", "Player.WallHopForce", 10, 100, function(val)
+        Mega.States.Player.WallHopForce = val
+    end)
+})
+
+task.spawn(function()
     pcall(function() Mega.LoadModule("features/long_jump.lua") end)
 end)
 
