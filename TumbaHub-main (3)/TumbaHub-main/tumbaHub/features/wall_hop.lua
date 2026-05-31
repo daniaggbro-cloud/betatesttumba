@@ -69,19 +69,30 @@ local function performWallHop()
                 if camera then
                     local angleRad = math.rad(States.Player.WallHopAngle or 80)
                     
+                    -- Dynamic flick direction based on active strafe keys (A for left, D for right)
+                    local isLeft = Services.UserInputService:IsKeyDown(Enum.KeyCode.A)
+                    local isRight = Services.UserInputService:IsKeyDown(Enum.KeyCode.D)
+                    
+                    local directionSign = -1 -- Default right flick
+                    if isLeft then
+                        directionSign = 1 -- Flick Left
+                    elseif isRight then
+                        directionSign = -1 -- Flick Right
+                    end
+                    
                     -- Trigger jump state at the start of the flick
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     
                     local steps = 4 -- Number of frames to flick to the side
                     -- Smoothly rotate camera to the side
                     for i = 1, steps do
-                        camera.CFrame = camera.CFrame * CFrame.Angles(0, -angleRad / steps, 0)
+                        camera.CFrame = camera.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
                         Services.RunService.RenderStepped:Wait()
                     end
                     
                     -- Smoothly rotate camera back
                     for i = 1, steps do
-                        camera.CFrame = camera.CFrame * CFrame.Angles(0, angleRad / steps, 0)
+                        camera.CFrame = camera.CFrame * CFrame.Angles(0, -directionSign * (angleRad / steps), 0)
                         Services.RunService.RenderStepped:Wait()
                     end
                 end
@@ -93,6 +104,13 @@ local function performWallHop()
             local force = States.Player.WallHopForce or 35
             hrp.Velocity = Vector3.new(hrp.Velocity.X, force, hrp.Velocity.Z)
         end
+    end
+end
+
+function Mega.Features.WallHop.UpdateFPSLimit()
+    if setfpscap then
+        local cap = (States.Player.WallHop and States.Player.WallHopLimitFPS) and 60 or 999
+        pcall(setfpscap, cap)
     end
 end
 
@@ -118,6 +136,8 @@ function Mega.Features.WallHop.SetEnabled(state)
             end
         end)
     end
+    
+    Mega.Features.WallHop.UpdateFPSLimit()
 end
 
 if States.Player.WallHop then
@@ -127,6 +147,7 @@ end
 if Mega.UnloadedSignal then
     if not connections.Unload then
         connections.Unload = Mega.UnloadedSignal:Connect(function()
+            if setfpscap then pcall(setfpscap, 999) end
             for _, conn in pairs(connections) do 
                 if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
             end

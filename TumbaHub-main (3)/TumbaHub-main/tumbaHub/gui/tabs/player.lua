@@ -84,6 +84,12 @@ end, {
     end),
     UI.CreateSlider(nil, "slider_wall_hop_force", "Player.WallHopForce", 10, 100, function(val)
         Mega.States.Player.WallHopForce = val
+    end),
+    UI.CreateToggle(nil, "toggle_wall_hop_limit_fps", "Player.WallHopLimitFPS", function(state)
+        Mega.States.Player.WallHopLimitFPS = state
+        if Mega.Features.WallHop and Mega.Features.WallHop.UpdateFPSLimit then
+            Mega.Features.WallHop.UpdateFPSLimit()
+        end
     end)
 })
 

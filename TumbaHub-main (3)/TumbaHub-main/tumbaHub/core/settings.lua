@@ -136,6 +136,7 @@ Mega.States = {
         WallHopMode = "Flick",
         WallHopAngle = 80,
         WallHopForce = 35,
+        WallHopLimitFPS = true,
         Sprint = false,
         NoFall = false,
         BuildReach = {
