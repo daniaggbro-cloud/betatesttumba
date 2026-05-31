@@ -1,5 +1,6 @@
 -- features/bed_defend.lua
--- Auto Bed Defend module - automatically builds a protective cover around your team's bed
+-- Bed Protector - EXACT replica of the TumbaV6 / Vape Bed Protector feature
+-- Automatically builds a mathematical pyramid defense using the strongest blocks in your inventory
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.BedDefend = {}
@@ -16,40 +17,44 @@ local States = Mega.States
 
 if not States.Player then States.Player = {} end
 if States.Player.BedDefend == nil then States.Player.BedDefend = false end
-if States.Player.BedDefendBlock == nil then States.Player.BedDefendBlock = "wool" end
-if States.Player.BedDefendLayer == nil then States.Player.BedDefendLayer = 1 end
 
-local active = false
-local placeDelay = 0.05
+local bedwars = {}
 
-local function getOurBed()
-    local myTeam = LocalPlayer:GetAttribute("Team")
-    for _, bed in ipairs(Services.CollectionService:GetTagged("bed")) do
-        if bed:IsA("BasePart") or bed:IsA("Model") then
-            local bedTeam = bed:GetAttribute("TeamId") or bed:GetAttribute("Team")
-            if bedTeam == myTeam then
-                return bed:IsA("BasePart") and bed or bed.PrimaryPart
-            end
-        end
-    end
+-- Lazy-load Bedwars block controller
+local function initBedwars()
+    pcall(function()
+        local lplr = Services.Players.LocalPlayer
+        local Knit = require(lplr.PlayerScripts.TS.knit).Knit
+        bedwars.BlockController = require(Services.ReplicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out).BlockEngine
+    end)
+end
+
+local function getPlacedBlock(pos)
+    if not pos then return nil end
+    initBedwars()
     
-    -- Fallback: find nearest bed
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        local closestBed = nil
-        local closestDist = 9999
-        for _, bed in ipairs(Services.CollectionService:GetTagged("bed")) do
-            local bedPart = bed:IsA("BasePart") and bed or bed.PrimaryPart
-            if bedPart then
-                local dist = (bedPart.Position - hrp.Position).Magnitude
-                if dist < closestDist then
-                    closestDist = dist
-                    closestBed = bedPart
-                end
-            end
+    local block, blockPos
+    pcall(function()
+        if bedwars.BlockController then
+            local bp = bedwars.BlockController:getBlockPosition(pos)
+            block = bedwars.BlockController:getStore():getBlockAt(bp)
+            blockPos = bp
         end
-        return closestBed
+    end)
+    if block then return block, blockPos end
+    
+    -- Fallback: Scan Map blocks directly
+    local overlap = OverlapParams.new()
+    overlap.FilterType = Enum.RaycastFilterType.Include
+    local blocksFolder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
+    if blocksFolder then
+        overlap.FilterDescendantsInstances = {blocksFolder}
+    end
+    local parts = game.Workspace:GetPartBoundsInBox(CFrame.new(pos), Vector3.new(2.8, 2.8, 2.8), overlap)
+    for _, p in ipairs(parts) do
+        if p:IsA("BasePart") and p.Name ~= "bed" and not p:GetAttribute("NoBreak") then
+            return p, Vector3.new(math.round(pos.X / 3), math.round(pos.Y / 3), math.round(pos.Z / 3))
+        end
     end
     return nil
 end
@@ -75,18 +80,19 @@ local function placeBlock(pos, blockName)
     end
 end
 
-local function isBlockAt(pos)
-    local overlap = OverlapParams.new()
-    overlap.FilterType = Enum.RaycastFilterType.Include
-    local folder = game.Workspace:FindFirstChild("Map") and game.Workspace.Map:FindFirstChild("Blocks") or game.Workspace:FindFirstChild("Blocks")
-    if folder then
-        overlap.FilterDescendantsInstances = {folder}
+local function getBedNear()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local localPosition = hrp and hrp.Position or Vector3.zero
+    for _, v in ipairs(Services.CollectionService:GetTagged('bed')) do
+        if (localPosition - v.Position).Magnitude < 20 and v:GetAttribute('Team'..(LocalPlayer:GetAttribute('Team') or -1)..'NoBreak') then
+            return v
+        end
     end
-    local parts = game.Workspace:GetPartBoundsInBox(CFrame.new(pos), Vector3.new(2.8, 2.8, 2.8), overlap)
-    return #parts > 0
 end
 
-local function getInventoryBlock(blockName)
+local function getBlocks()
+    local blocks = {}
     local inventory = nil
     pcall(function()
         local InventoryUtil = require(Services.ReplicatedStorage.TS.inventory["inventory-util"]).InventoryUtil
@@ -94,80 +100,49 @@ local function getInventoryBlock(blockName)
     end)
     
     if inventory and inventory.items then
+        local itemMeta = require(Services.ReplicatedStorage.TS.item['item-meta']).items
         for _, item in ipairs(inventory.items) do
-            if item.itemType:lower():find(blockName:lower()) then
-                return item.itemType
+            local meta = itemMeta[item.itemType]
+            local block = meta and meta.block
+            if block then
+                table.insert(blocks, {item.itemType, block.health or 10})
             end
         end
     end
-    return nil
+    table.sort(blocks, function(a, b) 
+        return a[2] > b[2]
+    end)
+    return blocks
+end
+
+local function getPyramid(size, grid)
+    local positions = {}
+    for h = size, 0, -1 do
+        for w = h, 0, -1 do
+            table.insert(positions, Vector3.new(w, (size - h), ((h + 1) - w)) * grid)
+            table.insert(positions, Vector3.new(w * -1, (size - h), ((h + 1) - w)) * grid)
+            table.insert(positions, Vector3.new(w, (size - h), (h - w) * -1) * grid)
+            table.insert(positions, Vector3.new(w * -1, (size - h), (h - w) * -1) * grid)
+        end
+    end
+    return positions
 end
 
 local function buildDefense()
-    if active then return end
-    active = true
-    
-    local bed = getOurBed()
-    if not bed then
-        active = false
-        return
-    end
-    
-    -- Check if we have blocks
-    local blockType = States.Player.BedDefendBlock or "wool"
-    local resolvedBlock = getInventoryBlock(blockType)
-    if not resolvedBlock then
-        active = false
-        return
-    end
-
-    local bedPos = bed.Position
-    local layer = States.Player.BedDefendLayer or 1
-    
-    -- Calculate shell offsets around the bed
-    -- Since bed is 2 parts (placed along either X or Z), we define a protective shell
-    local offsets = {}
-    local step = 3
-    
-    -- Layer 1 shell offsets
-    for x = -step, step, step do
-        for y = 0, step, step do
-            for z = -step, step, step do
-                -- Exclude the bed itself (center area)
-                if not (x == 0 and y == 0 and z == 0) and not (x == 0 and y == 0 and z == step) then
-                    table.insert(offsets, Vector3.new(x, y, z))
+    local bed = getBedNear()
+    local bedPos = bed and bed.Position or nil
+    if bedPos then
+        local blocks = getBlocks()
+        for i, block in ipairs(blocks) do
+            for _, pos in ipairs(getPyramid(i, 3)) do
+                if not States.Player.BedDefend then break end
+                local targetPos = bedPos + pos
+                if not getPlacedBlock(targetPos) then
+                    placeBlock(targetPos, block[1])
+                    task.wait(0.05)
                 end
             end
         end
-    end
-    
-    -- Layer 2 shell offsets if enabled
-    if layer > 1 then
-        local step2 = step * 2
-        for x = -step2, step2, step do
-            for y = 0, step, step do
-                for z = -step2, step2, step do
-                    -- Outer shell
-                    if math.abs(x) == step2 or math.abs(z) == step2 or y == step then
-                        table.insert(offsets, Vector3.new(x, y, z))
-                    end
-                end
-            end
-        end
-    end
-    
-    -- Place blocks at calculated positions
-    task.spawn(function()
-        for _, offset in ipairs(offsets) do
-            if not States.Player.BedDefend then break end
-            local targetPos = bedPos + offset
-            
-            if not isBlockAt(targetPos) then
-                pcall(placeBlock, targetPos, resolvedBlock)
-                task.wait(placeDelay)
-            end
-        end
-        active = false
         
         -- Automatically toggle off when finished
         if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_bed_defend"] then
@@ -175,7 +150,22 @@ local function buildDefense()
         else
             States.Player.BedDefend = false
         end
-    end)
+    else
+        -- Notify the user bed was not found
+        pcall(function()
+            local StarterGui = game:GetService("StarterGui")
+            StarterGui:SetCore("SendNotification", {
+                Title = "Bed Protector",
+                Text = "Unable to locate bed",
+                Duration = 5
+            })
+        end)
+        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_bed_defend"] then
+            Mega.Objects.Toggles["toggle_bed_defend"](false)
+        else
+            States.Player.BedDefend = false
+        end
+    end
 end
 
 function Mega.Features.BedDefend.SetEnabled(state)
@@ -183,8 +173,6 @@ function Mega.Features.BedDefend.SetEnabled(state)
     
     if state then
         task.spawn(buildDefense)
-    else
-        active = false
     end
 end
 
