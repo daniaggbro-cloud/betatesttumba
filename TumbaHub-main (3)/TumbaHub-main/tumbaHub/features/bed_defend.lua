@@ -87,11 +87,11 @@ local function isBlockAt(pos)
 end
 
 local function getInventoryBlock(blockName)
-    -- In Bedwars, blockName can be e.g. "wool_white" or "wood_oak"
-    -- Let's resolve the exact itemType from inventory
-    local Knit = require(LocalPlayer.PlayerScripts.TS.knit).Knit
-    local ClientStore = require(LocalPlayer.PlayerScripts.TS.ui.store.client_store).ClientStore
-    local inventory = ClientStore:getState().Inventory.inventory
+    local inventory = nil
+    pcall(function()
+        local InventoryUtil = require(Services.ReplicatedStorage.TS.inventory["inventory-util"]).InventoryUtil
+        inventory = InventoryUtil.getInventory(LocalPlayer)
+    end)
     
     if inventory and inventory.items then
         for _, item in ipairs(inventory.items) do
