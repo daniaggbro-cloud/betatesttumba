@@ -90,6 +90,9 @@ end, {
         if Mega.Features.WallHop and Mega.Features.WallHop.UpdateFPSLimit then
             Mega.Features.WallHop.UpdateFPSLimit()
         end
+    end),
+    UI.CreateToggle(nil, "toggle_wall_hop_stabilize", "Player.WallHopStabilize", function(state)
+        Mega.States.Player.WallHopStabilize = state
     end)
 })
 

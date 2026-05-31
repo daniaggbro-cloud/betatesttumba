@@ -81,36 +81,42 @@ local function performWallHop()
                     end
                     
                     local steps = 12 -- Slower and smoother human-like rotation
-                    local rootJoint = char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart:FindFirstChild("RootJoint")
+                    local originalCamCFrame = camera.CFrame
                     
-                    if rootJoint then
-                        local originalC0 = rootJoint.C0
+                    -- Smoothly rotate character's physical root part to the side
+                    for i = 1, steps do
+                        if not hrp or not camera then break end
+                        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
                         
-                        -- Smoothly rotate the character's physical Torso relative to the root part
-                        for i = 1, steps do
-                            if not rootJoint then break end
-                            -- In R6, Torso rotation around the Y axis corresponds to rotating RootJoint.C0 around Z
-                            rootJoint.C0 = originalC0 * CFrame.Angles(0, 0, directionSign * (angleRad * (i / steps)))
-                            Services.RunService.RenderStepped:Wait()
+                        -- Keep camera 100% stable if stabilization is toggled on
+                        if States.Player.WallHopStabilize then
+                            camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
                         end
-                        
-                        -- Trigger jump state at the peak of the flick
-                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                        
-                        -- Brief pause at the peak of the turn to ensure replication
-                        task.wait(0.06)
-                        
-                        -- Smoothly rotate character's Torso back to original position
-                        for i = steps, 0, -1 do
-                            if not rootJoint then break end
-                            rootJoint.C0 = originalC0 * CFrame.Angles(0, 0, directionSign * (angleRad * (i / steps)))
-                            Services.RunService.RenderStepped:Wait()
+                        Services.RunService.RenderStepped:Wait()
+                    end
+                    
+                    -- Trigger jump state at the peak of the flick (most realistic timing)
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    
+                    -- Brief pause at the peak of the turn (stabilize camera if needed)
+                    for i = 1, 4 do
+                        if not camera then break end
+                        if States.Player.WallHopStabilize then
+                            camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
                         end
+                        Services.RunService.RenderStepped:Wait()
+                    end
+                    
+                    -- Smoothly rotate character's physical root part back
+                    for i = 1, steps do
+                        if not hrp or not camera then break end
+                        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, -directionSign * (angleRad / steps), 0)
                         
-                        -- Reset to original to avoid any offset errors
-                        if rootJoint then
-                            rootJoint.C0 = originalC0
+                        -- Keep camera 100% stable if stabilization is toggled on
+                        if States.Player.WallHopStabilize then
+                            camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
                         end
+                        Services.RunService.RenderStepped:Wait()
                     end
                 end
                 isFlicking = false
