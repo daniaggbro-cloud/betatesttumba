@@ -80,15 +80,18 @@ local function performWallHop()
                         directionSign = -1 -- Flick Right
                     end
                     
-                    -- Trigger jump state at the start of the flick
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    
-                    local steps = 4 -- Number of frames to flick to the side
+                    local steps = 8 -- More frames for a smooth human-like swipe
                     -- Smoothly rotate camera to the side
                     for i = 1, steps do
                         camera.CFrame = camera.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
                         Services.RunService.RenderStepped:Wait()
                     end
+                    
+                    -- Trigger jump state at the peak of the flick (most realistic timing)
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    
+                    -- Brief pause at the peak of the turn to ensure Roblox replicates the rotation to other players
+                    task.wait(0.04)
                     
                     -- Smoothly rotate camera back
                     for i = 1, steps do
