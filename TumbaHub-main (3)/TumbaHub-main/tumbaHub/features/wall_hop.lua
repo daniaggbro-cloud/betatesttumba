@@ -55,7 +55,7 @@ local function performWallHop()
     
     if raycastResult and raycastResult.Instance then
         local now = os.clock()
-        if now - lastHopTime < 0.18 then return end -- Cooldown between hops to maintain rhythm
+        if now - lastHopTime < 0.45 then return end -- Cooldown between hops to match natural jump rhythm
         lastHopTime = now
 
         local mode = States.Player.WallHopMode or "Flick"
@@ -80,22 +80,32 @@ local function performWallHop()
                         directionSign = -1 -- Flick Right
                     end
                     
-                    local steps = 8 -- More frames for a smooth human-like swipe
-                    -- Smoothly rotate camera to the side
+                    local steps = 12 -- Slower and smoother human-like rotation
+                    local originalCamCFrame = camera.CFrame
+                    
+                    -- Smoothly rotate character to the side while keeping camera static
                     for i = 1, steps do
-                        camera.CFrame = camera.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
+                        if not hrp or not camera then break end
+                        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, directionSign * (angleRad / steps), 0)
+                        camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
                         Services.RunService.RenderStepped:Wait()
                     end
                     
                     -- Trigger jump state at the peak of the flick (most realistic timing)
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     
-                    -- Brief pause at the peak of the turn to ensure Roblox replicates the rotation to other players
-                    task.wait(0.04)
+                    -- Brief pause at the peak of the turn (camera still locked)
+                    for i = 1, 4 do
+                        if not camera then break end
+                        camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
+                        Services.RunService.RenderStepped:Wait()
+                    end
                     
-                    -- Smoothly rotate camera back
+                    -- Smoothly rotate character back while keeping camera static
                     for i = 1, steps do
-                        camera.CFrame = camera.CFrame * CFrame.Angles(0, -directionSign * (angleRad / steps), 0)
+                        if not hrp or not camera then break end
+                        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, -directionSign * (angleRad / steps), 0)
+                        camera.CFrame = CFrame.new(camera.CFrame.Position) * originalCamCFrame.Rotation
                         Services.RunService.RenderStepped:Wait()
                     end
                 end
