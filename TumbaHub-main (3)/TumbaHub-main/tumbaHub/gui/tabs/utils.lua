@@ -167,9 +167,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_staff_detector", "Utility.StaffDet
         Mega.Features.StaffDetector.SetEnabled(state) 
     end
 end, {
-    UI.CreateDropdown(nil, "dropdown_staff_detector_mode", "Utility.StaffDetector.Mode", {"Notify", "Uninject", "Requeue", "Profile", "AutoConfig", "Leave", "Lobby"}, function(val) Mega.States.Utility.StaffDetector.Mode = val end, false),
-    UI.CreateToggle(nil, "toggle_staff_detector_clans", "Utility.StaffDetector.Clans"),
-    UI.CreateToggle(nil, "toggle_staff_detector_party", "Utility.StaffDetector.LeaveParty"),
+    UI.CreateDropdown(nil, "dropdown_staff_detector_mode", "Utility.StaffDetector.Mode", {"Notify", "Uninject", "ServerHop", "Profile", "AutoConfig"}, function(val) Mega.States.Utility.StaffDetector.Mode = val end, false),
     Mega.UI.CreateTextBox(nil, "textbox_staff_detector_group", "Utility.StaffDetector.Group"),
     Mega.UI.CreateTextBox(nil, "textbox_staff_detector_role", "Utility.StaffDetector.Role"),
     Mega.UI.CreateTextBox(nil, "textbox_staff_detector_profile", "Utility.StaffDetector.Profile"),
