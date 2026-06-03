@@ -720,3 +720,56 @@ function Mega.UI.CreateLabel(parent, textKey)
     
     return LabelFrame
 end
+
+function Mega.UI.CreateTextBox(parent, textKey, statePath, callback)
+    local translatedText = GetText(textKey)
+    
+    local function getState()
+        local path = statePath
+        local value = Mega.States
+        for part in path:gmatch("[^%.]+") do value = value and value[part] end
+        return value or ""
+    end
+
+    local TextBoxFrame = Instance.new("Frame")
+    TextBoxFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    TextBoxFrame.BackgroundTransparency = 1
+    TextBoxFrame.Parent = parent
+
+    local TextBoxLabel = Instance.new("TextLabel", TextBoxFrame)
+    TextBoxLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    TextBoxLabel.BackgroundTransparency = 1
+    TextBoxLabel.Text = " " .. translatedText
+    TextBoxLabel.TextColor3 = Mega.Settings.Menu.TextColor
+    TextBoxLabel.TextSize = 13
+    TextBoxLabel.Font = Enum.Font.Gotham
+    TextBoxLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local InputBox = Instance.new("TextBox", TextBoxFrame)
+    InputBox.Size = UDim2.new(0.45, 0, 0, 25)
+    InputBox.Position = UDim2.new(0.52, 0, 0.5, -12.5)
+    InputBox.BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+    InputBox.BorderSizePixel = 0
+    InputBox.Text = tostring(getState())
+    InputBox.PlaceholderText = translatedText
+    InputBox.TextColor3 = Mega.Settings.Menu.TextColor
+    InputBox.TextSize = 11
+    InputBox.Font = Enum.Font.Gotham
+    Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 6)
+
+    InputBox.FocusLost:Connect(function()
+        local val = InputBox.Text
+        local path = statePath
+        local tbl = Mega.States
+        local key
+        for part in path:gmatch("[^%.]+") do
+            if tbl[part] == nil and part ~= path:match("([^%.]+)$") then tbl[part] = {} end
+            key = part
+            if part ~= path:match("([^%.]+)$") then tbl = tbl[part] end
+        end
+        tbl[key] = val
+        if callback then pcall(callback, val) end
+    end)
+
+    return TextBoxFrame
+end

@@ -156,3 +156,24 @@ UI.CreateToggle(TabFrame, "toggle_trap_disabler", "Utility.TrapDisabler", functi
 end)
 --#endregion
 
+--#region -- Staff Detector
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/staff_detector.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_staff_detector", "Utility.StaffDetector.Enabled", function(state)
+    Mega.States.Utility.StaffDetector.Enabled = state
+    if Mega.Features.StaffDetector and Mega.Features.StaffDetector.SetEnabled then 
+        Mega.Features.StaffDetector.SetEnabled(state) 
+    end
+end, {
+    UI.CreateDropdown(nil, "dropdown_staff_detector_mode", "Utility.StaffDetector.Mode", {"Notify", "Uninject", "Requeue", "Profile", "AutoConfig", "Leave", "Lobby"}, function(val) Mega.States.Utility.StaffDetector.Mode = val end, false),
+    UI.CreateToggle(nil, "toggle_staff_detector_clans", "Utility.StaffDetector.Clans"),
+    UI.CreateToggle(nil, "toggle_staff_detector_party", "Utility.StaffDetector.LeaveParty"),
+    Mega.UI.CreateTextBox(nil, "textbox_staff_detector_group", "Utility.StaffDetector.Group"),
+    Mega.UI.CreateTextBox(nil, "textbox_staff_detector_role", "Utility.StaffDetector.Role"),
+    Mega.UI.CreateTextBox(nil, "textbox_staff_detector_profile", "Utility.StaffDetector.Profile"),
+    Mega.UI.CreateTextBox(nil, "textbox_staff_detector_users", "Utility.StaffDetector.Users")
+})
+--#endregion
+

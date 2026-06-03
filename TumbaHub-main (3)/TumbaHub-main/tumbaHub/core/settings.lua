@@ -231,7 +231,17 @@ Mega.States = {
         BedPlatesCounter = true
     },
     Utility = {
-        TrapDisabler = false
+        TrapDisabler = false,
+        StaffDetector = {
+            Enabled = false,
+            Mode = "Notify",
+            Clans = true,
+            LeaveParty = false,
+            Group = "",
+            Role = "",
+            Profile = "default",
+            Users = ""
+        }
     },
     Misc = {
         FameSpam = false,
