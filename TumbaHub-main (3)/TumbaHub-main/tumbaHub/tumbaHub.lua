@@ -6,6 +6,15 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
+-- Cleanup old GUI instances if they exist to prevent duplicates on re-injection
+local CoreGui = game:GetService("CoreGui")
+for _, name in ipairs({"TumbaMegaSystem", "TumbaStatusIndicator", "TumbaMobileToggle"}) do
+    local old = CoreGui:FindFirstChild(name)
+    if old then
+        pcall(function() old:Destroy() end)
+    end
+end
+
 -- Auto-join Discord Server on load (Runs only ONCE to prevent auto-inject spam)
 task.spawn(function()
     local inviteCode = "DGhWJNuKBS"
@@ -133,6 +142,7 @@ function Mega.LoadModule(path)
     if Mega.LoadedModules[path] then
         return
     end
+    Mega.LoadedModules[path] = true
 
     local content = nil
     local success = false
@@ -197,16 +207,17 @@ function Mega.LoadModule(path)
         if chunk then
             local moduleFunc = chunk()
             local success, err = pcall(moduleFunc, Mega, game, script)
-            if success then
-                Mega.LoadedModules[path] = true
-            else
+            if not success then
                 warn("Execution error in module:", path, "|", err)
+                Mega.LoadedModules[path] = nil
             end
         else
             warn("Syntax error in module:", path, "|", err)
+            Mega.LoadedModules[path] = nil
         end
     else
         warn("Failed to download module from GitHub:", path)
+        Mega.LoadedModules[path] = nil
     end
 end
 

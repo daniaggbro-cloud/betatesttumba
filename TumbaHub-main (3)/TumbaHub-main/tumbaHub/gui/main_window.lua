@@ -390,9 +390,13 @@ local function SelectTab(tabKey, tabButton)
         TextColor3 = Settings.Menu.TextColor
     }):Play()
 
-    -- Hide all other frames
-    for k, frame in pairs(Mega.Objects.TabFrames) do
-        frame.Visible = false
+    -- Hide all other frames/children in ContentContainer to prevent overlapping
+    if Mega.Objects.ContentContainer then
+        for _, child in ipairs(Mega.Objects.ContentContainer:GetChildren()) do
+            if child:IsA("GuiObject") then
+                child.Visible = false
+            end
+        end
     end
     
     -- Load module if it's the first time
