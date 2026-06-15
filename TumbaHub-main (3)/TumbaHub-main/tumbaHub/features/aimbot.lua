@@ -35,15 +35,12 @@ if not States.AimAssist then
         Enabled = false,
         Active = false,
         Key = "R",
-        FOV = 120,
         Range = 100,
         AimSpeed = 6,
         TargetPart = "Head",
-        ShowFOV = true,
         Prediction = true,
         ToggleMode = false,
-        MobileBtn = false,
-        FOVColor = Color3.fromRGB(0, 180, 255)
+        MobileBtn = false
     }
 end
 
@@ -57,26 +54,8 @@ if connections.AimAssistEnded then connections.AimAssistEnded:Disconnect() end
 if connections.MouseClickTracker then connections.MouseClickTracker:Disconnect() end
 
 -- Remove any old FOV circles or Target HUDs
-if Mega.Objects.AimAssistFOVCircle then
-    pcall(function() Mega.Objects.AimAssistFOVCircle:Remove() end)
-    Mega.Objects.AimAssistFOVCircle = nil
-end
 if Services.CoreGui:FindFirstChild("TumbaTargetHUD") then
     pcall(function() Services.CoreGui.TumbaTargetHUD:Destroy() end)
-end
-
--- Setup FOV circle Drawing
-local fovCircle = nil
-if type(Drawing) == "table" or type(Drawing) == "function" then
-    pcall(function()
-        fovCircle = Drawing.new("Circle")
-        fovCircle.Visible = false
-        fovCircle.Thickness = 1.5
-        fovCircle.NumSides = 64
-        fovCircle.Filled = false
-        fovCircle.Transparency = 0.8
-        Mega.Objects.AimAssistFOVCircle = fovCircle
-    end)
 end
 
 -- Target HUD functionality removed
@@ -136,7 +115,7 @@ local function isVisible(part, character)
     return result == nil
 end
 
--- Aim Assist Target Finder (Distance-based)
+-- Aim Assist Target Finder (Distance-based, No FOV limit)
 local function getAimAssistTarget()
     local closestPlayer = nil
     local closestPart = nil
@@ -144,7 +123,6 @@ local function getAimAssistTarget()
     local currentCamera = Services.Workspace.CurrentCamera
     
     if not currentCamera then return nil, nil end
-    local mousePos = Services.UserInputService:GetMouseLocation()
     local localChar = LocalPlayer.Character
     local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
     
@@ -166,20 +144,11 @@ local function getAimAssistTarget()
                     -- 1. Range check (physical distance in studs)
                     local dist = (targetPart.Position - localRoot.Position).Magnitude
                     if dist <= shortestDistance then
-                        -- 2. Screen FOV check
-                        local pos, onScreen = currentCamera:WorldToViewportPoint(targetPart.Position)
-                        if onScreen then
-                            local screenDist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                            local maxFOV = States.AimAssist.FOV or 120
-                            
-                            if screenDist <= maxFOV then
-                                -- 3. Wall check (visibility check)
-                                if isVisible(targetPart, character) then
-                                    closestPlayer = player
-                                    closestPart = targetPart
-                                    shortestDistance = dist -- Keep closest physical distance
-                                end
-                            end
+                        -- 2. Wall check (visibility check)
+                        if isVisible(targetPart, character) then
+                            closestPlayer = player
+                            closestPart = targetPart
+                            shortestDistance = dist -- Keep closest physical distance
                         end
                     end
                 end
@@ -242,21 +211,7 @@ local function updateAimbotLoopState()
                     if connections.AimbotLoop then connections.AimbotLoop:Disconnect() end
                     if connections.AimAssistBegan then connections.AimAssistBegan:Disconnect() end
                     if connections.AimAssistEnded then connections.AimAssistEnded:Disconnect() end
-                    if fovCircle then fovCircle:Remove() end
                     return
-                end
-
-                -- 1. FOV Ring drawing logic
-                if fovCircle then
-                    if aimAssistEnabled and States.AimAssist.ShowFOV then
-                        local mousePos = Services.UserInputService:GetMouseLocation()
-                        fovCircle.Radius = States.AimAssist.FOV or 120
-                        fovCircle.Color = States.AimAssist.FOVColor or Color3.fromRGB(0, 180, 255)
-                        fovCircle.Position = mousePos
-                        fovCircle.Visible = true
-                    else
-                        fovCircle.Visible = false
-                    end
                 end
 
                 -- 2. Combat Aimbot Targeting path (Unchanged)
@@ -379,7 +334,7 @@ local function updateAimbotLoopState()
             isClicking = false
             if type(mouse1release) == "function" then pcall(mouse1release) end
         end
-        if fovCircle then fovCircle.Visible = false end
+
         
         Mega.Features.Aimbot.Target = nil
         Mega.Features.AimAssistTargetPart = nil
@@ -482,15 +437,12 @@ function Mega.Features.Aimbot.SetAimAssistEnabled(state)
             Enabled = false,
             Active = false,
             Key = "R",
-            FOV = 120,
             Range = 100,
             AimSpeed = 6,
             TargetPart = "Head",
-            ShowFOV = true,
             Prediction = true,
             ToggleMode = false,
-            MobileBtn = false,
-            FOVColor = Color3.fromRGB(0, 180, 255)
+            MobileBtn = false
         }
     end
     States.AimAssist.Enabled = state

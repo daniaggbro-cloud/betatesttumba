@@ -99,15 +99,12 @@ Mega.States = {
         Enabled = false,
         Active = false,
         Key = "R",
-        FOV = 120,
         Range = 100,
         AimSpeed = 6,
         TargetPart = "Head",
-        ShowFOV = true,
         Prediction = true,
         ToggleMode = false,
-        MobileBtn = false,
-        FOVColor = Color3.fromRGB(0, 180, 255)
+        MobileBtn = false
     },
     Visuals = {
         NoFog = false,
