@@ -39,42 +39,12 @@ end)
 UI.CreateSection(TabFrame, "section_aim_settings")
 
 UI.CreateToggle(TabFrame, "toggle_aim_show_fov", "AimAssist.ShowFOV")
-UI.CreateToggle(TabFrame, "toggle_aim_silent", "AimAssist.SilentAim")
 UI.CreateToggle(TabFrame, "toggle_aim_prediction", "AimAssist.Prediction")
-UI.CreateToggle(TabFrame, "toggle_aim_target_hud", "AimAssist.TargetHUD")
 UI.CreateToggle(TabFrame, "toggle_aim_toggle_mode", "AimAssist.ToggleMode")
-
--- Tumba V6 Toggles
-UI.CreateToggle(TabFrame, "toggle_aim_click", "AimAssist.ClickAim")
-UI.CreateToggle(TabFrame, "toggle_aim_mousedown", "AimAssist.RequireMouseDown")
-UI.CreateToggle(TabFrame, "toggle_aim_strafe", "AimAssist.StrafeIncrease")
-UI.CreateToggle(TabFrame, "toggle_aim_blockbreak", "AimAssist.BlockBreak")
-UI.CreateToggle(TabFrame, "toggle_aim_killaura", "AimAssist.KillauraTarget")
-UI.CreateToggle(TabFrame, "toggle_aim_limit", "AimAssist.LimitToItems")
 
 UI.CreateSlider(TabFrame, "slider_aim_fov", "AimAssist.FOV", 10, 1500)
 UI.CreateSlider(TabFrame, "slider_aim_range", "AimAssist.Range", 10, 1000)
 UI.CreateSlider(TabFrame, "slider_aim_speed", "AimAssist.AimSpeed", 1, 20)
-UI.CreateSlider(TabFrame, "slider_aim_shake", "AimAssist.Shake", 0, 100)
-UI.CreateSlider(TabFrame, "slider_aim_max_angle", "AimAssist.MaxAngle", 1, 360)
-
-UI.CreateDropdown(TabFrame, "dropdown_aim_mode", "AimAssist.Mode", {
-    "Simple",
-    "Adaptive"
-}, function(val)
-    Mega.States.AimAssist.Mode = val or "Simple"
-end, false)
-
-UI.CreateDropdown(TabFrame, "dropdown_aim_area", "AimAssist.AimArea", {
-    "dropdown_aim_area_center",
-    "dropdown_aim_area_closest"
-}, function(val)
-    local areaMap = {
-        dropdown_aim_area_center = "Center",
-        dropdown_aim_area_closest = "Closest"
-    }
-    Mega.States.AimAssist.AimArea = areaMap[val] or "Center"
-end, true)
 
 UI.CreateDropdown(TabFrame, "dropdown_aim_target", "AimAssist.TargetPart", {
     "dropdown_aim_target_head",
