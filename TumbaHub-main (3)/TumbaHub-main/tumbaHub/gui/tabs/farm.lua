@@ -44,9 +44,7 @@ TabFrame.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 2
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
 local function notifyFeature(key, state)
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText(key) .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
+    -- Handled automatically by ui_builder.lua
 end
 
 --#region -- Main Farm

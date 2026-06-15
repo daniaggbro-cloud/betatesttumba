@@ -153,9 +153,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
             Mega.Features.ESP.SetKitEnabled(state)
         end
     end)
-    pcall(function()
-        Mega.ShowNotification(Mega.GetText(state and "notify_kit_esp_on" or "notify_kit_esp_off"))
-    end)
+    -- Removed redundant notification
 
     if state then
         task.spawn(function()
@@ -249,7 +247,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
                 pcall(function()
                     local key, val = info[1], info[2]
                     if Mega.Objects.Toggles and Mega.Objects.Toggles[key] then
-                        Mega.Objects.Toggles[key](val)
+                        Mega.Objects.Toggles[key](val, true)
                     end
                 end)
             end
@@ -302,7 +300,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
                 pcall(function()
                     local key, val = info[1], info[2]
                     if Mega.Objects.Toggles and Mega.Objects.Toggles[key] then
-                        Mega.Objects.Toggles[key](val)
+                        Mega.Objects.Toggles[key](val, true)
                     end
                 end)
             end

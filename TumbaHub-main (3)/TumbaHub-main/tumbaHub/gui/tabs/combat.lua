@@ -69,9 +69,6 @@ end
 UI.CreateToggleWithSettings(TabFrame, "toggle_killaura", "Combat.Killaura.Enabled", function(state)
     Mega.States.Combat.Killaura.Enabled = state
     if Mega.Features.Killaura and Mega.Features.Killaura.SetEnabled then Mega.Features.Killaura.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_killaura") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
 end, {
     UI.CreateSlider(nil, "slider_killaura_range", "Combat.Killaura.Range", 5, 22),
     UI.CreateSlider(nil, "slider_killaura_delay", "Combat.Killaura.Delay", 0, 1000),

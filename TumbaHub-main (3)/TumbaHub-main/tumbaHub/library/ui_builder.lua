@@ -3,6 +3,10 @@
 
 Mega.UI = {}
 
+Mega.Objects.Sliders = Mega.Objects.Sliders or {}
+Mega.Objects.Dropdowns = Mega.Objects.Dropdowns or {}
+Mega.Objects.KeybindButtons = Mega.Objects.KeybindButtons or {}
+
 local GetText = Mega.GetText
 local ShowNotification = Mega.ShowNotification
 local TweenService = Mega.Services.TweenService
@@ -170,7 +174,14 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
     CircleCorner.CornerRadius = UDim.new(1, 0)
     CircleCorner.Parent = ToggleCircle
 
-    local function SetState(newState)
+    local function SetState(newState, silent)
+        if newState == nil then
+            newState = getState()
+        end
+        if newState == nil then
+            newState = false
+        end
+
         local path = statePath
         local tbl = Mega.States
         local key
@@ -188,13 +199,18 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
         TweenService:Create(ToggleButton, TweenInfo.new(0.2), { BackgroundColor3 = newState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80) }):Play()
         TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = newState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9) }):Play()
         
-        if callback then pcall(callback, newState) end
+        if callback and not silent then pcall(callback, newState) end
         
-        local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
-        ShowNotification(translatedText .. ": " .. statusText, 2)
+        if not silent then
+            local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
+            ShowNotification(translatedText .. ": " .. statusText, 2)
+        end
     end
     
-    Mega.Objects.Toggles[textKey] = SetState
+    Mega.Objects.Toggles[textKey] = function(newState, silent)
+        if not ToggleButton or not ToggleButton.Parent or not ToggleCircle then return end
+        SetState(newState, silent)
+    end
     ToggleButton.MouseButton1Click:Connect(function() SetState(not getState()) end)
 
     if initialState and callback then
@@ -334,6 +350,15 @@ function Mega.UI.CreateSlider(parent, textKey, statePath, min, max, callback)
             callback = callback
         })
     end)
+
+    if not Mega.Objects.Sliders then Mega.Objects.Sliders = {} end
+    Mega.Objects.Sliders[statePath] = function()
+        if not SliderFill or not SliderFill.Parent or not SliderButton or not SliderLabel then return end
+        local val = getState()
+        SliderFill.Size = UDim2.new((val - min) / (max - min), 0, 1, 0)
+        SliderButton.Position = UDim2.new(SliderFill.Size.X.Scale, -8, 0.5, -8)
+        SliderLabel.Text = GetText("slider_label", translatedText, val)
+    end
 
     return SliderFrame
 end
@@ -500,6 +525,17 @@ function Mega.UI.CreateDropdown(parent, textKey, statePath, options, callback, o
         if DropdownList then DropdownList:Destroy() end
     end)
 
+    if not Mega.Objects.Dropdowns then Mega.Objects.Dropdowns = {} end
+    Mega.Objects.Dropdowns[statePath] = function()
+        if not DropdownButton or not DropdownButton.Parent then return end
+        local val = getState()
+        local displayText = (optionsAreKeys and GetText(val)) or val
+        if not displayText or displayText == "" then
+            displayText = (optionsAreKeys and GetText(options[1])) or options[1]
+        end
+        DropdownButton.Text = tostring(displayText or "")
+    end
+
     return DropdownFrame
 end
 
@@ -585,6 +621,14 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
         }
         KeybindButton.Text = GetText("keybind_listening")
     end)
+
+    if not Mega.Objects.KeybindButtons then Mega.Objects.KeybindButtons = {} end
+    Mega.Objects.KeybindButtons[statePath] = function()
+        if not KeybindButton or not KeybindButton.Parent then return end
+        local val = getState()
+        KeybindButton.Text = val or GetText("keybind_none")
+    end
+
     return KeybindFrame
 end
 
@@ -772,4 +816,27 @@ function Mega.UI.CreateTextBox(parent, textKey, statePath, callback)
     end)
 
     return TextBoxFrame
+end
+
+function Mega.UI.SyncAll()
+    if Mega.Objects.Toggles then
+        for _, syncFunc in pairs(Mega.Objects.Toggles) do
+            pcall(syncFunc, nil, true)
+        end
+    end
+    if Mega.Objects.Sliders then
+        for _, syncFunc in pairs(Mega.Objects.Sliders) do
+            pcall(syncFunc)
+        end
+    end
+    if Mega.Objects.Dropdowns then
+        for _, syncFunc in pairs(Mega.Objects.Dropdowns) do
+            pcall(syncFunc)
+        end
+    end
+    if Mega.Objects.KeybindButtons then
+        for _, syncFunc in pairs(Mega.Objects.KeybindButtons) do
+            pcall(syncFunc)
+        end
+    end
 end

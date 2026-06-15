@@ -108,6 +108,10 @@ function Mega.ConfigSystem.Load(name)
         if Mega.States.Combat.Killaura.Range > 25 then Mega.States.Combat.Killaura.Range = 25 end
     end
 
+    if Mega.UI and Mega.UI.SyncAll then
+        pcall(Mega.UI.SyncAll)
+    end
+
     return true
 end
 

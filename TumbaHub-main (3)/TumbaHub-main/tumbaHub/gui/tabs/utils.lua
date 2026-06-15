@@ -82,9 +82,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_auto_honor", "Misc.AutoHonor.Enabled", function(state)
     Mega.States.Misc.AutoHonor.Enabled = state
     if Mega.Features.AutoHonor and Mega.Features.AutoHonor.SetEnabled then Mega.Features.AutoHonor.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification((Mega.GetText("toggle_auto_honor") or "Auto Honor") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
+    -- Notification is handled by ui_builder.lua automatically
 end, {
     UI.CreateDropdown(nil, "dropdown_auto_honor_target", "Misc.AutoHonor.Target", {"Teammate", "Enemy", "Teammate and Enemy"}, function(val) Mega.States.Misc.AutoHonor.Target = val end)
 })
@@ -99,9 +97,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_chest_steal", "Misc.ChestSteal.Enabled", function(state)
     Mega.States.Misc.ChestSteal.Enabled = state
     if Mega.Features.ChestSteal and Mega.Features.ChestSteal.SetEnabled then Mega.Features.ChestSteal.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_chest_steal") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
+    -- Notification is handled by ui_builder.lua automatically
 end, {
     UI.CreateSlider(nil, "slider_chest_steal_range", "Misc.ChestSteal.Range", 5, 50)
 })
@@ -113,9 +109,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_chest_esp", "Misc.ChestESP.Enabled", function(state)
     Mega.States.Misc.ChestESP.Enabled = state
     if Mega.Features.ChestESP and Mega.Features.ChestESP.SetEnabled then Mega.Features.ChestESP.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification((Mega.GetText("toggle_chest_esp") or "Chest ESP") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
+    -- Notification is handled by ui_builder.lua automatically
 end, {
     UI.CreateSlider(nil, "slider_chest_esp_range", "Misc.ChestESP.MaxDistance", 50, 1000)
 })
@@ -130,9 +124,7 @@ end)
 UI.CreateToggleWithSettings(TabFrame, "toggle_auto_deposit", "Misc.AutoDeposit.Enabled", function(state)
     Mega.States.Misc.AutoDeposit.Enabled = state
     if Mega.Features.AutoDeposit and Mega.Features.AutoDeposit.SetEnabled then Mega.Features.AutoDeposit.SetEnabled(state) end
-    if Mega.ShowNotification then
-        Mega.ShowNotification(Mega.GetText("toggle_auto_deposit") .. ": " .. (state and Mega.GetText("notify_enabled") or Mega.GetText("notify_disabled")), 2)
-    end
+    -- Notification is handled by ui_builder.lua automatically
 end, {
     UI.CreateSlider(nil, "slider_auto_deposit_range", "Misc.AutoDeposit.Range", 5, 50),
     UI.CreateSection(nil, "section_deposit_resources"),
