@@ -404,6 +404,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                     -- 3. Attack Logic (Every Heartbeat for max Speed)
                     local activeRemote = GetSwordRemote()
                     if closestTarget and weapon and activeRemote then
+                        Mega.Features.Killaura.TargetChar = closestTarget
                         States.Combat.Killaura.IsAttacking = true
                         local currentTime = tick()
                         local userDelay = (States.Combat.Killaura.Delay or 0) / 1000
@@ -469,6 +470,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                         end
                     else
                         States.Combat.Killaura.IsAttacking = false
+                        Mega.Features.Killaura.TargetChar = nil
                     end
                 end)
 
@@ -480,6 +482,7 @@ function Mega.Features.Killaura.SetEnabled(state)
             end
             killauraActive = false
             States.Combat.Killaura.IsAttacking = false
+            Mega.Features.Killaura.TargetChar = nil
         end)
     end
 end

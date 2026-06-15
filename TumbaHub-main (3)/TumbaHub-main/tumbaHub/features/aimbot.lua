@@ -1,5 +1,5 @@
 -- features/aimbot.lua
--- Aimbot, AutoShoot, and fully remade Aim Assist logic
+-- Aimbot, AutoShoot, and fully remade Tumba V6 Aim Assist logic
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.Aimbot = { Target = nil }
@@ -42,7 +42,18 @@ if not States.AimAssist then
         SilentAim = false,
         TargetPart = "Head",
         ShowFOV = true,
-        FOVColor = Color3.fromRGB(0, 180, 255)
+        FOVColor = Color3.fromRGB(0, 180, 255),
+        Mode = "Simple",
+        ClickAim = true,
+        RequireMouseDown = false,
+        StrafeIncrease = false,
+        BlockBreak = false,
+        KillauraTarget = false,
+        AimSpeed = 6,
+        Shake = 0,
+        MaxAngle = 70,
+        LimitToItems = false,
+        AimArea = "Center"
     }
 end
 
@@ -53,6 +64,7 @@ local connections = Mega.Objects.Connections
 if connections.AimbotLoop then connections.AimbotLoop:Disconnect() end
 if connections.AimAssistBegan then connections.AimAssistBegan:Disconnect() end
 if connections.AimAssistEnded then connections.AimAssistEnded:Disconnect() end
+if connections.MouseClickTracker then connections.MouseClickTracker:Disconnect() end
 
 -- Remove any old FOV circles or Target HUDs
 if Mega.Objects.AimAssistFOVCircle then
@@ -296,11 +308,48 @@ local function isVisible(part, character)
     return result == nil
 end
 
--- Aim Assist Target Finder (Fully Remade)
+-- Helper: Get part of character closest to the mouse cursor
+local function getClosestPartToCursor(character)
+    local currentCamera = Services.Workspace.CurrentCamera
+    if not currentCamera then return nil end
+    local mousePos = Services.UserInputService:GetMouseLocation()
+    local closestPart = nil
+    local shortestDistance = 9e9
+    
+    for _, child in ipairs(character:GetChildren()) do
+        if child:IsA("BasePart") then
+            local pos, onScreen = currentCamera:WorldToViewportPoint(child.Position)
+            if onScreen then
+                local screenDist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                if screenDist < shortestDistance then
+                    closestPart = child
+                    shortestDistance = screenDist
+                end
+            end
+        end
+    end
+    
+    return closestPart
+end
+
+-- Aim Assist Target Finder (Tumba V6 Logic)
 local function getAimAssistTarget()
+    -- 1. Support Killaura target option
+    if States.AimAssist.KillauraTarget and Mega.Features.Killaura and Mega.Features.Killaura.TargetChar then
+        local tChar = Mega.Features.Killaura.TargetChar
+        local part = nil
+        if States.AimAssist.AimArea == "Closest" then
+            part = getClosestPartToCursor(tChar)
+        else
+            local partName = States.AimAssist.TargetPart or "Head"
+            part = tChar:FindFirstChild(partName) or tChar:FindFirstChild("Head") or tChar:FindFirstChild("HumanoidRootPart")
+        end
+        return Services.Players:GetPlayerFromCharacter(tChar) or {Character = tChar, Name = tChar.Name, UserId = 0}, part
+    end
+
     local closestPlayer = nil
     local closestPart = nil
-    local shortestDistance = (States.AimAssist and States.AimAssist.FOV) or 120
+    local shortestDistance = States.AimAssist.FOV or 120
     local currentCamera = Services.Workspace.CurrentCamera
     
     if not currentCamera then return nil, nil end
@@ -319,24 +368,37 @@ local function getAimAssistTarget()
             local isTeammate = player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team
             
             if humanoid and humanoid.Health > 0 and not isTeammate then
-                -- Target part option
-                local partName = (States.AimAssist and States.AimAssist.TargetPart) or "Head"
-                local targetPart = character:FindFirstChild(partName) or character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+                -- Target area check (Center vs Closest part to mouse cursor)
+                local targetPart = nil
+                if States.AimAssist.AimArea == "Closest" then
+                    targetPart = getClosestPartToCursor(character)
+                else
+                    local partName = States.AimAssist.TargetPart or "Head"
+                    targetPart = character:FindFirstChild(partName) or character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+                end
                 
                 if targetPart then
-                    -- Range check
+                    -- 1. Range check
                     local dist = (targetPart.Position - localRoot.Position).Magnitude
-                    if dist <= ((States.AimAssist and States.AimAssist.Range) or 100) then
-                        -- Screen FOV check
-                        local pos, onScreen = currentCamera:WorldToViewportPoint(targetPart.Position)
-                        if onScreen then
-                            local screenDist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                            if screenDist < shortestDistance then
-                                -- Wall obstruction check
-                                if isVisible(targetPart, character) then
-                                    closestPlayer = player
-                                    closestPart = targetPart
-                                    shortestDistance = screenDist
+                    if dist <= (States.AimAssist.Range or 100) then
+                        -- 2. Max Angle check (facing angle)
+                        local delta = (targetPart.Position - localRoot.Position)
+                        local localFacing = localRoot.CFrame.LookVector * Vector3.new(1, 0, 1)
+                        local angle = math.acos(localFacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
+                        local maxAngleRad = math.rad(States.AimAssist.MaxAngle or 70)
+                        
+                        if angle <= (maxAngleRad / 2) then
+                            -- 3. Screen FOV check
+                            local pos, onScreen = currentCamera:WorldToViewportPoint(targetPart.Position)
+                            if onScreen then
+                                local screenDist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                                if screenDist < shortestDistance then
+                                    -- 4. Wall check
+                                    if isVisible(targetPart, character) then
+                                        closestPlayer = player
+                                        closestPart = targetPart
+                                        shortestDistance = screenDist
+                                    end
                                 end
                             end
                         end
@@ -347,6 +409,45 @@ local function getAimAssistTarget()
     end
     
     return closestPlayer, closestPart
+end
+
+-- Check holding weapon (sword/blade/axe/katana)
+local function isHoldingWeapon()
+    local char = LocalPlayer.Character
+    local tool = char and char:FindFirstChildOfClass("Tool")
+    if not tool and char and char:FindFirstChild("HandInvItem") and char.HandInvItem.Value then
+        tool = char.HandInvItem.Value
+    end
+    if tool then
+        local name = tool.Name:lower()
+        if name:find("sword") or name:find("blade") or name:find("scythe") or name:find("axe") or name:find("hammer") or name:find("katana") then
+            return true
+        end
+    end
+    return false
+end
+
+-- Check holding pickaxe/axe/shears (block breaking tool)
+local function isHoldingBlockBreakTool()
+    local char = LocalPlayer.Character
+    local tool = char and char:FindFirstChildOfClass("Tool")
+    if not tool and char and char:FindFirstChild("HandInvItem") and char.HandInvItem.Value then
+        tool = char.HandInvItem.Value
+    end
+    if tool then
+        local name = tool.Name:lower()
+        if name:find("pickaxe") or name:find("axe") or name:find("shears") then
+            return true
+        end
+    end
+    return false
+end
+
+-- Check if mouse click / touchscreen is pressed
+local function isMouseDown()
+    return Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or 
+           Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) or
+           #Services.UserInputService:GetNavigationGamepads() > 0
 end
 
 -- Remote & Helpers (Unchanged)
@@ -369,6 +470,25 @@ end
  
 local isClicking = false
 local lastShoot = 0
+local lastClickTime = 0
+
+-- Track mouse clicks for ClickAim option
+connections.MouseClickTracker = Services.UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        lastClickTime = tick()
+    end
+end)
+
+-- Validation function for triggers
+local function canAimAssist()
+    if not States.AimAssist or not States.AimAssist.Enabled then return false end
+    if States.AimAssist.LimitToItems and not isHoldingWeapon() then return false end
+    if States.AimAssist.RequireMouseDown and not isMouseDown() then return false end
+    if States.AimAssist.ClickAim and (tick() - lastClickTime > 0.3) then return false end
+    if States.AimAssist.BlockBreak and isHoldingBlockBreakTool() and isMouseDown() then return false end
+    return true
+end
 
 -- Keybind Input listeners
 local function setupInputListeners()
@@ -400,6 +520,14 @@ local function setupInputListeners()
     end)
 end
 
+-- Math Easing function for Adaptive Mode
+local function ease(t)
+    return t < 0.5 and 4 * t * t * t or 1 - math.pow(-2 * t + 2, 3) / 2
+end
+
+local lockStartedTime = 0
+local lastTargetPart = nil
+
 -- Main Loop Manager
 local function updateAimbotLoopState()
     local aimbotEnabled = States.Combat.Aimbot and States.Combat.Aimbot.Enabled
@@ -410,7 +538,7 @@ local function updateAimbotLoopState()
         setupInputListeners()
         
         if not connections.AimbotLoop then
-            connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function()
+            connections.AimbotLoop = Services.RunService.RenderStepped:Connect(function(dt)
                 if Mega.Unloaded then
                     if isClicking then
                         isClicking = false
@@ -419,6 +547,7 @@ local function updateAimbotLoopState()
                     if connections.AimbotLoop then connections.AimbotLoop:Disconnect() end
                     if connections.AimAssistBegan then connections.AimAssistBegan:Disconnect() end
                     if connections.AimAssistEnded then connections.AimAssistEnded:Disconnect() end
+                    if connections.MouseClickTracker then connections.MouseClickTracker:Disconnect() end
                     if fovCircle then fovCircle:Remove() end
                     if Services.CoreGui:FindFirstChild("TumbaTargetHUD") then
                         Services.CoreGui.TumbaTargetHUD:Destroy()
@@ -453,39 +582,85 @@ local function updateAimbotLoopState()
 
                 -- 3. Aim Assist Targeting path (Fully Remade)
                 local assistPlayer, assistPart = nil, nil
-                if aimAssistEnabled then
+                local allowedToLock = canAimAssist()
+                
+                if aimAssistEnabled and allowedToLock then
                     assistPlayer, assistPart = getAimAssistTarget()
                     Mega.Features.AimAssistTargetPart = assistPart
                 else
                     Mega.Features.AimAssistTargetPart = nil
                 end
 
-                -- 4. Camera Lerping for Aim Assist
-                if aimAssistEnabled and States.AimAssist.Active and assistPart then
-                    -- If silent aim is enabled, we do NOT snap camera, hooks handle targeting
+                -- 4. Camera Lock Mechanics (Simple & Adaptive)
+                if aimAssistEnabled and States.AimAssist.Active and assistPart and allowedToLock then
+                    -- Reset lock timer if target changed
+                    if assistPart ~= lastTargetPart then
+                        lockStartedTime = tick()
+                        lastTargetPart = assistPart
+                    end
+
+                    -- If silent aim is enabled, we do NOT snap camera, namecall hooks handle it
                     if not States.AimAssist.SilentAim then
                         local currentCamera = Services.Workspace.CurrentCamera
                         if currentCamera then
                             local targetPos = assistPart.Position
                             
-                            -- Target velocity prediction
+                            -- Velocity Prediction
                             if States.AimAssist.Prediction and assistPart.Parent then
                                 local root = assistPart.Parent:FindFirstChild("HumanoidRootPart")
                                 local velocity = root and root.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
                                 targetPos = targetPos + (velocity * 0.05)
                             end
                             
-                            local smooth = States.AimAssist.Smoothness or 0.4
+                            -- Jitter/Shake Offset
+                            if States.AimAssist.Shake and States.AimAssist.Shake > 0 then
+                                local rng = Random.new()
+                                local shakeFactor = States.AimAssist.Shake * 0.005
+                                targetPos = targetPos + Vector3.new(
+                                    (rng:NextNumber() - 0.5) * shakeFactor,
+                                    (rng:NextNumber() - 0.5) * shakeFactor,
+                                    (rng:NextNumber() - 0.5) * shakeFactor
+                                )
+                            end
+                            
+                            -- Calculate Lerp Alpha Factor
+                            local fps = dt or 0.016
+                            local lerpFactor = 0.4
+                            
+                            if States.AimAssist.Mode == "Adaptive" then
+                                local prog = ease(math.min(tick() - lockStartedTime, 1))
+                                local speed = (States.AimAssist.AimSpeed * 0.1 * prog) + (1 - prog)
+                                
+                                -- Strafe increase logic
+                                if States.AimAssist.StrafeIncrease and (Services.UserInputService:IsKeyDown(Enum.KeyCode.A) or Services.UserInputService:IsKeyDown(Enum.KeyCode.D)) then
+                                    speed = speed + 10
+                                end
+                                
+                                lerpFactor = speed * fps
+                            else
+                                -- Simple mode
+                                local speed = States.AimAssist.AimSpeed or 6
+                                
+                                -- Strafe increase logic
+                                if States.AimAssist.StrafeIncrease and (Services.UserInputService:IsKeyDown(Enum.KeyCode.A) or Services.UserInputService:IsKeyDown(Enum.KeyCode.D)) then
+                                    speed = speed + 10
+                                end
+                                
+                                lerpFactor = speed * fps
+                            end
+                            
                             local currentCFrame = currentCamera.CFrame
                             local newCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
                             
-                            currentCamera.CFrame = currentCFrame:Lerp(newCFrame, smooth)
+                            currentCamera.CFrame = currentCFrame:Lerp(newCFrame, math.clamp(lerpFactor, 0, 1))
                         end
                     end
+                else
+                    lastTargetPart = nil
                 end
 
                 -- 5. Target HUD UI update
-                if aimAssistEnabled and States.AimAssist.TargetHUD and States.AimAssist.Active and assistPlayer and assistPart then
+                if aimAssistEnabled and States.AimAssist.TargetHUD and States.AimAssist.Active and assistPlayer and assistPart and allowedToLock then
                     updateTargetHUD(assistPlayer, assistPart)
                 else
                     updateTargetHUD(nil, nil)
@@ -679,7 +854,18 @@ function Mega.Features.Aimbot.SetAimAssistEnabled(state)
             SilentAim = false,
             TargetPart = "Head",
             ShowFOV = true,
-            FOVColor = Color3.fromRGB(0, 180, 255)
+            FOVColor = Color3.fromRGB(0, 180, 255),
+            Mode = "Simple",
+            ClickAim = true,
+            RequireMouseDown = false,
+            StrafeIncrease = false,
+            BlockBreak = false,
+            KillauraTarget = false,
+            AimSpeed = 6,
+            Shake = 0,
+            MaxAngle = 70,
+            LimitToItems = false,
+            AimArea = "Center"
         }
     end
     States.AimAssist.Enabled = state
