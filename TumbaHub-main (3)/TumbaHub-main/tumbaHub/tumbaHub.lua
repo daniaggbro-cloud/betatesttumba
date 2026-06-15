@@ -8,7 +8,7 @@ end
 
 -- Cleanup old GUI instances if they exist to prevent duplicates on re-injection
 local CoreGui = game:GetService("CoreGui")
-for _, name in ipairs({"TumbaMegaSystem", "TumbaStatusIndicator", "TumbaMobileToggle", "TumbaMobileHUD"}) do
+for _, name in ipairs({"TumbaMegaSystem", "TumbaStatusIndicator", "TumbaMobileToggle", "TumbaM  obileHUD"}) do
     local old = CoreGui:FindFirstChild(name)
     if old then
         pcall(function() old:Destroy() end)
@@ -333,17 +333,6 @@ end
 
 print("🔥 TUMBA MEGA SYSTEM (Refactored) LOADED SUCCESSFULLY!")
 print("🎮 Use RightShift to open the menu")
-
--- Показываем пользователю, что нового добавили в этом обновлении
-task.spawn(function()
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "TumbaHub Обновлен!",
-            Text = "Добавлено: 3D Gorilla Mode с анимациями\nИсправлено: Aim Assist, Краши экзекьюторов",
-            Duration = 10
-        })
-    end)
-end)
 
 -- === AUTO-INJECT ON TELEPORT (QUEUE ON TELEPORT) ===
 local queue_on_teleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or queueonteleport
