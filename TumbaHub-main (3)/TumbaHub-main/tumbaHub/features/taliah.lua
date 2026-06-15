@@ -58,7 +58,7 @@ local function UpdateChickenESP()
             
             -- Принудительная видимость для stage_4
             if target.Name == "stage_4" then
-                local targetTransparency = (States.Taliah.Enabled and States.Taliah.ESP) and 0 or 1
+                local targetTransparency = ((States.Taliah.Enabled and States.Taliah.ESP) or (States.KitESP and States.KitESP.Enabled)) and 0 or 1
                 if target:IsA("BasePart") then
                     target.Transparency = targetTransparency
                 elseif target:IsA("Model") then
@@ -75,7 +75,7 @@ local function UpdateChickenESP()
             
             local esp = target:FindFirstChild("TaliahESP")
             
-            if States.Taliah.Enabled and States.Taliah.ESP and stage == 4 then
+            if ((States.Taliah.Enabled and States.Taliah.ESP) or (States.KitESP and States.KitESP.Enabled)) and stage == 4 then
                 if not esp then
                     esp = Instance.new("Highlight")
                     esp.Name = "TaliahESP"
@@ -126,7 +126,7 @@ local lastEspState = false
 local lastEspTrans = States.Taliah.ESPTransparency
 
 connections.StateWatcher = Services.RunService.Heartbeat:Connect(function()
-    local currentEspState = States.Taliah.Enabled and States.Taliah.ESP
+    local currentEspState = (States.Taliah.Enabled and States.Taliah.ESP) or (States.KitESP and States.KitESP.Enabled)
     local currentTrans = States.Taliah.ESPTransparency
     
     if currentEspState ~= lastEspState or currentTrans ~= lastEspTrans then
@@ -194,4 +194,5 @@ function Mega.Features.Taliah.SetEnabled(state)
 end
 
 function Mega.Features.Taliah.UpdateESP()
+    lastEspState = nil -- Force update in Heartbeat loop
 end

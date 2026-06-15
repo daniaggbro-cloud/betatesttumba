@@ -82,7 +82,7 @@ end
 
 local function UpdateMetalESP()
     for _, m in ipairs(Services.CollectionService:GetTagged("hidden-metal")) do
-        if States.Metal.Enabled and States.Metal.ESP and not isShopItem(m) then
+        if ((States.Metal.Enabled and States.Metal.ESP) or (States.KitESP and States.KitESP.Enabled)) and not isShopItem(m) then
             AddMetalESP(m)
         else
             if m:FindFirstChild("MetalESP_Highlight") then m.MetalESP_Highlight:Destroy() end
@@ -92,7 +92,7 @@ local function UpdateMetalESP()
 end
 
 connections.MetalAdded = Services.CollectionService:GetInstanceAddedSignal("hidden-metal"):Connect(function(m)
-    if States.Metal.Enabled and States.Metal.ESP then AddMetalESP(m) end
+    if (States.Metal.Enabled and States.Metal.ESP) or (States.KitESP and States.KitESP.Enabled) then AddMetalESP(m) end
 end)
 
 local lastMetalCheck = 0

@@ -94,7 +94,7 @@ end
 
 local function EnableESP()
     ClearESP()
-    if not States.StarCollector.Enabled or not States.StarCollector.ESP then return end
+    if not ((States.StarCollector.Enabled and States.StarCollector.ESP) or (States.KitESP and States.KitESP.Enabled)) then return end
 
     local function check(v)
         if v:IsA("Model") and (v.Name == "CritStar" or v.Name == "VitalityStar") then
