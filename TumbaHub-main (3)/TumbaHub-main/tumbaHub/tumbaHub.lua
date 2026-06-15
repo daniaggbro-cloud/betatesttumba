@@ -8,7 +8,7 @@ end
 
 -- Cleanup old GUI instances if they exist to prevent duplicates on re-injection
 local CoreGui = game:GetService("CoreGui")
-for _, name in ipairs({"TumbaMegaSystem", "TumbaStatusIndicator", "TumbaMobileToggle"}) do
+for _, name in ipairs({"TumbaMegaSystem", "TumbaStatusIndicator", "TumbaMobileToggle", "TumbaMobileHUD"}) do
     local old = CoreGui:FindFirstChild(name)
     if old then
         pcall(function() old:Destroy() end)
