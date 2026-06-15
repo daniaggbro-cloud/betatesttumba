@@ -144,32 +144,7 @@ UI.CreateToggle(TabFrame, "toggle_show_notifications", "Temp.ShowNotifications",
     Mega.Settings.System.ShowNotifications = state
 end)
 
-if Mega.Settings.Menu.ShowMenuIcon == nil then
-    Mega.Settings.Menu.ShowMenuIcon = false -- Default to false for all platforms, player must explicitly enable it
-end
-Mega.States.Temp.ShowMenuIcon = Mega.Settings.Menu.ShowMenuIcon
-UI.CreateToggle(TabFrame, "toggle_menu_icon", "Temp.ShowMenuIcon", function(state)
-    Mega.Settings.Menu.ShowMenuIcon = state
-    -- Instantly toggle visibility if the GUI exists
-    if Mega.Services.CoreGui:FindFirstChild("TumbaMobileToggle") then
-        Mega.Services.CoreGui.TumbaMobileToggle.Enabled = state
-    end
-end)
-
--- New Mobile HUD Section
-UI.CreateSection(TabFrame, "section_settings_mobile_hud")
-
-UI.CreateToggle(TabFrame, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)
-    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("killaura", state) end
-end)
-
-UI.CreateToggle(TabFrame, "toggle_aim_mobile_btn", "AimAssist.MobileBtn", function(state)
-    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("aimassist", state) end
-end)
-
-UI.CreateToggle(TabFrame, "toggle_scaffold_mobile_btn", "Player.Scaffold.MobileBtn", function(state)
-    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("scaffold", state) end
-end)
+    -- Mobile settings removed as requested
 --#endregion
 
 --#region -- Config Management

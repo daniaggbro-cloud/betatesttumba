@@ -63,26 +63,6 @@ end, true)
 --#region -- Aim Keybind
 UI.CreateSection(TabFrame, "section_aim_key")
 UI.CreateKeybindButton(TabFrame, "keybind_aim", "Keybinds.AimAssist")
-UI.CreateToggle(TabFrame, "toggle_aim_mobile_btn", "AimAssist.MobileBtn", function(state)
-    if Mega.MobileHUD then Mega.MobileHUD.SetVisible("aimassist", state) end
-end)
-
--- Register mobile button
-if Mega.MobileHUD then
-    Mega.MobileHUD.CreateActionButton("aimassist", "Aim", "rbxassetid://6031215966", function()
-        if Mega.States.AimAssist.Enabled then
-            Mega.States.AimAssist.Active = not Mega.States.AimAssist.Active
-        else
-            if Mega.ShowNotification then
-                Mega.ShowNotification("Enable Aim Assist first!", 2, Color3.fromRGB(255, 100, 100))
-            end
-        end
-    end, function() return Mega.States.AimAssist.Active and Mega.States.AimAssist.Enabled end)
-    
-    task.spawn(function()
-        task.wait(1)
-        Mega.MobileHUD.SetVisible("aimassist", Mega.States.AimAssist.MobileBtn)
-    end)
-end
+-- Mobile button registration removed as requested
 --#endregion
 

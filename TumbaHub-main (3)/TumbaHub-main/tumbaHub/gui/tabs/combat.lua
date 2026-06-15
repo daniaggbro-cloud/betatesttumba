@@ -82,26 +82,8 @@ end, {
     UI.CreateToggle(nil, "toggle_killaura_animation", "Combat.Killaura.AnimationEnabled"),
     UI.CreateDropdown(nil, "dropdown_killaura_animation_mode", "Combat.Killaura.AnimationMode", {"Normal", "Astral", "Smooth", "Exhibition", "Hamsterware", "Horizontal Spin"}, nil, false),
     UI.CreateSlider(nil, "slider_killaura_animation_speed", "Combat.Killaura.AnimationSpeed", 1, 40, function(val) Mega.States.Combat.Killaura.AnimationSpeed = val / 10 end),
-    UI.CreateToggle(nil, "toggle_killaura_mobile_btn", "Combat.Killaura.MobileBtn", function(state)
-        if Mega.MobileHUD then Mega.MobileHUD.SetVisible("killaura", state) end
-    end)
 })
-
--- Register mobile button
-if Mega.MobileHUD then
-    Mega.MobileHUD.CreateActionButton("killaura", "Killaura", "rbxassetid://6031280882", function()
-        local newState = not Mega.States.Combat.Killaura.Enabled
-        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_killaura"] then
-            Mega.Objects.Toggles["toggle_killaura"](newState)
-        end
-    end, function() return Mega.States.Combat.Killaura.Enabled end)
-    
-    -- Load state slightly delayed to ensure settings are loaded
-    task.spawn(function()
-        task.wait(1)
-        Mega.MobileHUD.SetVisible("killaura", Mega.States.Combat.Killaura.MobileBtn)
-    end)
-end
+-- Mobile button registration removed as requested
 --#endregion
 
 --#region -- Bed Nuke
