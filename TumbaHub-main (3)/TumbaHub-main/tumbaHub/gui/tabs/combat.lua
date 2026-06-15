@@ -37,7 +37,7 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/aimbot.lua") end)
 end)
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_aim", "Combat.Aimbot.Enabled", function(state)
+UI.CreateToggleWithSettings(TabFrame, "toggle_aimbot", "Combat.Aimbot.Enabled", function(state)
     Mega.States.Combat.Aimbot.Enabled = state
     if Mega.Features.Aimbot and Mega.Features.Aimbot.SetEnabled then Mega.Features.Aimbot.SetEnabled(state) end
 end, {

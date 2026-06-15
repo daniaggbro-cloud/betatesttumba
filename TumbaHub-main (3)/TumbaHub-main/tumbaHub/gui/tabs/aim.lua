@@ -29,8 +29,8 @@ UI.CreateSection(TabFrame, "section_aim_main")
 UI.CreateToggle(TabFrame, "toggle_aim", "AimAssist.Enabled", function(state)
     -- The actual aimbot logic will be in features/aimbot.lua
     -- and will be controlled by this state change.
-    if Mega.Features.Aimbot then
-        Mega.Features.Aimbot.SetEnabled(state)
+    if Mega.Features.Aimbot and Mega.Features.Aimbot.SetAimAssistEnabled then
+        Mega.Features.Aimbot.SetAimAssistEnabled(state)
     end
 end)
 --#endregion
@@ -78,11 +78,14 @@ end)
 -- Register mobile button
 if Mega.MobileHUD then
     Mega.MobileHUD.CreateActionButton("aimassist", "Aim", "rbxassetid://6031215966", function()
-        local newState = not Mega.States.AimAssist.Enabled
-        if Mega.Objects.Toggles and Mega.Objects.Toggles["toggle_aim"] then
-            Mega.Objects.Toggles["toggle_aim"](newState)
+        if Mega.States.AimAssist.Enabled then
+            Mega.States.AimAssist.Active = not Mega.States.AimAssist.Active
+        else
+            if Mega.ShowNotification then
+                Mega.ShowNotification("Enable Aim Assist first!", 2, Color3.fromRGB(255, 100, 100))
+            end
         end
-    end, function() return Mega.States.AimAssist.Enabled end)
+    end, function() return Mega.States.AimAssist.Active and Mega.States.AimAssist.Enabled end)
     
     task.spawn(function()
         task.wait(1)
