@@ -26,7 +26,8 @@ local ICONS = {
     ["wild_flower"] = "rbxassetid://9134545166",
     ["crit_star"] = "rbxassetid://9866757805",
     ["vitality_star"] = "rbxassetid://9866757969",
-    ["alchemy_crystal"] = "rbxassetid://9134545166"
+    ["spirit_energy"] = "rbxassetid://81860000434067",
+    ["sheep"] = "rbxassetid://140602810920707"
 }
 
 local function isShopItem(v)
@@ -97,28 +98,52 @@ local function addKit(tag, icon, isCustom)
         end
     end
 
-    table.insert(kitEspConnections, Services.CollectionService:GetInstanceAddedSignal(tag):Connect(function(v) 
-        if not isShopItem(v) then
-            espadd(v, icon) 
+    if not isCustom then
+        table.insert(kitEspConnections, Services.CollectionService:GetInstanceAddedSignal(tag):Connect(function(v) 
+            if not isShopItem(v) then
+                espadd(v, icon) 
+            end
+        end))
+        table.insert(kitEspConnections, Services.CollectionService:GetInstanceRemovedSignal(tag):Connect(function(v) 
+            if kitEspObjects[v] then 
+                kitEspObjects[v]:Destroy() 
+                kitEspObjects[v] = nil 
+            end 
+        end))
+        for _, instance in ipairs(Services.CollectionService:GetTagged(tag)) do 
+            if not isShopItem(instance) then processInstance(instance) end 
         end
-    end))
-    table.insert(kitEspConnections, Services.CollectionService:GetInstanceRemovedSignal(tag):Connect(function(v) 
-        if kitEspObjects[v] then 
-            kitEspObjects[v]:Destroy() 
-            kitEspObjects[v] = nil 
-        end 
-    end))
-    
-    if isCustom then
+    else
         table.insert(kitEspConnections, Services.Workspace.ChildAdded:Connect(function(v)
             if not isShopItem(v) then processInstance(v) end
+        end))
+        table.insert(kitEspConnections, Services.Workspace.ChildRemoved:Connect(function(v)
+            if kitEspObjects[v] then
+                kitEspObjects[v]:Destroy()
+                kitEspObjects[v] = nil
+            end
         end))
         for _, child in ipairs(Services.Workspace:GetChildren()) do 
             if not isShopItem(child) then processInstance(child) end 
         end
-    else
-        for _, instance in ipairs(Services.CollectionService:GetTagged(tag)) do 
-            if not isShopItem(instance) then processInstance(instance) end 
+
+        -- Custom logic for SheepModel from user script
+        if tag == "Sheep1" then
+            local sheepModel = Services.Workspace:FindFirstChild("SheepModel")
+            if sheepModel then
+                table.insert(kitEspConnections, sheepModel.ChildAdded:Connect(function(v)
+                    if not isShopItem(v) then processInstance(v) end
+                end))
+                table.insert(kitEspConnections, sheepModel.ChildRemoved:Connect(function(v)
+                    if kitEspObjects[v] then
+                        kitEspObjects[v]:Destroy()
+                        kitEspObjects[v] = nil
+                    end
+                end))
+                for _, v in pairs(sheepModel:GetChildren()) do
+                    if not isShopItem(v) then processInstance(v) end
+                end
+            end
         end
     end
 end
@@ -131,12 +156,17 @@ function Mega.Features.ESP.RecreateKitESP()
 
     if not States.KitESP.Enabled then return end
 
-    local filters = States.KitESP.Filters
-    if filters.Iron then addKit("hidden-metal", "iron") end
-    if filters.Bee then addKit("bee", "bee") end
-    if filters.Thorns then addKit("Thorns", "thorns", true) end
-    if filters.Mushrooms then addKit("Mushrooms", "mushrooms", true) end
-    if filters.Sorcerer then addKit("alchemy_crystal", "alchemy_crystal") end
+    addKit("hidden-metal", "iron")
+    addKit("bee", "bee")
+    addKit("treeOrb", "natures_essence_1")
+    
+    addKit("Thorns", "thorns", true)
+    addKit("Mushrooms", "mushrooms", true)
+    addKit("Flower", "wild_flower", true)
+    addKit("CritStar", "crit_star", true)
+    addKit("VitalityStar", "vitality_star", true)
+    addKit("SpiritGardenerEnergy", "spirit_energy", true)
+    addKit("Sheep1", "sheep", true)
 end
 
 function Mega.Features.ESP.SetKitEnabled(state)

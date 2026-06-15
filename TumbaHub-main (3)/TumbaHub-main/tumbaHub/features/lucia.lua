@@ -94,7 +94,7 @@ local function startLoop()
             for _, pinata in ipairs(pinatas) do
                 local pinataPart = pinata:IsA("BasePart") and pinata or pinata.PrimaryPart or pinata:FindFirstChildWhichIsA("BasePart", true)
                 if pinataPart then
-                    if States.Lucia.ESP or (States.KitESP and States.KitESP.Enabled) then
+                    if States.Lucia.ESP then
                         activePinatas[pinataPart] = true
                         local hl = pinata:FindFirstChild("LuciaHighlight")
                         if not hl then
@@ -140,7 +140,7 @@ local function startLoop()
                 end
             end
 
-            if not States.Lucia.Enabled or not States.Lucia.AutoDeposit then return end
+            if not States.Lucia.AutoDeposit then return end
             
             if tick() - lastCheck < 0.5 then return end
             lastCheck = tick()
@@ -218,9 +218,9 @@ local function stopLoop()
     end
 end
 
-function Mega.Features.Lucia.UpdateActiveState()
-    local shouldRun = States.Lucia.Enabled or (States.KitESP and States.KitESP.Enabled)
-    if shouldRun then
+function Mega.Features.Lucia.SetEnabled(state)
+    States.Lucia.Enabled = state
+    if state then
         startLoop()
     else
         stopLoop()
@@ -232,16 +232,7 @@ function Mega.Features.Lucia.UpdateActiveState()
     end
 end
 
-function Mega.Features.Lucia.SetEnabled(state)
-    States.Lucia.Enabled = state
-    Mega.Features.Lucia.UpdateActiveState()
-end
-
-function Mega.Features.Lucia.UpdateESP()
-    Mega.Features.Lucia.UpdateActiveState()
-end
-
 -- Initialize loop on load
-if States.Lucia.Enabled or (States.KitESP and States.KitESP.Enabled) then
-    Mega.Features.Lucia.UpdateActiveState()
+if States.Lucia.Enabled then
+    startLoop()
 end

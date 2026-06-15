@@ -95,10 +95,10 @@ end
 
 local alchemistActive = false
 
-function Mega.Features.Alchemist.UpdateActiveState()
-    local shouldRun = States.Misc.Alchemist.Enabled or (States.KitESP and States.KitESP.Enabled)
+function Mega.Features.Alchemist.SetEnabled(state)
+    States.Misc.Alchemist.Enabled = state
     
-    if not shouldRun then
+    if not state then
         clearESP()
         alchemistActive = false
         if descAddedConn then descAddedConn:Disconnect(); descAddedConn = nil end
@@ -106,7 +106,7 @@ function Mega.Features.Alchemist.UpdateActiveState()
         return
     end
     
-    if shouldRun and not alchemistActive then
+    if state and not alchemistActive then
         alchemistActive = true
         
         for _, obj in ipairs(Services.Workspace:GetDescendants()) do
@@ -116,7 +116,7 @@ function Mega.Features.Alchemist.UpdateActiveState()
         descAddedConn = Services.Workspace.DescendantAdded:Connect(checkIngredient)
         
         task.spawn(function()
-            while States.Misc.Alchemist.Enabled or (States.KitESP and States.KitESP.Enabled) do
+            while States.Misc.Alchemist.Enabled do
                 task.wait(0.15)
                 if Mega.Unloaded then break end
                 
@@ -133,16 +133,13 @@ function Mega.Features.Alchemist.UpdateActiveState()
                         continue
                     end
                     
-                    if States.Misc.Alchemist.ESP or (States.KitESP and States.KitESP.Enabled) then
+                    if States.Misc.Alchemist.ESP then
                         createESP(obj, data)
                     else
-                        if espObjects[obj] then
-                            espObjects[obj]:Destroy()
-                            espObjects[obj] = nil
-                        end
+                        clearESP()
                     end
                     
-                    if States.Misc.Alchemist.Enabled and States.Misc.Alchemist.AutoCollect and hrp and netManaged then
+                    if States.Misc.Alchemist.AutoCollect and hrp and netManaged then
                         local dropPos = obj:IsA("Model") and obj:GetPivot().Position or obj.Position
                         local dist = (hrp.Position - dropPos).Magnitude
                         
@@ -177,18 +174,4 @@ function Mega.Features.Alchemist.UpdateActiveState()
             alchemistActive = false
         end)
     end
-end
-
-function Mega.Features.Alchemist.SetEnabled(state)
-    States.Misc.Alchemist.Enabled = state
-    Mega.Features.Alchemist.UpdateActiveState()
-end
-
-function Mega.Features.Alchemist.UpdateESP()
-    Mega.Features.Alchemist.UpdateActiveState()
-end
-
--- Initialize loop on load if enabled
-if States.Misc.Alchemist.Enabled or (States.KitESP and States.KitESP.Enabled) then
-    Mega.Features.Alchemist.UpdateActiveState()
 end

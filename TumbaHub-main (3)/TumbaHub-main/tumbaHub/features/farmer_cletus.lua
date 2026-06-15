@@ -54,7 +54,7 @@ local function EnableCletusESP()
     table.clear(espConnections)
     cletusEspFolder:ClearAllChildren()
 
-    if (States.Cletus.Enabled and States.Cletus.ESP) or (States.KitESP and States.KitESP.Enabled) then
+    if States.Cletus.Enabled and States.Cletus.ESP then
         local function updateCrop(crop)
             if not crop:IsA("BasePart") then return end
             local espName = crop:GetDebugId()

@@ -153,16 +153,6 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_kit_esp", "KitESP.Enabled", functi
             Mega.Features.ESP.SetKitEnabled(state)
         end
     end)
-
-    -- Update all kit features' ESP active states without turning on their main switches
-    pcall(function() if Mega.Features.Beekeeper and Mega.Features.Beekeeper.UpdateVisuals then Mega.Features.Beekeeper.UpdateVisuals() end end)
-    pcall(function() if Mega.Features.Cletus and Mega.Features.Cletus.RecreateESP then Mega.Features.Cletus.RecreateESP() end end)
-    pcall(function() if Mega.Features.Eldertree and Mega.Features.Eldertree.UpdateESP then Mega.Features.Eldertree.UpdateESP() end end)
-    pcall(function() if Mega.Features.StarCollector and Mega.Features.StarCollector.UpdateESP then Mega.Features.StarCollector.UpdateESP() end end)
-    pcall(function() if Mega.Features.Metal and Mega.Features.Metal.UpdateESP then Mega.Features.Metal.UpdateESP() end end)
-    pcall(function() if Mega.Features.Taliah and Mega.Features.Taliah.UpdateESP then Mega.Features.Taliah.UpdateESP() end end)
-    pcall(function() if Mega.Features.Lucia and Mega.Features.Lucia.UpdateESP then Mega.Features.Lucia.UpdateESP() end end)
-    pcall(function() if Mega.Features.Alchemist and Mega.Features.Alchemist.UpdateESP then Mega.Features.Alchemist.UpdateESP() end end)
 end, {})
 --#endregion
 

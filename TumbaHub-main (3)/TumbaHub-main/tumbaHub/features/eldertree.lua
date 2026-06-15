@@ -92,19 +92,15 @@ end
 
 local lastEspState = false
 
-local function IsEspActive()
-    return (States.Eldertree.Enabled and States.Eldertree.ESP) or (States.KitESP and States.KitESP.Enabled)
-end
-
 -- 1. Отдельный цикл для контроля ESP
 connections.ESPLoop = Services.RunService.Heartbeat:Connect(function()
-    local currentEspState = IsEspActive()
+    local currentEspState = States.Eldertree.Enabled and States.Eldertree.ESP
     if currentEspState ~= lastEspState then
         lastEspState = currentEspState
         ClearESP()
         if currentEspState then
             connections.ESPAdded = Services.CollectionService:GetInstanceAddedSignal("treeOrb"):Connect(function(orb)
-                if IsEspActive() then CreateOrbESP(orb) end
+                if States.Eldertree.Enabled and States.Eldertree.ESP then CreateOrbESP(orb) end
             end)
             for _, orb in ipairs(Services.CollectionService:GetTagged("treeOrb")) do
                 CreateOrbESP(orb)
@@ -149,7 +145,7 @@ function Mega.Features.Eldertree.SetEnabled(state)
 end
 
 function Mega.Features.Eldertree.UpdateESP()
-    lastEspState = nil -- Force update in Heartbeat loop
+    -- Пусто, так как ESPLoop автоматически обнаружит изменение States.Eldertree.ESP
 end
 
 function Mega.Features.Eldertree.SetAutoCollect(state)
