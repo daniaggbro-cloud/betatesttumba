@@ -42,7 +42,7 @@ UI.CreateToggle(TabFrame, "toggle_aim_prediction", "AimAssist.Prediction")
 UI.CreateToggle(TabFrame, "toggle_aim_toggle_mode", "AimAssist.ToggleMode")
 
 UI.CreateSlider(TabFrame, "slider_aim_range", "AimAssist.Range", 10, 1000)
-UI.CreateSlider(TabFrame, "slider_aim_speed", "AimAssist.AimSpeed", 1, 50)
+UI.CreateSlider(TabFrame, "slider_aim_speed", "AimAssist.AimSpeed", 1, 100)
 
 UI.CreateDropdown(TabFrame, "dropdown_aim_target", "AimAssist.TargetPart", {
     "dropdown_aim_target_head",

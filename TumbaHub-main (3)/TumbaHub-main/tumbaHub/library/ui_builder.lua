@@ -581,7 +581,7 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
             statePath = statePath,
             callback = callback,
             textKey = textKey,
-            currentKey = currentKey
+            currentKey = getState() or "None"
         }
         KeybindButton.Text = GetText("keybind_listening")
     end)
