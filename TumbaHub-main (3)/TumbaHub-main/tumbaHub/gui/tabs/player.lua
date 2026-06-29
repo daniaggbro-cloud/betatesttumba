@@ -87,6 +87,17 @@ end, {
     end)
 })
 
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/swim.lua") end)
+end)
+
+UI.CreateToggle(TabFrame, "toggle_swim", "Player.Swim", function(state)
+    Mega.States.Player.Swim = state
+    if Mega.Features.Swim and Mega.Features.Swim.SetEnabled then 
+        Mega.Features.Swim.SetEnabled(state) 
+    end
+end)
+
 UI.CreateToggle(TabFrame, "toggle_inf_jump", "Player.InfiniteJump")
 
 task.spawn(function()

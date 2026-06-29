@@ -294,6 +294,7 @@ InitializePhase("features", {
     "features/killaura.lua",
     "features/hitboxes.lua",
     "features/freecam.lua",
+    "features/swim.lua",
     "features/bed_nuke.lua",
     "features/gorilla_chams.lua",
     "features/kit_ban.lua",
