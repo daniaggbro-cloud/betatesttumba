@@ -121,7 +121,7 @@ function Mega.ShowNotification(message, duration, color)
     iconCircle.Size = UDim2.fromOffset(32, 32)
     iconCircle.Position = UDim2.fromOffset(12, 16)
     iconCircle.BackgroundColor3 = color
-    iconCircle.BackgroundTransparency = 0.88
+    iconCircle.BackgroundTransparency = 0.85
     iconCircle.BorderSizePixel = 0
     iconCircle.Parent = container
 
@@ -139,7 +139,7 @@ function Mega.ShowNotification(message, duration, color)
     local iconLabel = Instance.new("TextLabel")
     iconLabel.Size = UDim2.new(1, 0, 1, 0)
     iconLabel.BackgroundTransparency = 1
-    iconLabel.TextColor3 = color
+    iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     iconLabel.Font = Enum.Font.GothamBold
     iconLabel.TextSize = 16
     iconLabel.Text = iconSymbol
