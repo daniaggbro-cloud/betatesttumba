@@ -72,6 +72,20 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_fly", "Player.Fly", nil, {
     end)
 })
 
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/freecam.lua") end)
+end)
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_freecam", "Player.Freecam.Enabled", function(state)
+    Mega.States.Player.Freecam.Enabled = state
+    if Mega.Features.Freecam and Mega.Features.Freecam.SetEnabled then 
+        Mega.Features.Freecam.SetEnabled(state) 
+    end
+end, {
+    UI.CreateSlider(nil, "slider_freecam_speed", "Player.Freecam.Speed", 1, 150, function(val)
+        Mega.States.Player.Freecam.Speed = val
+    end)
+})
 
 UI.CreateToggle(TabFrame, "toggle_inf_jump", "Player.InfiniteJump")
 

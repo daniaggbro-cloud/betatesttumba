@@ -16,6 +16,8 @@ Mega.Localization = {
         ["notify_disabled"] = { ru = "ВЫКЛЮЧЕН", en = "DISABLED", es = "DESHABILITADO", pt = "DESATIVADO", ko = "비활성화됨", ja = "無効", uk = "ВИМКНЕНО" },
         ["module_toggled"] = { ru = "Модуль переключен", en = "Module Toggled", es = "Módulo Cambiado", pt = "Módulo Alternado", ko = "모듈 토글됨", ja = "モジュール切替", uk = "Модуль переключений" },
         ["toggle_hitboxes"] = { ru = "Хитбоксы", en = "Hit Boxes", uk = "Хітбокси" },
+        ["toggle_freecam"] = { ru = "Свободная камера", en = "Freecam", uk = "Вільна камера" },
+        ["slider_freecam_speed"] = { ru = "Скорость камеры", en = "Camera Speed", uk = "Швидкість камери" },
         ["section_combat_hitboxes"] = { ru = "⚔️ НАСТРОЙКА ХИТБОКСОВ", en = "⚔️ HITBOX CONFIGURATION", uk = "⚔️ НАЛАШТУВАННЯ ХІТБОКСІВ" },
         ["dropdown_hitboxes_mode"] = { ru = "Режим", en = "Mode", uk = "Режим" },
         ["slider_hitboxes_expand"] = { ru = "Размер расширения", en = "Expand Amount", uk = "Розмір розширення" },
