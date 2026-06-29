@@ -15,7 +15,6 @@ Mega.Localization = {
         ["notify_enabled"] = { ru = "ВКЛЮЧЕНО", en = "ENABLED", es = "HABILITADO", pt = "ATIVADO", ko = "활성화됨", ja = "有効", uk = "УВІМКНЕНО" },
         ["notify_disabled"] = { ru = "ВЫКЛЮЧЕН", en = "DISABLED", es = "DESHABILITADO", pt = "DESATIVADO", ko = "비활성화됨", ja = "無効", uk = "ВИМКНЕНО" },
         ["module_toggled"] = { ru = "Модуль переключен", en = "Module Toggled", es = "Módulo Cambiado", pt = "Módulo Alternado", ko = "모듈 토글됨", ja = "モジュール切替", uk = "Модуль переключений" },
-        ["toggle_autotool"] = { ru = "Авто-Инструмент", en = "Auto Tool", uk = "Авто-Інструмент" },
         ["toggle_hitboxes"] = { ru = "Хитбоксы", en = "Hit Boxes", uk = "Хітбокси" },
         ["section_combat_hitboxes"] = { ru = "⚔️ НАСТРОЙКА ХИТБОКСОВ", en = "⚔️ HITBOX CONFIGURATION", uk = "⚔️ НАЛАШТУВАННЯ ХІТБОКСІВ" },
         ["dropdown_hitboxes_mode"] = { ru = "Режим", en = "Mode", uk = "Режим" },

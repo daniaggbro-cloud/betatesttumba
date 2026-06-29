@@ -292,7 +292,6 @@ InitializePhase("features", {
     "features/chest_esp.lua",
     "features/build_reach.lua",
     "features/killaura.lua",
-    "features/autotool.lua",
     "features/hitboxes.lua",
     "features/bed_nuke.lua",
     "features/gorilla_chams.lua",

@@ -86,21 +86,6 @@ end, {
 -- Mobile button registration removed as requested
 --#endregion
 
---#region -- Auto Tool
-UI.CreateSection(TabFrame, "toggle_autotool")
-
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/autotool.lua") end)
-end)
-
-UI.CreateToggle(TabFrame, "toggle_autotool", "Combat.AutoTool.Enabled", function(state)
-    Mega.States.Combat.AutoTool.Enabled = state
-    if Mega.Features.AutoTool and Mega.Features.AutoTool.SetEnabled then 
-        Mega.Features.AutoTool.SetEnabled(state) 
-    end
-end)
---#endregion
-
 --#region -- Hit Boxes
 UI.CreateSection(TabFrame, "section_combat_hitboxes")
 
