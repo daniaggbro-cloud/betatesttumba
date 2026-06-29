@@ -62,13 +62,6 @@ function Mega.ShowNotification(message, duration, color)
         end
     end
 
-    local iconSymbol = "ℹ"
-    if notifType == "success" then
-        iconSymbol = "✔"
-    elseif notifType == "error" then
-        iconSymbol = "✕"
-    end
-
     -- Dynamically calculate text size for compact width matching Vape
     local cleanText = string.gsub(text, "<[^>]+>", "")
     local textWidth = game:GetService("TextService"):GetTextSize(cleanText, 12, Enum.Font.Gotham, Vector2.new(1000, 1000)).X
@@ -80,24 +73,41 @@ function Mega.ShowNotification(message, duration, color)
     NotifGui.Parent = CoreGui
     NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Modern container frame (glassmorphic dark theme)
+    -- Modern container frame (glassmorphic dark theme with gradient background)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(0, width, 0, 64)
     container.Position = UDim2.new(1, 10, 1, 0) -- Start off-screen
-    container.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    container.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
     container.BackgroundTransparency = 0.15
     container.BorderSizePixel = 0
     container.Parent = NotifGui
     
+    local bgGradient = Instance.new("UIGradient")
+    bgGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(24, 24, 32)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 14, 18))
+    })
+    bgGradient.Rotation = 45
+    bgGradient.Parent = container
+
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = container
 
+    -- Glowing top-left border stroke using UIGradient
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 1
-    stroke.Color = color
-    stroke.Transparency = 0.4
+    stroke.Color = Color3.new(1, 1, 1) -- Set to white, gradient determines color
+    stroke.Transparency = 0.3
     stroke.Parent = container
+
+    local strokeGradient = Instance.new("UIGradient")
+    strokeGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, color),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 40, 50))
+    })
+    strokeGradient.Rotation = 45
+    strokeGradient.Parent = stroke
 
     -- Left Icon Circle
     local iconCircle = Instance.new("Frame")
@@ -118,16 +128,64 @@ function Mega.ShowNotification(message, duration, color)
     iconStroke.Transparency = 0.6
     iconStroke.Parent = iconCircle
 
-    local iconLabel = Instance.new("TextLabel")
-    iconLabel.Size = UDim2.new(1, 0, 1, 0)
-    iconLabel.BackgroundTransparency = 1
-    iconLabel.TextColor3 = color
-    iconLabel.Font = Enum.Font.GothamBold
-    iconLabel.TextSize = 14
-    iconLabel.Text = iconSymbol
-    iconLabel.TextXAlignment = Enum.TextXAlignment.Center
-    iconLabel.TextYAlignment = Enum.TextYAlignment.Center
-    iconLabel.Parent = iconCircle
+    -- Native Vector drawing inside the circular icon container to prevent character box squares
+    local iconVector = Instance.new("Frame")
+    iconVector.Size = UDim2.fromOffset(16, 16)
+    iconVector.Position = UDim2.new(0.5, 0, 0.5, 0)
+    iconVector.AnchorPoint = Vector2.new(0.5, 0.5)
+    iconVector.BackgroundTransparency = 1
+    iconVector.Parent = iconCircle
+
+    if notifType == "success" then
+        -- Draw custom checkmark natively
+        local leftLeg = Instance.new("Frame")
+        leftLeg.Size = UDim2.fromOffset(2.5, 6)
+        leftLeg.Position = UDim2.fromOffset(5, 9)
+        leftLeg.Rotation = 45
+        leftLeg.BackgroundColor3 = color
+        leftLeg.BorderSizePixel = 0
+        leftLeg.Parent = iconVector
+
+        local rightLeg = Instance.new("Frame")
+        rightLeg.Size = UDim2.fromOffset(2.5, 11)
+        rightLeg.Position = UDim2.fromOffset(9, 5)
+        rightLeg.Rotation = -45
+        rightLeg.BackgroundColor3 = color
+        rightLeg.BorderSizePixel = 0
+        rightLeg.Parent = iconVector
+    elseif notifType == "error" then
+        -- Draw custom X (Cross) natively
+        local line1 = Instance.new("Frame")
+        line1.Size = UDim2.fromOffset(2.5, 12)
+        line1.Position = UDim2.fromOffset(7, 2)
+        line1.Rotation = 45
+        line1.BackgroundColor3 = color
+        line1.BorderSizePixel = 0
+        line1.Parent = iconVector
+
+        local line2 = Instance.new("Frame")
+        line2.Size = UDim2.fromOffset(2.5, 12)
+        line2.Position = UDim2.fromOffset(7, 2)
+        line2.Rotation = -45
+        line2.BackgroundColor3 = color
+        line2.BorderSizePixel = 0
+        line2.Parent = iconVector
+    else
+        -- Draw standard Info "i" natively
+        local dot = Instance.new("Frame")
+        dot.Size = UDim2.fromOffset(2.5, 2.5)
+        dot.Position = UDim2.fromOffset(7, 3)
+        dot.BackgroundColor3 = color
+        dot.BorderSizePixel = 0
+        dot.Parent = iconVector
+
+        local body = Instance.new("Frame")
+        body.Size = UDim2.fromOffset(2.5, 6)
+        body.Position = UDim2.fromOffset(7, 7)
+        body.BackgroundColor3 = color
+        body.BorderSizePixel = 0
+        body.Parent = iconVector
+    end
 
     -- Title Label
     local titleLabel = Instance.new("TextLabel")
