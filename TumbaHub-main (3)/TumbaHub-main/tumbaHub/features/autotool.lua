@@ -34,6 +34,10 @@ local storeChangedConnection
 local oldHitBlock
 local active = false
 
+local InventoryChanged = Instance.new("BindableEvent")
+local blockBreakTrigger = Instance.new("BindableEvent")
+local blockBreakConnection
+
 local function initBedwars()
     if bedwars.BlockBreaker then return true end
     
@@ -96,6 +100,8 @@ local function updateStore(new, oldState)
                 store.tools[v] = tool
             end
         end
+        
+        InventoryChanged:Fire()
     end
 end
 
@@ -105,6 +111,7 @@ local function hotbarSwitch(slot)
             type = 'InventorySelectHotbarSlot',
             slot = slot
         })
+        InventoryChanged.Event:Wait()
         return true
     end
     return false
@@ -128,7 +135,7 @@ local function switchHotbarItem(block)
             end
             if slot and hotbarSwitch(slot) then
                 if Services.UserInputService:IsMouseButtonPressed(0) then
-                    Services.ContextActionService:CallFunction('block-break', Enum.UserInputState.Begin, newproxy(true))
+                    blockBreakTrigger:Fire()
                 end
                 return true
             end
@@ -168,6 +175,11 @@ function Mega.Features.AutoTool.SetEnabled(state)
                 storeChangedConnection = bedwars.Store.changed:connect(updateStore)
                 updateStore(bedwars.Store:getState(), {})
             end
+            if not blockBreakConnection then
+                blockBreakConnection = blockBreakTrigger.Event:Connect(function()
+                    Services.ContextActionService:CallFunction('block-break', Enum.UserInputState.Begin, newproxy(true))
+                end)
+            end
             hookHitBlock()
             active = true
         end
@@ -176,6 +188,10 @@ function Mega.Features.AutoTool.SetEnabled(state)
         if storeChangedConnection then
             storeChangedConnection:disconnect()
             storeChangedConnection = nil
+        end
+        if blockBreakConnection then
+            blockBreakConnection:Disconnect()
+            blockBreakConnection = nil
         end
         active = false
     end
@@ -191,6 +207,10 @@ if Mega.UnloadedSignal then
         if storeChangedConnection then
             storeChangedConnection:disconnect()
             storeChangedConnection = nil
+        end
+        if blockBreakConnection then
+            blockBreakConnection:Disconnect()
+            blockBreakConnection = nil
         end
     end)
 end
