@@ -14,6 +14,7 @@ Mega.Localization = {
         -- Notifications
         ["notify_enabled"] = { ru = "ВКЛЮЧЕНО", en = "ENABLED", es = "HABILITADO", pt = "ATIVADO", ko = "활성화됨", ja = "有効", uk = "УВІМКНЕНО" },
         ["notify_disabled"] = { ru = "ВЫКЛЮЧЕН", en = "DISABLED", es = "DESHABILITADO", pt = "DESATIVADO", ko = "비활성화됨", ja = "無効", uk = "ВИМКНЕНО" },
+        ["module_toggled"] = { ru = "Модуль переключен", en = "Module Toggled", es = "Módulo Cambiado", pt = "Módulo Alternado", ko = "모듈 토글됨", ja = "モジュール切替", uk = "Модуль переключений" },
         ["notify_kit_esp_updated"] = { ru = "Kit ESP обновлен", en = "Kit ESP updated", es = "Kit ESP actualizado", pt = "Kit ESP atualizado", ko = "Kit ESP 업데이트됨", ja = "Kit ESP 更新されました", uk = "Kit ESP оновлено" },
         ["notify_kit_esp_on"] = { ru = "Kit ESP включен", en = "Kit ESP enabled", es = "Kit ESP habilitado", pt = "Kit ESP ativado", ko = "Kit ESP 활성화됨", ja = "Kit ESP 有効", uk = "Kit ESP увімкнено" },
         ["notify_kit_esp_off"] = { ru = "Kit ESP выключен", en = "Kit ESP disabled", es = "Kit ESP deshabilitado", pt = "Kit ESP desativado", ko = "Kit ESP 비활성화됨", ja = "Kit ESP 無効", uk = "Kit ESP вимкнено" },
