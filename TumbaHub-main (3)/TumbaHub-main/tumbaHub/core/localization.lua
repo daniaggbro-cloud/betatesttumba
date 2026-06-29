@@ -327,6 +327,8 @@ Mega.Localization = {
         ["toggle_aim_limit"] = { ru = "Только с мечом в руках", en = "Limit to items (Sword)", uk = "Тільки з мечем в руках" },
         ["slider_aim_speed"] = { ru = "Скорость аима (Aim speed)", en = "Aim speed", uk = "Швидкість аїму (Aim speed)" },
         ["slider_aim_shake"] = { ru = "Тряска прицела (Shake)", en = "Aim Shake", uk = "Тряска прицілу (Shake)" },
+        ["toggle_aim_shake"] = { ru = "Тряска трекинга", en = "Shake Tracking", uk = "Тряска трекінгу" },
+        ["slider_aim_shake_intensity"] = { ru = "Интенсивность тряски", en = "Shake Intensity", uk = "Інтенсивність тряски" },
         ["slider_aim_max_angle"] = { ru = "Максимальный угол", en = "Max angle", uk = "Максимальний кут" },
         ["dropdown_aim_mode"] = { ru = "Режим аима (Mode)", en = "Aim Mode", uk = "Режим аїму (Mode)" },
         ["dropdown_aim_area"] = { ru = "Область наводки", en = "Target Area", uk = "Область наведення" },

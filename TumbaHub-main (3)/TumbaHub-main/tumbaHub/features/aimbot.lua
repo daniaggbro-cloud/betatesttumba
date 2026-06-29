@@ -40,8 +40,13 @@ if not States.AimAssist then
         TargetPart = "Head",
         Prediction = true,
         ToggleMode = false,
-        MobileBtn = false
+        MobileBtn = false,
+        Shake = false,
+        ShakeValue = 3
     }
+else
+    if States.AimAssist.Shake == nil then States.AimAssist.Shake = false end
+    if States.AimAssist.ShakeValue == nil then States.AimAssist.ShakeValue = 3 end
 end
 
 if not Mega.Objects.Connections then Mega.Objects.Connections = {} end
@@ -247,6 +252,15 @@ local function updateAimbotLoopState()
                             local root = assistPart.Parent:FindFirstChild("HumanoidRootPart")
                             local velocity = root and root.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
                             targetPos = targetPos + (velocity * 0.05)
+                        end
+                        
+                        -- Aim Shake Tracking
+                        if States.AimAssist.Shake then
+                            local shakeVal = States.AimAssist.ShakeValue or 3
+                            local xOffset = (math.random(-100, 100) / 100) * (shakeVal / 10)
+                            local yOffset = (math.random(-100, 100) / 100) * (shakeVal / 10)
+                            local zOffset = (math.random(-100, 100) / 100) * (shakeVal / 10)
+                            targetPos = targetPos + Vector3.new(xOffset, yOffset, zOffset)
                         end
                         
                         -- Lerp Factor

@@ -40,6 +40,8 @@ UI.CreateSection(TabFrame, "section_aim_settings")
 
 UI.CreateToggle(TabFrame, "toggle_aim_prediction", "AimAssist.Prediction")
 UI.CreateToggle(TabFrame, "toggle_aim_toggle_mode", "AimAssist.ToggleMode")
+UI.CreateToggle(TabFrame, "toggle_aim_shake", "AimAssist.Shake")
+UI.CreateSlider(TabFrame, "slider_aim_shake_intensity", "AimAssist.ShakeValue", 1, 10)
 
 UI.CreateSlider(TabFrame, "slider_aim_range", "AimAssist.Range", 10, 1000)
 UI.CreateSlider(TabFrame, "slider_aim_speed", "AimAssist.AimSpeed", 1, 100)
