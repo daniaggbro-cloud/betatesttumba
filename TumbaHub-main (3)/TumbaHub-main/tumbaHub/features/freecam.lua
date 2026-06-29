@@ -67,6 +67,30 @@ local function enableFreecam()
         camPos = gameCamera.CFrame.Position
     end
     
+    -- Disable local player controls to prevent movement
+    local playerModule = LocalPlayer.PlayerScripts:FindFirstChild("PlayerModule")
+    if playerModule then
+        pcall(function()
+            local controls = require(playerModule)
+            if controls and controls.Disable then
+                controls:Disable()
+            elseif controls and controls.GetControls then
+                local ctrl = controls:GetControls()
+                if ctrl and ctrl.Disable then
+                    ctrl:Disable()
+                end
+            end
+        end)
+    end
+    
+    -- Anchor HumanoidRootPart to freeze physics
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.Value = hrp.Position -- backup position
+        hrp.Anchored = true
+    end
+    
     -- Keyboard and movement binding loop
     connection = Services.RunService.PreSimulation:Connect(function(dt)
         if not Services.UserInputService:GetFocusedTextBox() then
@@ -111,6 +135,29 @@ local function disableFreecam()
     pcall(function()
         Services.ContextActionService:UnbindAction('FreecamKeyboard'..randomkey)
     end)
+    
+    -- Re-enable local player controls
+    local playerModule = LocalPlayer.PlayerScripts:FindFirstChild("PlayerModule")
+    if playerModule then
+        pcall(function()
+            local controls = require(playerModule)
+            if controls and controls.Enable then
+                controls:Enable()
+            elseif controls and controls.GetControls then
+                local ctrl = controls:GetControls()
+                if ctrl and ctrl.Enable then
+                    ctrl:Enable()
+                end
+            end
+        end)
+    end
+    
+    -- Unanchor HumanoidRootPart
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.Anchored = false
+    end
     
     if connection then
         connection:Disconnect()
