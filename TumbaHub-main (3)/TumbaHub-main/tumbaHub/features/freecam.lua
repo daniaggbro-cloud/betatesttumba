@@ -87,7 +87,6 @@ local function enableFreecam()
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if hrp then
-        hrp.Value = hrp.Position -- backup position
         hrp.Anchored = true
     end
     

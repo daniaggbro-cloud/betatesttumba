@@ -4,6 +4,20 @@
 local CoreGui = Mega.Services.CoreGui
 local Debris = Mega.Services.Debris
 local TweenService = Mega.Services.TweenService
+local LocalPlayer = Mega.Services.LocalPlayer
+
+local function getNotificationParent()
+    local parent
+    local success = pcall(function()
+        local cGui = game:GetService("CoreGui")
+        local test = cGui.Name
+        parent = cGui
+    end)
+    if success and parent then
+        return parent
+    end
+    return LocalPlayer:WaitForChild("PlayerGui", 5) or LocalPlayer:FindFirstChildOfClass("PlayerGui")
+end
 
 function Mega.ShowNotification(message, duration, color)
     duration = duration or 3
@@ -77,7 +91,7 @@ function Mega.ShowNotification(message, duration, color)
 
     local NotifGui = Instance.new("ScreenGui")
     NotifGui.Name = "TumbaGlobalNotification"
-    NotifGui.Parent = CoreGui
+    NotifGui.Parent = getNotificationParent()
     NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
     -- Modern container frame (glassmorphic dark theme with gradient background)
