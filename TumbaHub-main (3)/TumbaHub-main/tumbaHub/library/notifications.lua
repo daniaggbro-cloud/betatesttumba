@@ -62,6 +62,13 @@ function Mega.ShowNotification(message, duration, color)
         end
     end
 
+    local iconSymbol = "i"
+    if notifType == "success" then
+        iconSymbol = "✔"
+    elseif notifType == "error" then
+        iconSymbol = "X"
+    end
+
     -- Dynamically calculate text size for compact width matching Vape
     local cleanText = string.gsub(text, "<[^>]+>", "")
     local textWidth = game:GetService("TextService"):GetTextSize(cleanText, 12, Enum.Font.Gotham, Vector2.new(1000, 1000)).X
@@ -128,64 +135,17 @@ function Mega.ShowNotification(message, duration, color)
     iconStroke.Transparency = 0.6
     iconStroke.Parent = iconCircle
 
-    -- Native Vector drawing inside the circular icon container to prevent character box squares
-    local iconVector = Instance.new("Frame")
-    iconVector.Size = UDim2.fromOffset(16, 16)
-    iconVector.Position = UDim2.new(0.5, 0, 0.5, 0)
-    iconVector.AnchorPoint = Vector2.new(0.5, 0.5)
-    iconVector.BackgroundTransparency = 1
-    iconVector.Parent = iconCircle
-
-    if notifType == "success" then
-        -- Draw custom checkmark natively
-        local leftLeg = Instance.new("Frame")
-        leftLeg.Size = UDim2.fromOffset(2.5, 6)
-        leftLeg.Position = UDim2.fromOffset(5, 9)
-        leftLeg.Rotation = 45
-        leftLeg.BackgroundColor3 = color
-        leftLeg.BorderSizePixel = 0
-        leftLeg.Parent = iconVector
-
-        local rightLeg = Instance.new("Frame")
-        rightLeg.Size = UDim2.fromOffset(2.5, 11)
-        rightLeg.Position = UDim2.fromOffset(9, 5)
-        rightLeg.Rotation = -45
-        rightLeg.BackgroundColor3 = color
-        rightLeg.BorderSizePixel = 0
-        rightLeg.Parent = iconVector
-    elseif notifType == "error" then
-        -- Draw custom X (Cross) natively
-        local line1 = Instance.new("Frame")
-        line1.Size = UDim2.fromOffset(2.5, 12)
-        line1.Position = UDim2.fromOffset(7, 2)
-        line1.Rotation = 45
-        line1.BackgroundColor3 = color
-        line1.BorderSizePixel = 0
-        line1.Parent = iconVector
-
-        local line2 = Instance.new("Frame")
-        line2.Size = UDim2.fromOffset(2.5, 12)
-        line2.Position = UDim2.fromOffset(7, 2)
-        line2.Rotation = -45
-        line2.BackgroundColor3 = color
-        line2.BorderSizePixel = 0
-        line2.Parent = iconVector
-    else
-        -- Draw standard Info "i" natively
-        local dot = Instance.new("Frame")
-        dot.Size = UDim2.fromOffset(2.5, 2.5)
-        dot.Position = UDim2.fromOffset(7, 3)
-        dot.BackgroundColor3 = color
-        dot.BorderSizePixel = 0
-        dot.Parent = iconVector
-
-        local body = Instance.new("Frame")
-        body.Size = UDim2.fromOffset(2.5, 6)
-        body.Position = UDim2.fromOffset(7, 7)
-        body.BackgroundColor3 = color
-        body.BorderSizePixel = 0
-        body.Parent = iconVector
-    end
+    -- Classic text-based icon rendering
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(1, 0, 1, 0)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.TextColor3 = color
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextSize = 16
+    iconLabel.Text = iconSymbol
+    iconLabel.TextXAlignment = Enum.TextXAlignment.Center
+    iconLabel.TextYAlignment = Enum.TextYAlignment.Center
+    iconLabel.Parent = iconCircle
 
     -- Title Label
     local titleLabel = Instance.new("TextLabel")
