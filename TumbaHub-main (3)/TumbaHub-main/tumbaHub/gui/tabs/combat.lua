@@ -86,6 +86,51 @@ end, {
 -- Mobile button registration removed as requested
 --#endregion
 
+--#region -- Auto Tool
+UI.CreateSection(TabFrame, "toggle_autotool")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/autotool.lua") end)
+end)
+
+UI.CreateToggle(TabFrame, "toggle_autotool", "Combat.AutoTool.Enabled", function(state)
+    Mega.States.Combat.AutoTool.Enabled = state
+    if Mega.Features.AutoTool and Mega.Features.AutoTool.SetEnabled then 
+        Mega.Features.AutoTool.SetEnabled(state) 
+    end
+end)
+--#endregion
+
+--#region -- Hit Boxes
+UI.CreateSection(TabFrame, "section_combat_hitboxes")
+
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/hitboxes.lua") end)
+end)
+
+local hitboxesSettings = {
+    UI.CreateDropdown(nil, "dropdown_hitboxes_mode", "Combat.HitBoxes.Mode", {"Sword", "Player"}, function(val)
+        Mega.States.Combat.HitBoxes.Mode = val
+        if Mega.Features.HitBoxes and Mega.Features.HitBoxes.UpdateSettings then
+            Mega.Features.HitBoxes.UpdateSettings()
+        end
+    end),
+    UI.CreateSlider(nil, "slider_hitboxes_expand", "Combat.HitBoxes.ExpandAmount", 0, 15, function(val)
+        Mega.States.Combat.HitBoxes.ExpandAmount = val
+        if Mega.Features.HitBoxes and Mega.Features.HitBoxes.UpdateSettings then
+            Mega.Features.HitBoxes.UpdateSettings()
+        end
+    end)
+}
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_hitboxes", "Combat.HitBoxes.Enabled", function(state)
+    Mega.States.Combat.HitBoxes.Enabled = state
+    if Mega.Features.HitBoxes and Mega.Features.HitBoxes.SetEnabled then
+        Mega.Features.HitBoxes.SetEnabled(state)
+    end
+end, hitboxesSettings)
+--#endregion
+
 --#region -- Bed Nuke
 UI.CreateSection(TabFrame, "section_combat_bednuke")
 
