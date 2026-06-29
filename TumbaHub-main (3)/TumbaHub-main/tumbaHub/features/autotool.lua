@@ -60,7 +60,7 @@ local function initBedwars()
             
             local replicatedStorage = Services.ReplicatedStorage
             bedwars.BlockController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out).BlockEngine
-            bedwars.ItemMeta = require(replicatedStorage.TS.item['item-meta']).ItemMeta
+            bedwars.ItemMeta = require(replicatedStorage.TS.item['item-meta']).items
             bedwars.Store = require(LocalPlayer.PlayerScripts.TS.ui.store).ClientStore
         end
     end)
@@ -70,6 +70,7 @@ end
 
 local function getTool(breakType)
     local bestTool, bestToolSlot, bestToolDamage = nil, nil, 0
+    if not bedwars.ItemMeta then return nil, nil end
     if not store.inventory or not store.inventory.inventory or not store.inventory.inventory.items then return nil, nil end
     for slot, item in pairs(store.inventory.inventory.items) do
         local itemData = bedwars.ItemMeta[item.itemType]
@@ -110,6 +111,7 @@ local function hotbarSwitch(slot)
 end
 
 local function switchHotbarItem(block)
+    if not bedwars.ItemMeta then return nil end
     if block and not block:GetAttribute('NoBreak') and not block:GetAttribute('Team'..(LocalPlayer:GetAttribute('Team') or 0)..'NoBreak') then
         local itemData = bedwars.ItemMeta[block.Name]
         local breakType = itemData and itemData.block and itemData.block.breakType
