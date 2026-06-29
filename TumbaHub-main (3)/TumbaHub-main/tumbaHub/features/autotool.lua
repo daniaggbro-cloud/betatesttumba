@@ -72,13 +72,23 @@ local function initBedwars()
     return bedwars.BlockBreaker ~= nil
 end
 
+local function getActiveSlot()
+    if bedwars.Store then
+        local success, state = pcall(function() return bedwars.Store:getState() end)
+        if success and state and state.Inventory and state.Inventory.observedInventory then
+            return state.Inventory.observedInventory.hotbarSlot
+        end
+    end
+    return store.inventory and store.inventory.hotbarSlot
+end
+
 local function getTool(breakType)
     local bestTool, bestToolSlot, bestToolDamage = nil, nil, 0
     if not bedwars.ItemMeta then return nil, nil end
     if not store.inventory or not store.inventory.inventory or not store.inventory.inventory.items then return nil, nil end
     for slot, item in pairs(store.inventory.inventory.items) do
         local itemData = bedwars.ItemMeta[item.itemType]
-        local toolMeta = itemData and itemData.block and itemData.block.breakBlock
+        local toolMeta = itemData and itemData.breakBlock
         if toolMeta then
             local toolDamage = toolMeta[breakType] or 0
             if toolDamage > bestToolDamage then
@@ -106,7 +116,7 @@ local function updateStore(new, oldState)
 end
 
 local function hotbarSwitch(slot)
-    if slot and store.inventory and store.inventory.hotbarSlot ~= slot then
+    if slot ~= nil and store.inventory and getActiveSlot() ~= slot then
         bedwars.Store:dispatch({
             type = 'InventorySelectHotbarSlot',
             slot = slot
@@ -133,7 +143,7 @@ local function switchHotbarItem(block)
                     break
                 end
             end
-            if slot and hotbarSwitch(slot) then
+            if slot ~= nil and hotbarSwitch(slot) then
                 if Services.UserInputService:IsMouseButtonPressed(0) then
                     blockBreakTrigger:Fire()
                 end
