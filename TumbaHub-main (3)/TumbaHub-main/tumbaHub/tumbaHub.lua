@@ -325,12 +325,9 @@ if loaderUI then
     loaderUI.Destroy()
 end
 
--- Auto-load last configuration and start 5s background save
+-- Start 5s background autosave (config loading is handled by main_window.lua LoadStartupConfig)
 if Mega.ConfigSystem then
-    task.spawn(function()
-        Mega.ConfigSystem.LoadLastConfig()
-        Mega.ConfigSystem.StartAutosave(5)
-    end)
+    Mega.ConfigSystem.StartAutosave(5)
 end
 
 

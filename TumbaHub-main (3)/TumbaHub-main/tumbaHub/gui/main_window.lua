@@ -489,6 +489,11 @@ task.spawn(function()
             task.wait(0.15) -- КД 150мс между прогрузкой вкладок, чтобы избежать фризов игры
         end
     end
+    -- После загрузки всех вкладок — активируем сохранённые функции из конфига
+    task.wait(0.3)
+    if Mega.UI and Mega.UI.SyncAll then
+        pcall(Mega.UI.SyncAll)
+    end
 end)
 
 -- Keybinds Logic
@@ -676,16 +681,27 @@ end -- End of Mega.InitializeMainGUI
 
 local function LoadStartupConfig()
     if not Mega.ConfigSystem or not Mega.ConfigSystem.Load then return end
+    local configLoaded = false
     pcall(function()
         if isfile and readfile and isfile("tumbaHub/configs/LastConfig.txt") then
             local lastConf = readfile("tumbaHub/configs/LastConfig.txt")
             if lastConf and lastConf ~= "" then
-                Mega.ConfigSystem.Load(lastConf)
+                if Mega.ConfigSystem.Load(lastConf) then
+                    configLoaded = true
+                end
             end
         end
     end)
     -- Загружаем autosave поверх, чтобы восстановить точное состояние до телепорта
-    Mega.ConfigSystem.Load("autosave")
+    if Mega.ConfigSystem.Load("autosave") then configLoaded = true end
+    -- Fallback: загружаем default конфиг, если ничего не нашли
+    if not configLoaded then
+        pcall(function()
+            if isfile and isfile("tumbaHub/configs/TumbaConfig_default.json") then
+                Mega.ConfigSystem.Load("default")
+            end
+        end)
+    end
 end
 
 if not Mega.HasSavedLanguage() then

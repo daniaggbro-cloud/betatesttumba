@@ -199,7 +199,7 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
         TweenService:Create(ToggleButton, TweenInfo.new(0.2), { BackgroundColor3 = newState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80) }):Play()
         TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = newState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9) }):Play()
         
-        if callback and not silent then pcall(callback, newState) end
+        if callback and silent ~= true then pcall(callback, newState) end
         
         if not silent then
             local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
@@ -821,7 +821,7 @@ end
 function Mega.UI.SyncAll()
     if Mega.Objects.Toggles then
         for _, syncFunc in pairs(Mega.Objects.Toggles) do
-            pcall(syncFunc, nil, true)
+            pcall(syncFunc, nil, "restore")
         end
     end
     if Mega.Objects.Sliders then
