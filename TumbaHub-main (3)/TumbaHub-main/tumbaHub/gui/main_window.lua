@@ -653,14 +653,13 @@ end
 -- Auto-update status and apply UIScale (Throttled for maximum performance and FPS)
 local lastStatusUpdate = 0
 Mega.Objects.Connections.MainWindowStatusUpdate = Services.RunService.RenderStepped:Connect(function()
-    if not TumbaGUI.Enabled then return end
     local now = tick()
     if now - lastStatusUpdate >= 0.15 then
         lastStatusUpdate = now
         Mega.UpdateStatus()
         
-        -- Smart UI Scaling for Main Menu
-        if workspace.CurrentCamera then
+        -- Smart UI Scaling for Main Menu (only when menu is open)
+        if TumbaGUI.Enabled and workspace.CurrentCamera then
             local vp = workspace.CurrentCamera.ViewportSize
             -- If width < 1200 or height < 700 we need to scale down
             if vp.X > 0 and vp.Y > 0 then
