@@ -108,8 +108,10 @@ function Mega.ConfigSystem.Load(name)
         if Mega.States.Combat.Killaura.Range > 25 then Mega.States.Combat.Killaura.Range = 25 end
     end
 
+    -- Sync UI elements to reflect loaded values (silent=true: update visuals only, no feature callbacks).
+    -- Feature callbacks are fired by the one-time SyncAll in main_window.lua after all tabs load.
     if Mega.UI and Mega.UI.SyncAll then
-        pcall(Mega.UI.SyncAll)
+        pcall(Mega.UI.SyncAll, true)
     end
 
     return true

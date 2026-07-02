@@ -818,10 +818,13 @@ function Mega.UI.CreateTextBox(parent, textKey, statePath, callback)
     return TextBoxFrame
 end
 
-function Mega.UI.SyncAll()
+function Mega.UI.SyncAll(silent)
+    -- silent=true  → update UI visuals only, no feature callbacks (used by Config.Load)
+    -- silent=nil   → "restore" mode: fire callbacks but suppress notifications (used after tab load)
+    local toggleMode = silent and true or "restore"
     if Mega.Objects.Toggles then
         for _, syncFunc in pairs(Mega.Objects.Toggles) do
-            pcall(syncFunc, nil, "restore")
+            pcall(syncFunc, nil, toggleMode)
         end
     end
     if Mega.Objects.Sliders then
