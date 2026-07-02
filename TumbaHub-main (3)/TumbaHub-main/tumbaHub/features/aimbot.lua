@@ -466,5 +466,11 @@ function Mega.Features.Aimbot.SetAimAssistEnabled(state)
     updateAimbotLoopState()
 end
 
+-- Reset transient state that should never persist between sessions
+-- AimAssist.Active = "key is currently held down" - must always start as false
+if States.AimAssist then
+    States.AimAssist.Active = false
+end
+
 -- Initialize loop on load
 updateAimbotLoopState()

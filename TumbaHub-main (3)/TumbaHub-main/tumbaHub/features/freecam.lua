@@ -29,6 +29,7 @@ local module, old
 local camPos = Vector3.zero
 local gameCamera = Services.Workspace.CurrentCamera
 local connection
+local isEnabled = false  -- guard against double-enable
 
 local function initCameraModule()
     if module then return true end
@@ -52,6 +53,8 @@ local function initCameraModule()
 end
 
 local function enableFreecam()
+    if isEnabled then return end  -- already running, don't double-connect
+    isEnabled = true
     if not initCameraModule() then 
         -- Fallback if getconnections/debug library is not fully supported
         warn("Freecam: CameraModule not resolved.")
@@ -131,6 +134,7 @@ local function enableFreecam()
 end
 
 local function disableFreecam()
+    isEnabled = false
     pcall(function()
         Services.ContextActionService:UnbindAction('FreecamKeyboard'..randomkey)
     end)
