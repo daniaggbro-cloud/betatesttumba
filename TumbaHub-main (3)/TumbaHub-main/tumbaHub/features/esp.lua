@@ -550,3 +550,9 @@ function Mega.Features.ESP.SetEnabled(state)
 end
 --#endregion
 
+-- Self-initialize from saved config state (consistent with other features like killaura, speed, noclip)
+if States.ESP.Enabled then
+    Mega.Features.ESP.SetEnabled(true)
+end
+
+
