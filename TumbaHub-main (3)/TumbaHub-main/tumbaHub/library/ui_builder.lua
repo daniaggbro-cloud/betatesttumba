@@ -199,7 +199,7 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback)
         TweenService:Create(ToggleButton, TweenInfo.new(0.2), { BackgroundColor3 = newState and Mega.Settings.Menu.AccentColor or Color3.fromRGB(60, 60, 80) }):Play()
         TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = newState and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9) }):Play()
         
-        if callback then pcall(callback, newState) end
+        if callback and not silent then pcall(callback, newState) end
         
         if not silent then
             local statusText = newState and GetText("notify_enabled") or GetText("notify_disabled")
