@@ -178,12 +178,16 @@ do
     if Mega.States.TelepearlESP.DotSpacing == nil then
         Mega.States.TelepearlESP.DotSpacing = 5
     end
+    if Mega.States.TelepearlESP.Duration == nil then
+        Mega.States.TelepearlESP.Duration = 1 -- Время в секундах по умолчанию
+    end
 
     local loc = Mega.Localization.Strings
     if not loc["section_telepearl_esp"] then
         loc["section_telepearl_esp"]      = { ru = "Telepearl ESP",                en = "Telepearl ESP" }
         loc["toggle_telepearl_esp"]       = { ru = "Telepearl ESP",                en = "Telepearl ESP" }
-        loc["slider_pearl_dot_spacing"]   = { ru = "Расстояние между точками", en = "Dot Spacing" }
+        loc["slider_pearl_duration"]      = { ru = "Время показа (Сек)",           en = "Display Time (Sec)" }
+        loc["slider_pearl_dot_spacing"]   = { ru = "Расстояние между точками",     en = "Dot Spacing" }
         loc["slider_pearl_circle_transp"] = { ru = "Прозрачность круга",           en = "Circle Transparency" }
         loc["slider_pearl_icon_transp"]   = { ru = "Прозрачность иконки",          en = "Icon Transparency" }
         loc["button_pearl_color"]         = { ru = "Цвет траектории и круга",      en = "ESP Color" }
@@ -199,10 +203,11 @@ do
             Mega.Features.TelepearlESP.SetEnabled(state)
         end
     end, {
+        -- Ползунок от 0 до 10 секунд (0 = моментальное исчезновение)
+        UI.CreateSlider(nil, "slider_pearl_duration",      "TelepearlESP.Duration",     0,  10),
         UI.CreateSlider(nil, "slider_pearl_dot_spacing",   "TelepearlESP.DotSpacing",   1,  20),
         UI.CreateSlider(nil, "slider_pearl_circle_transp", "TelepearlESP.CircleTransp", 0, 100),
         UI.CreateSlider(nil, "slider_pearl_icon_transp",   "TelepearlESP.IconTransp",   0, 100),
-        -- Передаем цвет безопасно, с фоллбэком на фиолетовый
         CreateColorPicker(nil, "button_pearl_color", Mega.States.TelepearlESP.Color or Color3.fromRGB(160, 60, 255), function(col)
             Mega.States.TelepearlESP.Color = col
         end)
