@@ -1,5 +1,5 @@
 -- features/telepearl_predict.lua
--- Telepearl ESP — визуализация траектории и места приземления
+-- Telepearl ESP — визуализация траектории и места приземления (Поддержка множества жемчугов)
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.TelepearlESP = {}
@@ -11,154 +11,13 @@ local Debris       = game:GetService("Debris")
 local States = Mega.States
 
 local GRAVITY       = 70      -- studs/sec² (кастомная)
-local LINE_COLOR    = Color3.fromRGB(160, 60, 255)   -- фиолетовый
+local LINE_COLOR    = Color3.fromRGB(160, 60, 255)
 local CIRCLE_COLOR  = Color3.fromRGB(160, 60, 255)
 local PEARL_ICON    = "rbxassetid://6874950144"
 
--- ── Пул объектов (переиспользуем, не создаём каждый кадр) ─
-local dotPool       = {}
-local circleModel   = nil
-local iconBillboard = nil
-local currentDots   = {}
-
-local function getOrCreateDot(idx)
-    if dotPool[idx] then
-        return dotPool[idx]
-    end
-    local p = Instance.new("Part")
-    p.Name         = "PearlESPDot_" .. idx
-    p.Anchored     = true
-    p.CanCollide   = false
-    p.CanQuery     = false
-    p.CanTouch     = false
-    p.CastShadow   = false
-    p.Shape        = Enum.PartType.Ball
-    p.Material     = Enum.Material.Neon
-    p.Color        = LINE_COLOR
-    p.Size         = Vector3.new(0.25, 0.25, 0.25)
-    p.Parent       = Workspace
-    dotPool[idx]   = p
-    return p
-end
-
-local function hideDots(from)
-    for i = from, #dotPool do
-        if dotPool[i] then
-            -- Прячем в небо, чтобы избежать FallenPartsDestroyHeight
-            dotPool[i].Position = Vector3.new(0, 9999, 0)
-        end
-    end
-end
-
--- ── Кольцо приземления ────────────────────────────────────
-local function ensureCircle()
-    if circleModel and circleModel.Parent then return end
-
-    circleModel = Instance.new("Model")
-    circleModel.Name = "PearlESPCircle"
-    circleModel.Parent = Workspace
-
-    local SEGMENTS = 40
-    local RADIUS   = 3.5
-    for i = 1, SEGMENTS do
-        local seg = Instance.new("Part")
-        seg.Name         = "Seg_" .. i
-        seg.Anchored     = true
-        seg.CanCollide   = false
-        seg.CanQuery     = false
-        seg.CanTouch     = false
-        seg.CastShadow   = false
-        seg.Shape        = Enum.PartType.Block
-        seg.Material     = Enum.Material.Neon
-        seg.Color        = CIRCLE_COLOR
-        seg.Size         = Vector3.new(RADIUS * 2 * math.pi / SEGMENTS * 0.9, 0.15, 0.15)
-        seg.Parent       = circleModel
-    end
-end
-
-local function updateCircle(center, transp)
-    if not circleModel or not circleModel.Parent then ensureCircle() end
-    local SEGMENTS = 40
-    local RADIUS   = 3.5
-    local children = circleModel:GetChildren()
-    local currentColor = States.TelepearlESP.Color or CIRCLE_COLOR
-
-    for i, seg in ipairs(children) do
-        local angle = (i / SEGMENTS) * math.pi * 2
-        local x     = center.X + RADIUS * math.cos(angle)
-        local z     = center.Z + RADIUS * math.sin(angle)
-        local nextA = ((i) / SEGMENTS) * math.pi * 2
-        local midA  = (angle + nextA) / 2
-        seg.CFrame  = CFrame.new(x, center.Y + 0.1, z)
-                    * CFrame.Angles(0, -(midA + math.pi/2), 0)
-        seg.Transparency = transp
-        seg.Color = currentColor
-    end
-end
-
-local function hideCircle()
-    if circleModel then
-        for _, seg in ipairs(circleModel:GetChildren()) do
-            -- Прячем в небо
-            seg.Position = Vector3.new(0, 9999, 0)
-        end
-    end
-end
-
--- ── Иконка над местом приземления ─────────────────────────
-local function ensureIcon()
-    if iconBillboard and iconBillboard.Parent then return end
-
-    local anchor = Instance.new("Part")
-    anchor.Name        = "PearlESPIconAnchor"
-    anchor.Anchored    = true
-    anchor.CanCollide  = false
-    anchor.CanQuery    = false
-    anchor.CanTouch    = false
-    anchor.CastShadow  = false
-    anchor.Size        = Vector3.new(0.1, 0.1, 0.1)
-    anchor.Transparency = 1
-    anchor.Parent      = Workspace
-
-    iconBillboard = Instance.new("BillboardGui")
-    iconBillboard.Name          = "PearlESPIcon"
-    iconBillboard.Size          = UDim2.new(0, 32, 0, 32) -- Сделано меньше для аккуратности
-    iconBillboard.StudsOffset   = Vector3.new(0, 2, 0)
-    iconBillboard.AlwaysOnTop   = true
-    iconBillboard.Adornee       = anchor
-    iconBillboard.Parent        = anchor
-
-    local img = Instance.new("ImageLabel")
-    img.Name              = "Icon"
-    img.Size              = UDim2.new(1, 0, 1, 0)
-    img.BackgroundTransparency = 1
-    img.Image             = PEARL_ICON
-    img.Parent            = iconBillboard
-
-    iconBillboard:SetAttribute("AnchorRef", anchor)
-end
-
-local function updateIcon(pos, transp)
-    if not iconBillboard or not iconBillboard.Parent then ensureIcon() end
-    iconBillboard.Enabled = true -- Включаем отображение
-
-    local anchor = iconBillboard:GetAttribute("AnchorRef")
-            or Workspace:FindFirstChild("PearlESPIconAnchor")
-    if anchor then
-        anchor.Position = pos + Vector3.new(0, 2, 0)
-    end
-    local img = iconBillboard:FindFirstChild("Icon")
-    if img then
-        img.ImageTransparency = transp
-    end
-end
-
-local function hideIcon()
-    -- Вместо перемещения вниз карты просто отключаем Gui
-    if iconBillboard then
-        iconBillboard.Enabled = false
-    end
-end
+-- Таблица для хранения всех активных траекторий
+local activeESPFolders = {}
+local watcherConn  = nil
 
 -- ── Расчёт траектории ─────────────────────────────────────
 local function computeTrajectory(origin, velocity)
@@ -190,13 +49,21 @@ local function findLanding(pts, originY)
     return nil
 end
 
--- ── Размещение точек с заданным шагом ─────────────────────
-local function placeDots(pts, spacingStuds)
-    local spacing = math.max(0.5, spacingStuds)
-    local dotIdx  = 1
+-- ── Отрисовка ESP для ОДНОГО жемчуга ──────────────────────
+local function createPearlESP(pts, landingPos, s)
+    -- Создаем уникальную папку для этого броска
+    local folder = Instance.new("Folder")
+    folder.Name = "TelepearlESP_Instance"
+    folder.Parent = Workspace
+    table.insert(activeESPFolders, folder)
+
+    local currentColor = s.Color or LINE_COLOR
+
+    -- 1. Точки (Траектория)
+    local spacing = math.max(0.5, s.DotSpacing or 5)
     local accDist = 0
     local tooMany = false
-    local currentColor = States.TelepearlESP.Color or LINE_COLOR
+    local dotCount = 0
 
     for i = 2, #pts do
         if tooMany then break end
@@ -211,56 +78,124 @@ local function placeDots(pts, spacingStuds)
             local frac = 1 - (accDist / seg)
             local pos  = prev + (curr - prev) * frac
 
-            local dot = getOrCreateDot(dotIdx)
-            dot.Position = pos
-            dot.Color = currentColor
-            dotIdx = dotIdx + 1
+            local p = Instance.new("Part")
+            p.Anchored = true
+            p.CanCollide = false
+            p.CanQuery = false
+            p.CanTouch = false
+            p.CastShadow = false
+            p.Shape = Enum.PartType.Ball
+            p.Material = Enum.Material.Neon
+            p.Color = currentColor
+            p.Size = Vector3.new(0.25, 0.25, 0.25)
+            p.Position = pos
+            p.Parent = folder
 
-            if dotIdx > 300 then
+            dotCount = dotCount + 1
+            if dotCount > 300 then
                 tooMany = true
                 break
             end
         end
     end
 
-    hideDots(dotIdx)
-    return dotIdx - 1
+    -- 2. Кольцо и Иконка (Место приземления)
+    if landingPos then
+        local circleTransp = (s.CircleTransp or 30) / 100
+        local iconTransp   = (s.IconTransp or 30) / 100
+
+        -- Создаем кольцо
+        local SEGMENTS = 40
+        local RADIUS   = 3.5
+        for i = 1, SEGMENTS do
+            local seg = Instance.new("Part")
+            seg.Anchored     = true
+            seg.CanCollide   = false
+            seg.CanQuery     = false
+            seg.CanTouch     = false
+            seg.CastShadow   = false
+            seg.Shape        = Enum.PartType.Block
+            seg.Material     = Enum.Material.Neon
+            seg.Color        = currentColor
+            seg.Size         = Vector3.new(RADIUS * 2 * math.pi / SEGMENTS * 0.9, 0.15, 0.15)
+            
+            local angle = (i / SEGMENTS) * math.pi * 2
+            local x     = landingPos.X + RADIUS * math.cos(angle)
+            local z     = landingPos.Z + RADIUS * math.sin(angle)
+            local nextA = ((i) / SEGMENTS) * math.pi * 2
+            local midA  = (angle + nextA) / 2
+            seg.CFrame  = CFrame.new(x, landingPos.Y + 0.1, z)
+                        * CFrame.Angles(0, -(midA + math.pi/2), 0)
+            seg.Transparency = circleTransp
+            seg.Parent       = folder
+        end
+
+        -- Создаем иконку
+        local anchor = Instance.new("Part")
+        anchor.Name        = "PearlESPIconAnchor"
+        anchor.Anchored    = true
+        anchor.CanCollide  = false
+        anchor.CanQuery    = false
+        anchor.CanTouch    = false
+        anchor.CastShadow  = false
+        anchor.Size        = Vector3.new(0.1, 0.1, 0.1)
+        anchor.Transparency = 1
+        anchor.Position    = landingPos + Vector3.new(0, 2, 0)
+        anchor.Parent      = folder
+
+        local iconBillboard = Instance.new("BillboardGui")
+        iconBillboard.Size          = UDim2.new(0, 32, 0, 32)
+        iconBillboard.StudsOffset   = Vector3.new(0, 2, 0)
+        iconBillboard.AlwaysOnTop   = true
+        iconBillboard.Adornee       = anchor
+        iconBillboard.Parent        = anchor
+
+        local img = Instance.new("ImageLabel")
+        img.Size              = UDim2.new(1, 0, 1, 0)
+        img.BackgroundTransparency = 1
+        img.ImageTransparency = iconTransp
+        img.Image             = PEARL_ICON
+        img.Parent            = iconBillboard
+    end
+
+    return folder
 end
 
--- ── Главный render-цикл ───────────────────────────────────
-local renderConn   = nil
-local watcherConn  = nil
-local activePearl  = nil
-local pearlOrigin  = nil
-local pearlVel     = nil
-
+-- ── Главный обработчик ────────────────────────────────────
 local function onPearlSpawned(handle)
     task.defer(function()
         if not handle.Parent then return end
-        activePearl = handle
-        pearlOrigin = handle.Position
-        pearlVel    = handle.AssemblyLinearVelocity
+        
+        local origin = handle.Position
+        local vel    = handle.AssemblyLinearVelocity
+        local s      = States.TelepearlESP
 
-        local s = States.TelepearlESP
-        local pts = computeTrajectory(pearlOrigin, pearlVel)
+        -- Считаем
+        local pts     = computeTrajectory(origin, vel)
+        local landing = findLanding(pts, origin.Y)
 
-        placeDots(pts, s.DotSpacing or 5)
+        -- Рисуем уникальную траекторию
+        local espFolder = createPearlESP(pts, landing, s)
 
-        local landing = findLanding(pts, pearlOrigin.Y)
-        if landing then
-            updateCircle(landing, (s.CircleTransp or 30) / 100)
-            updateIcon(landing, (s.IconTransp or 30) / 100)
-        end
+        -- Ждем уничтожения ЭТОГО конкретного жемчуга
+        local conn
+        conn = handle.AncestryChanged:Connect(function(_, newParent)
+            if not newParent then
+                if conn then conn:Disconnect() end
+                
+                -- Запускаем таймер из UI
+                local delayTime = s.Duration or 1
+                task.delay(delayTime, function()
+                    if espFolder and espFolder.Parent then
+                        espFolder:Destroy()
+                    end
+                    -- Убираем из трекера активных папок
+                    local idx = table.find(activeESPFolders, espFolder)
+                    if idx then table.remove(activeESPFolders, idx) end
+                end)
+            end
+        end)
     end)
-end
-
-local function clearAll()
-    hideDots(1)
-    hideCircle()
-    hideIcon()
-    activePearl = nil
-    pearlOrigin = nil
-    pearlVel    = nil
 end
 
 -- ── Watcher — ловим Workspace.telepearl ───────────────────
@@ -283,17 +218,10 @@ local function startWatcher()
                     end
                 end)
             end
-
-            obj.AncestryChanged:Connect(function(_, newParent)
-                if not newParent then
-                    -- Получаем время задержки из ползунка (по умолчанию 1 сек, если стейт не загрузился)
-                    local delayTime = States.TelepearlESP.Duration or 1
-                    task.delay(delayTime, clearAll)
-                end
-            end)
         end
     end)
 end
+
 local function stopWatcher()
     if watcherConn then
         watcherConn:Disconnect()
@@ -301,17 +229,14 @@ local function stopWatcher()
     end
 end
 
--- ── Destroy всё при выключении ────────────────────────────
+-- Удаляем ВСЕ нарисованные траектории при выключении функции
 local function destroyAllObjects()
-    for _, d in ipairs(dotPool) do
-        if d and d.Parent then d:Destroy() end
+    for _, folder in ipairs(activeESPFolders) do
+        if folder and folder.Parent then
+            folder:Destroy()
+        end
     end
-    dotPool = {}
-    if circleModel and circleModel.Parent then circleModel:Destroy() end
-    circleModel = nil
-    local anchor = Workspace:FindFirstChild("PearlESPIconAnchor")
-    if anchor then anchor:Destroy() end
-    iconBillboard = nil
+    table.clear(activeESPFolders)
 end
 
 -- ── Публичный API ──────────────────────────────────────────
@@ -319,11 +244,7 @@ function Mega.Features.TelepearlESP.SetEnabled(state)
     States.TelepearlESP.Enabled = state
 
     if state then
-        ensureCircle()
-        ensureIcon()
         startWatcher()
-        hideCircle()
-        hideIcon()
     else
         stopWatcher()
         destroyAllObjects()
