@@ -278,6 +278,10 @@ Mega.States = {
             Enabled = false,
             Keybind = "X",
             Target = nil
+        },
+        AutoHonor = {
+            Enabled = false,
+            Target = "Teammate and Enemy"
         }
     },
     Beekeeper = {
