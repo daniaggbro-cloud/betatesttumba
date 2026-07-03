@@ -166,8 +166,6 @@ UI.CreateToggle(TabFrame, "toggle_trap_esp", "Render.TrapESP", function(state)
 end)
 --#endregion
 
-
-
 --#region -- Telepearl ESP
 do
     -- Безопасная инициализация ключей, если таблица уже существует, но пустая
@@ -211,6 +209,3 @@ do
     })
 end
 --#endregion
-
-
-
