@@ -286,14 +286,14 @@ local function startWatcher()
 
             obj.AncestryChanged:Connect(function(_, newParent)
                 if not newParent then
-                    -- Задержка скрытия снижена с 0.5 до 0.1 секунды
-                    task.delay(0.1, clearAll)
+                    -- Получаем время задержки из ползунка (по умолчанию 1 сек, если стейт не загрузился)
+                    local delayTime = States.TelepearlESP.Duration or 1
+                    task.delay(delayTime, clearAll)
                 end
             end)
         end
     end)
 end
-
 local function stopWatcher()
     if watcherConn then
         watcherConn:Disconnect()
