@@ -87,8 +87,6 @@ local function updateCircle(center, transp)
     local SEGMENTS = 40
     local RADIUS   = 3.5
     local children = circleModel:GetChildren()
-    local currentColor = States.TelepearlESP.Color or CIRCLE_COLOR -- Получаем цвет из UI
-
     for i, seg in ipairs(children) do
         local angle = (i / SEGMENTS) * math.pi * 2
         local x     = center.X + RADIUS * math.cos(angle)
@@ -98,7 +96,14 @@ local function updateCircle(center, transp)
         seg.CFrame  = CFrame.new(x, center.Y + 0.1, z)
                     * CFrame.Angles(0, -(midA + math.pi/2), 0)
         seg.Transparency = transp
-        seg.Color = currentColor -- Обновляем цвет кольца
+    end
+end
+
+local function hideCircle()
+    if circleModel then
+        for _, seg in ipairs(circleModel:GetChildren()) do
+            seg.Position = Vector3.new(0, -9999, 0)
+        end
     end
 end
 
@@ -192,7 +197,6 @@ local function placeDots(pts, spacingStuds)
     local dotIdx  = 1
     local accDist = 0
     local tooMany = false
-    local currentColor = States.TelepearlESP.Color or LINE_COLOR -- Получаем цвет из UI
 
     for i = 2, #pts do
         if tooMany then break end
@@ -209,7 +213,6 @@ local function placeDots(pts, spacingStuds)
 
             local dot = getOrCreateDot(dotIdx)
             dot.Position = pos
-            dot.Color = currentColor -- Динамически применяем цвет
             dotIdx = dotIdx + 1
 
             if dotIdx > 300 then

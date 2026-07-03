@@ -170,25 +170,13 @@ end)
 
 --#region -- Telepearl ESP
 do
-    -- 1. Инициализируем дефолтные значения до создания UI элементов
-    if Mega.States.TelepearlESP == nil then
-        Mega.States.TelepearlESP = {
-            Enabled = false,
-            DotSpacing = 5,
-            CircleTransp = 30,
-            IconTransp = 30,
-            Color = Color3.fromRGB(160, 60, 255)
-        }
-    end
-
     local loc = Mega.Localization.Strings
     if not loc["section_telepearl_esp"] then
         loc["section_telepearl_esp"]      = { ru = "Telepearl ESP",                en = "Telepearl ESP" }
         loc["toggle_telepearl_esp"]       = { ru = "Telepearl ESP",                en = "Telepearl ESP" }
-        loc["slider_pearl_dot_spacing"]   = { ru = "Расстояние между точками",     en = "Dot Spacing" }
+        loc["slider_pearl_dot_spacing"]   = { ru = "Расстояние между точками", en = "Dot Spacing" }
         loc["slider_pearl_circle_transp"] = { ru = "Прозрачность круга",           en = "Circle Transparency" }
         loc["slider_pearl_icon_transp"]   = { ru = "Прозрачность иконки",          en = "Icon Transparency" }
-        loc["button_pearl_color"]         = { ru = "Цвет траектории и круга",      en = "ESP Color" }
     end
 
     UI.CreateSection(TabFrame, "section_telepearl_esp")
@@ -204,10 +192,6 @@ do
         UI.CreateSlider(nil, "slider_pearl_dot_spacing",   "TelepearlESP.DotSpacing",   1,  20),
         UI.CreateSlider(nil, "slider_pearl_circle_transp", "TelepearlESP.CircleTransp", 0, 100),
         UI.CreateSlider(nil, "slider_pearl_icon_transp",   "TelepearlESP.IconTransp",   0, 100),
-        -- Добавляем ColorPicker для жемчуга
-        CreateColorPicker(nil, "button_pearl_color", Mega.States.TelepearlESP.Color, function(col)
-            Mega.States.TelepearlESP.Color = col
-        end)
     })
 end
 --#endregion
