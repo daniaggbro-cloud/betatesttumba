@@ -1,4 +1,4 @@
--- gui/tabs/esp.lua
+﻿-- gui/tabs/esp.lua
 -- Content for the "ESP" tab
 
 local tabKey = "tab_esp"
@@ -165,4 +165,36 @@ UI.CreateToggle(TabFrame, "toggle_trap_esp", "Render.TrapESP", function(state)
     end
 end)
 --#endregion
+
+
+
+--#region -- Telepearl ESP
+do
+    local loc = Mega.Localization.Strings
+    if not loc["section_telepearl_esp"] then
+        loc["section_telepearl_esp"]      = { ru = "Telepearl ESP",                en = "Telepearl ESP" }
+        loc["toggle_telepearl_esp"]       = { ru = "Telepearl ESP",                en = "Telepearl ESP" }
+        loc["slider_pearl_dot_spacing"]   = { ru = "Расстояние между точками", en = "Dot Spacing" }
+        loc["slider_pearl_circle_transp"] = { ru = "Прозрачность круга",           en = "Circle Transparency" }
+        loc["slider_pearl_icon_transp"]   = { ru = "Прозрачность иконки",          en = "Icon Transparency" }
+    end
+
+    UI.CreateSection(TabFrame, "section_telepearl_esp")
+
+    UI.CreateToggleWithSettings(TabFrame, "toggle_telepearl_esp", "TelepearlESP.Enabled", function(state)
+        if not Mega.Features.TelepearlESP then
+            Mega.LoadModule("features/telepearl_predict.lua")
+        end
+        if Mega.Features.TelepearlESP and Mega.Features.TelepearlESP.SetEnabled then
+            Mega.Features.TelepearlESP.SetEnabled(state)
+        end
+    end, {
+        UI.CreateSlider(nil, "slider_pearl_dot_spacing",   "TelepearlESP.DotSpacing",   1,  20),
+        UI.CreateSlider(nil, "slider_pearl_circle_transp", "TelepearlESP.CircleTransp", 0, 100),
+        UI.CreateSlider(nil, "slider_pearl_icon_transp",   "TelepearlESP.IconTransp",   0, 100),
+    })
+end
+--#endregion
+
+
 

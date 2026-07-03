@@ -228,6 +228,12 @@ Mega.States = {
         BedPlatesBackground = true,
         BedPlatesCounter = true
     },
+    TelepearlESP = {
+        Enabled      = false,
+        DotSpacing   = 3,   -- расстояние между точками (1–20 studs)
+        CircleTransp = 30,  -- прозрачность круга 0–100 (slider)
+        IconTransp   = 30,  -- прозрачность иконки 0–100 (slider)
+    },
     Utility = {
         TrapDisabler = false,
         StaffDetector = {

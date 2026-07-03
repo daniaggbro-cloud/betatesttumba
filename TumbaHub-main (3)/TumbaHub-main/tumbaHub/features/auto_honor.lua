@@ -21,13 +21,19 @@ local teamChangeConnection = nil
 local lastPlayingTeam = nil
 local cachedRemote = nil  -- Кэш remote чтобы не искать каждый раз
 
--- Рекурсивно ищет _NetManaged в rbxts_include (как в dumper.lua)
-local function findNetManaged(parent)
+-- Рекурсивно ищет _NetManaged через ВСЕ дочерние объекты
+-- (путь: rbxts_include/node_modules/@rbxts/net/out/_NetManaged)
+-- Узлы могут быть Folder, ModuleScript или других типов
+local function findNetManaged(parent, depth)
+    depth = depth or 0
+    if depth > 10 then return nil end
     local found = parent:FindFirstChild("_NetManaged")
     if found then return found end
     for _, child in pairs(parent:GetChildren()) do
-        if child:IsA("Folder") then
-            local res = findNetManaged(child)
+        -- Ищем во всех контейнерах, не только Folder
+        if not child:IsA("BasePart") and not child:IsA("LocalScript")
+        and not child:IsA("Script") and not child:IsA("Animation") then
+            local res = findNetManaged(child, depth + 1)
             if res then return res end
         end
     end
