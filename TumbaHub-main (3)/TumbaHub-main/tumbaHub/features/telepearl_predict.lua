@@ -1,10 +1,5 @@
 -- features/telepearl_predict.lua
 -- Telepearl ESP — визуализация траектории и места приземления
---
--- Подтверждённые данные (живой перехват):
---   Workspace object: Workspace.telepearl.Handle [MeshPart]
---   launchVelocity:   120 studs/sec (observed: 119.7)
---   gravity:          70 studs/sec² (кастомная BedWars)
 
 if not Mega.Features then Mega.Features = {} end
 Mega.Features.TelepearlESP = {}
@@ -14,8 +9,6 @@ local Workspace    = game:GetService("Workspace")
 local Debris       = game:GetService("Debris")
 
 local States = Mega.States
--- States инициализируются в settings.lua (TelepearlESP)
--- CircleTransp / IconTransp хранятся как 0–100 (int slider), делим на 100 при использовании
 
 local GRAVITY       = 70      -- studs/sec² (кастомная)
 local LINE_COLOR    = Color3.fromRGB(160, 60, 255)   -- фиолетовый
@@ -51,7 +44,8 @@ end
 local function hideDots(from)
     for i = from, #dotPool do
         if dotPool[i] then
-            dotPool[i].Position = Vector3.new(0, -9999, 0)
+            -- Прячем в небо, чтобы избежать FallenPartsDestroyHeight
+            dotPool[i].Position = Vector3.new(0, 9999, 0)
         end
     end
 end
@@ -87,6 +81,8 @@ local function updateCircle(center, transp)
     local SEGMENTS = 40
     local RADIUS   = 3.5
     local children = circleModel:GetChildren()
+    local currentColor = States.TelepearlESP.Color or CIRCLE_COLOR
+
     for i, seg in ipairs(children) do
         local angle = (i / SEGMENTS) * math.pi * 2
         local x     = center.X + RADIUS * math.cos(angle)
@@ -96,13 +92,15 @@ local function updateCircle(center, transp)
         seg.CFrame  = CFrame.new(x, center.Y + 0.1, z)
                     * CFrame.Angles(0, -(midA + math.pi/2), 0)
         seg.Transparency = transp
+        seg.Color = currentColor
     end
 end
 
 local function hideCircle()
     if circleModel then
         for _, seg in ipairs(circleModel:GetChildren()) do
-            seg.Position = Vector3.new(0, -9999, 0)
+            -- Прячем в небо
+            seg.Position = Vector3.new(0, 9999, 0)
         end
     end
 end
@@ -124,7 +122,7 @@ local function ensureIcon()
 
     iconBillboard = Instance.new("BillboardGui")
     iconBillboard.Name          = "PearlESPIcon"
-    iconBillboard.Size          = UDim2.new(0, 64, 0, 64)
+    iconBillboard.Size          = UDim2.new(0, 32, 0, 32) -- Сделано меньше для аккуратности
     iconBillboard.StudsOffset   = Vector3.new(0, 2, 0)
     iconBillboard.AlwaysOnTop   = true
     iconBillboard.Adornee       = anchor
@@ -137,12 +135,13 @@ local function ensureIcon()
     img.Image             = PEARL_ICON
     img.Parent            = iconBillboard
 
-    -- Сохраняем ссылку на anchor в модели
     iconBillboard:SetAttribute("AnchorRef", anchor)
 end
 
 local function updateIcon(pos, transp)
     if not iconBillboard or not iconBillboard.Parent then ensureIcon() end
+    iconBillboard.Enabled = true -- Включаем отображение
+
     local anchor = iconBillboard:GetAttribute("AnchorRef")
             or Workspace:FindFirstChild("PearlESPIconAnchor")
     if anchor then
@@ -155,9 +154,9 @@ local function updateIcon(pos, transp)
 end
 
 local function hideIcon()
+    -- Вместо перемещения вниз карты просто отключаем Gui
     if iconBillboard then
-        local anchor = Workspace:FindFirstChild("PearlESPIconAnchor")
-        if anchor then anchor.Position = Vector3.new(0, -9999, 0) end
+        iconBillboard.Enabled = false
     end
 end
 
@@ -197,6 +196,7 @@ local function placeDots(pts, spacingStuds)
     local dotIdx  = 1
     local accDist = 0
     local tooMany = false
+    local currentColor = States.TelepearlESP.Color or LINE_COLOR
 
     for i = 2, #pts do
         if tooMany then break end
@@ -213,6 +213,7 @@ local function placeDots(pts, spacingStuds)
 
             local dot = getOrCreateDot(dotIdx)
             dot.Position = pos
+            dot.Color = currentColor
             dotIdx = dotIdx + 1
 
             if dotIdx > 300 then
@@ -229,9 +230,9 @@ end
 -- ── Главный render-цикл ───────────────────────────────────
 local renderConn   = nil
 local watcherConn  = nil
-local activePearl  = nil   -- текущий Handle жемчуга
-local pearlOrigin  = nil   -- позиция при рождении
-local pearlVel     = nil   -- velocity при рождении
+local activePearl  = nil
+local pearlOrigin  = nil
+local pearlVel     = nil
 
 local function onPearlSpawned(handle)
     task.defer(function()
@@ -240,14 +241,11 @@ local function onPearlSpawned(handle)
         pearlOrigin = handle.Position
         pearlVel    = handle.AssemblyLinearVelocity
 
-        -- Рассчитываем траекторию один раз при появлении
         local s = States.TelepearlESP
         local pts = computeTrajectory(pearlOrigin, pearlVel)
 
-        -- Точки (DotSpacing = studs int)
-        placeDots(pts, s.DotSpacing)
+        placeDots(pts, s.DotSpacing or 5)
 
-        -- Landing (CircleTransp / IconTransp — 0..100 int → 0..1 float)
         local landing = findLanding(pts, pearlOrigin.Y)
         if landing then
             updateCircle(landing, (s.CircleTransp or 30) / 100)
@@ -272,7 +270,6 @@ local function startWatcher()
     watcherConn = Workspace.DescendantAdded:Connect(function(obj)
         if not States.TelepearlESP.Enabled then return end
 
-        -- Model "telepearl" или её Handle
         if obj.Name == "telepearl" and obj:IsA("Model") then
             local h = obj:FindFirstChild("Handle")
             if h then
@@ -287,11 +284,10 @@ local function startWatcher()
                 end)
             end
 
-            -- Очищаем когда pearl исчезает
             obj.AncestryChanged:Connect(function(_, newParent)
                 if not newParent then
-                    -- pearl уничтожен — убираем через полсекунды
-                    task.delay(0.5, clearAll)
+                    -- Задержка скрытия снижена с 0.5 до 0.1 секунды
+                    task.delay(0.1, clearAll)
                 end
             end)
         end
@@ -328,15 +324,12 @@ function Mega.Features.TelepearlESP.SetEnabled(state)
         startWatcher()
         hideCircle()
         hideIcon()
-        print("[TumbaHub] TelepearlESP: Enabled")
     else
         stopWatcher()
         destroyAllObjects()
-        print("[TumbaHub] TelepearlESP: Disabled")
     end
 end
 
--- Восстанавливаем при загрузке
 if States.TelepearlESP.Enabled then
     Mega.Features.TelepearlESP.SetEnabled(true)
 end
