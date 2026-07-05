@@ -293,3 +293,24 @@ end, {
     UI.CreateToggle(nil, "toggle_autodavey_legitswitch", "Combat.AutoDavey.LegitSwitch")
 })
 --#endregion
+
+--#region -- Raven
+do
+    local loc = Mega.Localization.Strings
+    if not loc["section_raven_farm"] then
+        loc["section_raven_farm"] = { ru = "Raven", en = "Raven" }
+        loc["toggle_raven_antifog"] = { ru = "Убрать чёрный туман", en = "Remove Black Fog" }
+    end
+
+    UI.CreateSection(TabFrame, "section_raven_farm")
+    
+    UI.CreateToggle(TabFrame, "toggle_raven_antifog", "RavenESP.RemoveFog", function(state)
+        if not Mega.Features.RavenAntiFog then
+            Mega.LoadModule("features/raven_antifog.lua")
+        end
+        if Mega.Features.RavenAntiFog and Mega.Features.RavenAntiFog.SetEnabled then
+            Mega.Features.RavenAntiFog.SetEnabled(state)
+        end
+    end)
+end
+--#endregion

@@ -166,39 +166,6 @@ function Mega.Features.RavenESP.SetEnabled(state)
             end)
         end
         
-        if not connections.RavenAntiFog then
-            connections.RavenAntiFog = Services.RunService.RenderStepped:Connect(function()
-                if RavenESPState.RemoveFog then
-                    -- 1. Сбрасываем FogEnd, если он слишком близко
-                    if game.Lighting.FogEnd < 500 then
-                        game.Lighting.FogEnd = 100000
-                    end
-                    -- 2. Сбрасываем ColorCorrection, если он делает экран чёрным
-                    for _, effect in ipairs(game.Lighting:GetChildren()) do
-                        if effect:IsA("ColorCorrectionEffect") then
-                            if effect.Brightness < 0 or effect.TintColor == Color3.new(0,0,0) then
-                                effect.Brightness = 0
-                                effect.TintColor = Color3.new(1,1,1)
-                            end
-                        end
-                    end
-                    -- 3. Ищем и скрываем черные UI-рамки на весь экран (Vignette)
-                    local lp = game.Players.LocalPlayer
-                    if lp and lp:FindFirstChild("PlayerGui") then
-                        for _, gui in ipairs(lp.PlayerGui:GetDescendants()) do
-                            if gui:IsA("ImageLabel") or gui:IsA("Frame") then
-                                if gui.Visible and gui.AbsoluteSize.X > 800 and gui.AbsoluteSize.Y > 500 then
-                                    if gui.BackgroundColor3 == Color3.new(0,0,0) or (gui:IsA("ImageLabel") and gui.ImageColor3 == Color3.new(0,0,0)) then
-                                        -- Если это черный фрейм на весь экран, скрываем его
-                                        gui.Visible = false
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
     else
         ClearRavenESP()
     end
