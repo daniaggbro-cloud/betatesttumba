@@ -24,21 +24,7 @@ ContentLayout.Padding = UDim.new(0, 8)
 -- Add this frame to the global list of tab frames
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
---#region -- Updates Section
-UI.CreateSection(TabFrame, "section_updates_list")
 
-local UpdateText = Instance.new("TextLabel")
-UpdateText.Size = UDim2.new(0.9, 0, 0, 80)
-UpdateText.BackgroundTransparency = 1
-UpdateText.Text = GetText("update_text_v5_1") .. "\n• [Система] Код полностью реструктурирован для обхода лимита переменных."
-UpdateText.TextColor3 = Mega.Settings.Menu.TextColor
-UpdateText.TextSize = 13
-UpdateText.Font = Enum.Font.Gotham
-UpdateText.TextXAlignment = Enum.TextXAlignment.Left
-UpdateText.TextYAlignment = Enum.TextYAlignment.Top
-UpdateText.TextWrapped = true
-UpdateText.Parent = TabFrame
---#endregion
 
 --#region -- Status Section
 UI.CreateSection(TabFrame, "section_status")
@@ -81,34 +67,7 @@ UI.CreateButton(TabFrame, "button_speed_toggle", function()
 end)
 --#endregion
 
---#region -- Stats
-UI.CreateSection(TabFrame, "section_stats")
 
-local StatsLabel = Instance.new("TextLabel")
-StatsLabel.Size = UDim2.new(0.9, 0, 0, 100)
-StatsLabel.BackgroundTransparency = 1
-StatsLabel.TextColor3 = Mega.Settings.Menu.TextColor
-StatsLabel.TextSize = 14
-StatsLabel.Font = Enum.Font.Gotham
-StatsLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatsLabel.TextYAlignment = Enum.TextYAlignment.Top
-StatsLabel.Parent = TabFrame
-
-local lastStatsUpdate = 0
-Mega.Objects.Connections.HomeStatsUpdate = Mega.Services.RunService.Stepped:Connect(function()
-    if TabFrame.Visible then
-        local now = tick()
-        if now - lastStatsUpdate >= 1 then
-            lastStatsUpdate = now
-            StatsLabel.Text = GetText("stats_label", 
-                Mega.Database.Stats.Kills, 
-                Mega.Database.Stats.Deaths, 
-                math.floor(Mega.Database.Stats.PlayTime / 60)
-            )
-        end
-    end
-end)
---#endregion
 
 --#region -- Discord Section
 local loc = Mega.Localization.Strings
