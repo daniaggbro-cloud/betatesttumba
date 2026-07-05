@@ -123,7 +123,7 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback, iconKey, cla
     
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = textKey .. "Toggle"
-    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 35)
+    ToggleFrame.Size = UDim2.new(0.9, 0, 0, 45)
     ToggleFrame.BackgroundTransparency = 1
     ToggleFrame.Parent = parent
 
@@ -133,24 +133,24 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback, iconKey, cla
     if iconKey and Mega.Images and Mega.Images[iconKey] then
         local IconLabel = Instance.new("ImageLabel")
         IconLabel.Name = "KitIcon"
-        IconLabel.Size = UDim2.new(0, 18, 0, 18)
-        IconLabel.Position = UDim2.new(0, nextX, 0.5, -9)
+        IconLabel.Size = UDim2.new(0, 36, 0, 36)
+        IconLabel.Position = UDim2.new(0, nextX, 0.5, -18)
         IconLabel.BackgroundTransparency = 1
         IconLabel.Image = Mega.Images[iconKey]
         IconLabel.Parent = ToggleFrame
-        nextX = nextX + 22
+        nextX = nextX + 40
         paddingOffset = nextX
     end
     
     if classIconKey and Mega.Images and Mega.Images[classIconKey] then
         local ClassIcon = Instance.new("ImageLabel")
         ClassIcon.Name = "ClassIcon"
-        ClassIcon.Size = UDim2.new(0, 14, 0, 14)
-        ClassIcon.Position = UDim2.new(0, nextX, 0.5, -7)
+        ClassIcon.Size = UDim2.new(0, 28, 0, 28)
+        ClassIcon.Position = UDim2.new(0, nextX, 0.5, -14)
         ClassIcon.BackgroundTransparency = 1
         ClassIcon.Image = Mega.Images[classIconKey]
         ClassIcon.Parent = ToggleFrame
-        nextX = nextX + 18
+        nextX = nextX + 32
         paddingOffset = nextX
     end
 
@@ -664,7 +664,7 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     -- This is the main container for the whole component, its height will be animated
     local ComponentFrame = Instance.new("Frame")
     ComponentFrame.Name = textKey .. "Component"
-    ComponentFrame.Size = UDim2.new(0.95, 0, 0, 40) -- Initial height
+    ComponentFrame.Size = UDim2.new(0.95, 0, 0, 45) -- Initial height
     ComponentFrame.BackgroundTransparency = 1
     ComponentFrame.ClipsDescendants = true
     ComponentFrame.Parent = parent
@@ -675,7 +675,7 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     -- Frame for the main toggle bar
     local ControlFrame = Instance.new("Frame")
     ControlFrame.Name = "ControlFrame"
-    ControlFrame.Size = UDim2.new(1, 0, 0, 35)
+    ControlFrame.Size = UDim2.new(1, 0, 0, 45)
     ControlFrame.BackgroundTransparency = 1
     ControlFrame.Parent = ComponentFrame
 

@@ -120,10 +120,10 @@ Mega.Images = {
 
 
     -- Kit Classes (Fighter, Economy, Defender, etc.)
-    ["class_fighter"] = "rbxassetid://6875480974",
-    ["class_economy"] = "rbxassetid://6875481046",
-    ["class_defender"] = "rbxassetid://7343272003",
-    ["class_support"] = "rbxassetid://6850538075",
-    ["class_movement"] = "rbxassetid://6850538161",
-    ["class_ranged"] = "rbxassetid://6850537969"
+    ["class_fighter"] = "rbxassetid://113143853424714",
+    ["class_economy"] = "rbxassetid://8273832966",
+    ["class_defender"] = "rbxassetid://17017846628",
+    ["class_support"] = "rbxassetid://9135829842",
+    ["class_movement"] = "rbxassetid://7813712527",
+    ["class_ranged"] = "rbxassetid://7343632287"
 }
