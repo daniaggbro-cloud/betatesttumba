@@ -183,7 +183,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_alchemist", "Misc.Alchemist.Enable
 end, {
     UI.CreateToggle(nil, "toggle_alchemist_esp", "Misc.Alchemist.ESP"),
     UI.CreateToggle(nil, "toggle_alchemist_autocollect", "Misc.Alchemist.AutoCollect")
-}, "alchemist", "class_economy")
+}, "alchemist", "class_support")
 --#endregion
 
 --#region -- Noelle
@@ -264,7 +264,7 @@ end, {
     UI.CreateToggle(nil, "toggle_autodavey_jump", "Combat.AutoDavey.JumpOnImpact"),
     UI.CreateToggle(nil, "toggle_autodavey_break", "Combat.AutoDavey.BreakOnImpact"),
     UI.CreateToggle(nil, "toggle_autodavey_legitswitch", "Combat.AutoDavey.LegitSwitch")
-}, "pirate_davey", "class_fighter")
+}, "pirate_davey", "class_destroyer")
 --#endregion
 
 --#region -- Raven
@@ -303,6 +303,6 @@ do
                 Mega.Features.RavenAntiFog.SetEnabled(state)
             end
         end)
-    }, "raven", "class_destroyer")
+    }, "raven", "class_ranged")
 end
 --#endregion
