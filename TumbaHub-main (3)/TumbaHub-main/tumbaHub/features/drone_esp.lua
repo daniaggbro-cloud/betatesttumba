@@ -1,4 +1,4 @@
-﻿-- features/drone_esp.lua
+-- features/drone_esp.lua
 -- Drone ESP logic
 
 Mega.Features.DroneESP = {}
