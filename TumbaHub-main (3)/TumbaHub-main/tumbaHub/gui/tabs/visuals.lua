@@ -23,29 +23,34 @@ ContentLayout.Padding = UDim.new(0, 8)
 
 Mega.Objects.TabFrames[tabKey] = TabFrame
 
--- Store original lighting values
-local originalFogEnd = Lighting.FogEnd
-local originalBrightness = Lighting.Brightness
-local originalClockTime = Lighting.ClockTime
-local originalGlobalShadows = Lighting.GlobalShadows
+task.spawn(function()
+    pcall(function() Mega.LoadModule("features/environment_visuals.lua") end)
+end)
 
 --#region -- Environment Visuals
 UI.CreateSection(TabFrame, "section_visuals_env")
 
 UI.CreateToggle(TabFrame, "toggle_nofog", "Visuals.NoFog", function(state)
-    Lighting.FogEnd = state and 100000 or originalFogEnd
+    Mega.States.Visuals.NoFog = state
 end)
 
 UI.CreateToggle(TabFrame, "toggle_fullbright", "Visuals.FullBright", function(state)
-    Lighting.Brightness = state and 2 or originalBrightness
+    Mega.States.Visuals.FullBright = state
+    if not state then
+        Lighting.Ambient = Color3.new(0, 0, 0)
+        Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+    end
 end)
 
 UI.CreateToggle(TabFrame, "toggle_nightmode", "Visuals.NightMode", function(state)
-    Lighting.ClockTime = state and 22 or originalClockTime
+    Mega.States.Visuals.NightMode = state
 end)
 
 UI.CreateToggle(TabFrame, "toggle_removeshadows", "Visuals.RemoveShadows", function(state)
-    Lighting.GlobalShadows = not state
+    Mega.States.Visuals.RemoveShadows = state
+    if not state then
+        Lighting.GlobalShadows = true
+    end
 end)
 
 --#region -- Custom Models

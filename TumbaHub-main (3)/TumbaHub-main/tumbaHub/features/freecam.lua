@@ -1,19 +1,9 @@
 -- features/freecam.lua
--- Freecam - Lets you fly and clip through walls freely without moving your player server-sided
+-- Robust Freecam implementation
 
-if not Mega.Features then Mega.Features = {} end
 Mega.Features.Freecam = {}
 
-local Services = Mega.Services or {
-    Players = game:GetService("Players"),
-    RunService = game:GetService("RunService"),
-    UserInputService = game:GetService("UserInputService"),
-    ContextActionService = game:GetService("ContextActionService"),
-    HttpService = game:GetService("HttpService"),
-    Workspace = game:GetService("Workspace")
-}
-
-local LocalPlayer = Services.Players.LocalPlayer
+local Services = Mega.Services
 local States = Mega.States
 
 if not States.Player then States.Player = {} end
@@ -24,154 +14,105 @@ if not States.Player.Freecam then
     }
 end
 
-local randomkey = Services.HttpService:GenerateGUID(false)
-local module, old
-local camPos = Vector3.zero
-local gameCamera = Services.Workspace.CurrentCamera
+local camera = Services.Workspace.CurrentCamera
 local connection
-local isEnabled = false  -- guard against double-enable
+local inputConn
+local isEnabled = false
 
-local function initCameraModule()
-    if module then return true end
-    
-    pcall(function()
-        local getconnections = getconnections or get_signal_cons
-        if getconnections then
-            for _, v in ipairs(getconnections(gameCamera:GetPropertyChangedSignal('CameraType'))) do
-                if v.Function then
-                    local up = debug.getupvalue(v.Function, 1)
-                    if type(up) == "table" and up.activeCameraController then
-                        module = up
-                        break
-                    end
-                end
-            end
-        end
-    end)
-    
-    return module ~= nil
-end
+local moveKeys = {
+    [Enum.KeyCode.W] = false,
+    [Enum.KeyCode.A] = false,
+    [Enum.KeyCode.S] = false,
+    [Enum.KeyCode.D] = false,
+    [Enum.KeyCode.E] = false,
+    [Enum.KeyCode.Q] = false,
+}
+
+local cameraPos = Vector3.zero
+local cameraRot = Vector2.zero
 
 local function enableFreecam()
-    if isEnabled then return end  -- already running, don't double-connect
+    if isEnabled then return end
     isEnabled = true
-    if not initCameraModule() then 
-        -- Fallback if getconnections/debug library is not fully supported
-        warn("Freecam: CameraModule not resolved.")
+    
+    camera = Services.Workspace.CurrentCamera
+    
+    local char = Services.Players.LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.Anchored = true
     end
     
-    if module and module.activeCameraController then
-        old = module.activeCameraController.GetSubjectPosition
-        camPos = old(module.activeCameraController) or Vector3.zero
-        module.activeCameraController.GetSubjectPosition = function()
-            return camPos
-        end
-    else
-        camPos = gameCamera.CFrame.Position
-    end
+    camera.CameraType = Enum.CameraType.Scriptable
+    cameraPos = camera.CFrame.Position
+    local x, y, z = camera.CFrame:ToEulerAnglesYXZ()
+    cameraRot = Vector2.new(x, y)
     
-    -- Disable local player controls to prevent movement
-    local playerModule = LocalPlayer.PlayerScripts:FindFirstChild("PlayerModule")
-    if playerModule then
-        pcall(function()
-            local controls = require(playerModule)
-            if controls and controls.Disable then
-                controls:Disable()
-            elseif controls and controls.GetControls then
-                local ctrl = controls:GetControls()
-                if ctrl and ctrl.Disable then
-                    ctrl:Disable()
-                end
-            end
-        end)
-    end
+    Mega.Objects.Connections.FreecamIB = Services.UserInputService.InputBegan:Connect(function(input, gp)
+        if gp then return end
+        if moveKeys[input.KeyCode] ~= nil then moveKeys[input.KeyCode] = true end
+    end)
     
-    -- Anchor HumanoidRootPart to freeze physics
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        hrp.Anchored = true
-    end
+    Mega.Objects.Connections.FreecamIE = Services.UserInputService.InputEnded:Connect(function(input, gp)
+        if moveKeys[input.KeyCode] ~= nil then moveKeys[input.KeyCode] = false end
+    end)
     
-    -- Keyboard and movement binding loop
-    connection = Services.RunService.PreSimulation:Connect(function(dt)
-        if not Services.UserInputService:GetFocusedTextBox() then
-            local forward = (Services.UserInputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (Services.UserInputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)
-            local side = (Services.UserInputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (Services.UserInputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0)
-            local up = (Services.UserInputService:IsKeyDown(Enum.KeyCode.Q) and -1 or 0) + (Services.UserInputService:IsKeyDown(Enum.KeyCode.E) and 1 or 0)
-            dt = dt * (Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 0.25 or 1)
-            
-            local speed = States.Player.Freecam.Speed or 50
-            local moveDir = Vector3.new(side, up, forward) * (speed * dt)
-            
-            camPos = (CFrame.lookAlong(camPos, gameCamera.CFrame.LookVector) * CFrame.new(moveDir)).Position
-            
-            if not module then
-                gameCamera.CFrame = CFrame.new(camPos) * (gameCamera.CFrame - gameCamera.CFrame.Position)
-            end
+    Mega.Objects.Connections.FreecamIC = Services.UserInputService.InputChanged:Connect(function(input, gp)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Delta
+            cameraRot = cameraRot + Vector2.new(-delta.Y, -delta.X) * 0.005
+            -- Limit pitch
+            cameraRot = Vector2.new(math.clamp(cameraRot.X, -math.rad(90), math.rad(90)), cameraRot.Y)
         end
     end)
     
-    -- Bind keys to sink action to freeze local player character
-    pcall(function()
-        Services.ContextActionService:BindActionAtPriority(
-            'FreecamKeyboard'..randomkey, 
-            function()
-                return Enum.ContextActionResult.Sink
-            end, 
-            false, 
-            Enum.ContextActionPriority.High.Value,
-            Enum.KeyCode.W,
-            Enum.KeyCode.A,
-            Enum.KeyCode.S,
-            Enum.KeyCode.D,
-            Enum.KeyCode.E,
-            Enum.KeyCode.Q,
-            Enum.KeyCode.Up,
-            Enum.KeyCode.Down
-        )
+    connection = Services.RunService.RenderStepped:Connect(function(dt)
+        local speed = States.Player.Freecam.Speed or 50
+        if Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+            speed = speed * 0.25
+        end
+        
+        local camCFrame = CFrame.new(cameraPos) * CFrame.Angles(0, cameraRot.Y, 0) * CFrame.Angles(cameraRot.X, 0, 0)
+        
+        local lookVector = camCFrame.LookVector
+        local rightVector = camCFrame.RightVector
+        local upVector = camCFrame.UpVector
+        
+        local moveDir = Vector3.zero
+        if moveKeys[Enum.KeyCode.W] then moveDir = moveDir + lookVector end
+        if moveKeys[Enum.KeyCode.S] then moveDir = moveDir - lookVector end
+        if moveKeys[Enum.KeyCode.D] then moveDir = moveDir + rightVector end
+        if moveKeys[Enum.KeyCode.A] then moveDir = moveDir - rightVector end
+        if moveKeys[Enum.KeyCode.E] then moveDir = moveDir + upVector end
+        if moveKeys[Enum.KeyCode.Q] then moveDir = moveDir - upVector end
+        
+        if moveDir.Magnitude > 0 then
+            moveDir = moveDir.Unit
+            cameraPos = cameraPos + (moveDir * speed * dt)
+        end
+        
+        camera.CFrame = CFrame.new(cameraPos) * CFrame.Angles(0, cameraRot.Y, 0) * CFrame.Angles(cameraRot.X, 0, 0)
     end)
 end
 
 local function disableFreecam()
     isEnabled = false
-    pcall(function()
-        Services.ContextActionService:UnbindAction('FreecamKeyboard'..randomkey)
-    end)
     
-    -- Re-enable local player controls
-    local playerModule = LocalPlayer.PlayerScripts:FindFirstChild("PlayerModule")
-    if playerModule then
-        pcall(function()
-            local controls = require(playerModule)
-            if controls and controls.Enable then
-                controls:Enable()
-            elseif controls and controls.GetControls then
-                local ctrl = controls:GetControls()
-                if ctrl and ctrl.Enable then
-                    ctrl:Enable()
-                end
-            end
-        end)
+    if connection then connection:Disconnect(); connection = nil end
+    if Mega.Objects.Connections.FreecamIB then Mega.Objects.Connections.FreecamIB:Disconnect() end
+    if Mega.Objects.Connections.FreecamIE then Mega.Objects.Connections.FreecamIE:Disconnect() end
+    if Mega.Objects.Connections.FreecamIC then Mega.Objects.Connections.FreecamIC:Disconnect() end
+    
+    -- Reset keys
+    for k, v in pairs(moveKeys) do moveKeys[k] = false end
+    
+    local char = Services.Players.LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.Anchored = false
     end
     
-    -- Unanchor HumanoidRootPart
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        hrp.Anchored = false
-    end
-    
-    if connection then
-        connection:Disconnect()
-        connection = nil
-    end
-    
-    if module and old then
-        module.activeCameraController.GetSubjectPosition = old
-        module = nil
-        old = nil
-    end
+    camera = Services.Workspace.CurrentCamera
+    camera.CameraType = Enum.CameraType.Custom
+    camera.CameraSubject = char and char:FindFirstChild("Humanoid")
 end
 
 function Mega.Features.Freecam.SetEnabled(state)
