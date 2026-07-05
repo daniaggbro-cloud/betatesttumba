@@ -106,7 +106,7 @@ end, {
     UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100, function(val)
         Mega.States.Eldertree.Range = val
     end)
-}, "eldertree", "class_defender")
+}, "eldertree", "class_tank")
 --#endregion
 
 --#region -- Star Collector
@@ -127,7 +127,7 @@ end, {
     UI.CreateSlider(nil, "slider_star_collector_range", "StarCollector.Range", 5, 100, function(val)
         Mega.States.StarCollector.Range = val
     end)
-}, "star_collector_stella", "class_economy")
+}, "star_collector_stella", "class_support")
 --#endregion
 
 --#region -- Metal Detector
@@ -161,7 +161,7 @@ end, {
     UI.CreateToggle(nil, "toggle_taliyah_collect_legit", "Taliyah.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_taliyah_radius", "Taliyah.CollectRadius", 5, 50),
     UI.CreateSlider(nil, "slider_taliyah_esp_transparency", "Taliyah.ESPTransparency", 0, 100, function(v) Mega.States.Taliyah.ESPTransparency = v/100 end)
-}, "taliyah", "class_fighter")
+}, "taliyah", "class_economy")
 --#endregion
 
 --#region -- Fisherman
@@ -303,6 +303,6 @@ do
                 Mega.Features.RavenAntiFog.SetEnabled(state)
             end
         end)
-    }, "raven", "class_ranged")
+    }, "raven", "class_destroyer")
 end
 --#endregion
