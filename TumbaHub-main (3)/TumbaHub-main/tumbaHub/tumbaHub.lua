@@ -17,7 +17,7 @@ end
 
 -- Auto-join Discord Server on load (Runs only ONCE to prevent auto-inject spam)
 task.spawn(function()
-    local inviteCode = "DGhWJNuKBS"
+    local inviteCode = "PE3YB6Dqtc"
     local fileName = "tumbaHub/DiscordInvited.txt"
     
     if isfile and isfile(fileName) then
@@ -284,7 +284,7 @@ InitializePhase("features", {
     "features/aimbot.lua",
     "features/beekeeper.lua",
     "features/farmer_cletus.lua",
-    "features/taliah.lua",
+    "features/taliyah.lua",
     "features/metal_detector.lua",
     "features/stella_star_collector.lua",
     "features/noelle.lua",
