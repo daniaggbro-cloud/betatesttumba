@@ -62,9 +62,11 @@ local function startDraggingSlider(sliderData)
             if slider.callback then pcall(slider.callback, newValue) end
         else
             stopDraggingSlider()
-        end
+end
     end)
 end
+
+Mega.StatusRegistry = Mega.StatusRegistry or {}
 
 function Mega.UI.CreateSection(parent, titleKey)
     local Section = Instance.new("Frame")
@@ -120,6 +122,10 @@ end
 
 function Mega.UI.CreateToggle(parent, textKey, statePath, callback, iconKey, classIconKey)
     local translatedText = GetText(textKey)
+    
+    if parent ~= nil then
+        Mega.StatusRegistry[textKey] = statePath
+    end
     
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Name = textKey .. "Toggle"
