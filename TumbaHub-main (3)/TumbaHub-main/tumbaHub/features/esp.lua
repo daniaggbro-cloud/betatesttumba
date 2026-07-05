@@ -91,6 +91,11 @@ end
 
 local function addKit(tag, icon, isCustom)
     local function processInstance(v)
+        if tag == "bee" then
+            local beeId = v:GetAttribute("BeeId") or v:GetAttribute("Id")
+            if beeId == -1 then return end
+        end
+
         if isCustom then
             if v.Name == tag and v:IsA("Model") then espadd(v, icon) end
         else
@@ -101,7 +106,7 @@ local function addKit(tag, icon, isCustom)
     if not isCustom then
         table.insert(kitEspConnections, Services.CollectionService:GetInstanceAddedSignal(tag):Connect(function(v) 
             if not isShopItem(v) then
-                espadd(v, icon) 
+                processInstance(v) 
             end
         end))
         table.insert(kitEspConnections, Services.CollectionService:GetInstanceRemovedSignal(tag):Connect(function(v) 
