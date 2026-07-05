@@ -143,7 +143,7 @@ Mega.Localization = {
         ["slider_autoheal_delay"] = { ru = "Задержка (мс)", en = "Delay (ms)", es = "Retraso (ms)", pt = "Atraso (ms)", ko = "지연 (ms)", ja = "遅延 (ms)", uk = "Затримка (мс)" },
 
         ["section_combat_autodavey"] = { ru = "🏴‍☠️ AUTO DAVEY", en = "🏴‍☠️ AUTO DAVEY", es = "🏴‍☠️ AUTO DAVEY", pt = "🏴‍☠️ AUTO DAVEY", ko = "🏴‍☠️ AUTO DAVEY", ja = "🏴‍☠️ AUTO DAVEY", uk = "🏴‍☠️ AUTO DAVEY" },
-        ["toggle_autodavey"] = { ru = "Auto Davey", en = "Auto Davey", es = "Auto Davey", pt = "Auto Davey", ko = "Auto Davey", ja = "Auto Davey", uk = "Auto Davey" },
+        ["toggle_autodavey"] = { ru = "Pirate Davey", en = "Pirate Davey", es = "Pirate Davey", pt = "Pirate Davey", ko = "Pirate Davey", ja = "Pirate Davey", uk = "Pirate Davey" },
         ["toggle_autodavey_jump"] = { ru = "Прыжок при ударе", en = "Jump on impact", es = "Saltar al impacto", pt = "Pular no impacto", ko = "타격 시 점프", ja = "インパクト時にジャンプ", uk = "Стрибок при ударі" },
         ["toggle_autodavey_break"] = { ru = "Ломать пушку при ударе", en = "Break on impact", es = "Romper al impacto", pt = "Quebrar no impacto", ko = "타격 시 파괴", ja = "インパクト時に破壊", uk = "Ламати пушку при ударі" },
         ["toggle_autodavey_legitswitch"] = { ru = "Легитный свитч (Кирка)", en = "Legit switch (Pickaxe)", es = "Cambio legítimo", pt = "Troca legítima", ko = "합법적인 전환", ja = "合法的なスイッチ", uk = "Легіт світч (Кирка)" },

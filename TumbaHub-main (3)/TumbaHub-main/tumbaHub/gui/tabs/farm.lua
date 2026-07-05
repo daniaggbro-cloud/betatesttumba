@@ -165,9 +165,6 @@ end, {
 --#endregion
 
 --#region -- Fisherman
-if not Mega.Localization.Strings["toggle_autofish"] then
-    Mega.Localization.Strings["toggle_autofish"] = { ru = "Fisherman", en = "Fisherman" }
-end
 UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
 --#endregion
 
@@ -258,10 +255,6 @@ end, {
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/auto_davey.lua") end)
 end)
-
-if not Mega.Localization.Strings["toggle_autodavey"] then
-    Mega.Localization.Strings["toggle_autodavey"] = { ru = "Pirate Davey", en = "Pirate Davey" }
-end
 
 UI.CreateToggleWithSettings(TabFrame, "toggle_autodavey", "Combat.AutoDavey.Enabled", function(state)
     Mega.States.Combat.AutoDavey.Enabled = state

@@ -316,8 +316,14 @@ function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
     if not state then
-        if targetMarkerArrow then targetMarkerArrow.Adornee = nil end
-        if targetMarkerCircle then targetMarkerCircle.Adornee = nil end
+        if targetMarkerArrow then
+            targetMarkerArrow.Adornee = nil
+            targetMarkerArrow.Visible = false
+        end
+        if targetMarkerCircle then
+            targetMarkerCircle.Adornee = nil
+            targetMarkerCircle.Visible = false
+        end
     end
 
     if state then
@@ -535,15 +541,21 @@ function Mega.Features.Killaura.SetEnabled(state)
                     if tHrp then
                         arrow.Adornee = tHrp
                         circle.Adornee = tHrp
+                        arrow.Visible = true
+                        circle.Visible = true
                         arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
                         circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
                     else
                         arrow.Adornee = nil
                         circle.Adornee = nil
+                        arrow.Visible = false
+                        circle.Visible = false
                     end
                 else
                     arrow.Adornee = nil
                     circle.Adornee = nil
+                    arrow.Visible = false
+                    circle.Visible = false
                 end
                 
                 Services.RunService.Heartbeat:Wait()
