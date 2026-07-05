@@ -120,10 +120,14 @@ Mega.Images = {
 
 
     -- Kit Classes (Fighter, Economy, Defender, etc.)
-    ["class_fighter"] = "rbxassetid://113143853424714",
-    ["class_economy"] = "rbxassetid://8273832966",
-    ["class_defender"] = "rbxassetid://17017846628",
-    ["class_support"] = "rbxassetid://9135829842",
-    ["class_movement"] = "rbxassetid://7813712527",
-    ["class_ranged"] = "rbxassetid://7343632287"
+    ["class_fighter"] = "rbxassetid://10987518632",
+    ["class_economy"] = "rbxassetid://9964937630",
+    ["class_defender"] = "rbxassetid://9964937994",
+    ["class_support"] = "rbxassetid://9964937010",
+    ["class_movement"] = "rbxassetid://9964937845",
+    ["class_ranged"] = "rbxassetid://12510116663",
+    ["class_tank"] = "rbxassetid://9964938168",
+    ["class_destroyer"] = "rbxassetid://9964937712"
+    -- Seasons
+    ["season_10"] = "rbxassetid://17017846628",
 }
