@@ -36,10 +36,6 @@ end)
 
 UI.CreateToggle(TabFrame, "toggle_fullbright", "Visuals.FullBright", function(state)
     Mega.States.Visuals.FullBright = state
-    if not state then
-        Lighting.Ambient = Color3.new(0, 0, 0)
-        Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
-    end
 end)
 
 UI.CreateToggle(TabFrame, "toggle_nightmode", "Visuals.NightMode", function(state)
@@ -48,9 +44,6 @@ end)
 
 UI.CreateToggle(TabFrame, "toggle_removeshadows", "Visuals.RemoveShadows", function(state)
     Mega.States.Visuals.RemoveShadows = state
-    if not state then
-        Lighting.GlobalShadows = true
-    end
 end)
 
 --#region -- Custom Models

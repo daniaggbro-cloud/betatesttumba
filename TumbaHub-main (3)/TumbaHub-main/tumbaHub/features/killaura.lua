@@ -28,6 +28,9 @@ if not States.Combat.Killaura then
         AnimationEnabled = true,
         AnimationMode = "Normal",
         AnimationSpeed = 1,
+        AimRadius = 95,
+        OnlyOnClick = false, 
+        AutoClick = false,
         TargetESP = true
     }
 else
@@ -533,7 +536,7 @@ function Mega.Features.Killaura.SetEnabled(state)
                 if not success then
                     warn("[TumbaHub] Killaura loop error: ", err)
                 end
-                
+
                 local arrow, circle = GetTargetVisuals()
                 local cTarg = Mega.Features.Killaura.TargetChar
                 if States.Combat.Killaura.Enabled and cTarg and States.Combat.Killaura.TargetESP then
@@ -573,4 +576,3 @@ if States.Combat.Killaura.Enabled then
 end
 
 return Mega.Features.Killaura
-
