@@ -271,7 +271,8 @@ InitializePhase("core", {
     "core/dumper.lua",
     "core/settings.lua",
     "core/localization.lua",
-    "core/config.lua"
+    "core/config.lua",
+    "library/images.lua"
 })
 
 -- PHASE 3: SYNCING SYSTEM FEATURES
