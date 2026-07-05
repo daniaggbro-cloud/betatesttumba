@@ -220,7 +220,7 @@ do
     local loc = Mega.Localization.Strings
     if not loc["section_drone_esp"] then
         loc["section_drone_esp"]      = { ru = "Drone ESP", en = "Drone ESP" }
-        loc["toggle_drone_esp"]       = { ru = "Включить Drone ESP", en = "Enable Drone ESP" }
+        loc["toggle_drone_esp"]       = { ru = "Drone ESP", en = "Drone ESP" }
         loc["toggle_drone_icons"]     = { ru = "Иконки дронов", en = "Drone Icons" }
         loc["toggle_drone_highlight"] = { ru = "Подсветка дронов", en = "Drone Highlight" }
         loc["slider_drone_bg_transp"] = { ru = "Прозрачность фона иконки", en = "Icon BG Transparency" }
@@ -254,7 +254,7 @@ do
     local loc = Mega.Localization.Strings
     if not loc["section_raven_esp"] then
         loc["section_raven_esp"]      = { ru = "Raven ESP", en = "Raven ESP" }
-        loc["toggle_raven_esp"]       = { ru = "Включить Raven ESP", en = "Enable Raven ESP" }
+        loc["toggle_raven_esp"]       = { ru = "Raven ESP", en = "Raven ESP" }
         loc["toggle_raven_icons"]     = { ru = "Иконки воронов", en = "Raven Icons" }
         loc["toggle_raven_highlight"] = { ru = "Подсветка воронов", en = "Raven Highlight" }
         loc["slider_raven_bg_transp"] = { ru = "Прозрачность фона иконки", en = "Icon BG Transparency" }
