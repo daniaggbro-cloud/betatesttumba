@@ -118,7 +118,7 @@ function Mega.UI.CreateSection(parent, titleKey)
     return Section
 end
 
-function Mega.UI.CreateToggle(parent, textKey, statePath, callback, iconKey)
+function Mega.UI.CreateToggle(parent, textKey, statePath, callback, iconKey, classIconKey)
     local translatedText = GetText(textKey)
     
     local ToggleFrame = Instance.new("Frame")
@@ -128,15 +128,30 @@ function Mega.UI.CreateToggle(parent, textKey, statePath, callback, iconKey)
     ToggleFrame.Parent = parent
 
     local paddingOffset = 0
+    local nextX = 5
+    
     if iconKey and Mega.Images and Mega.Images[iconKey] then
         local IconLabel = Instance.new("ImageLabel")
         IconLabel.Name = "KitIcon"
         IconLabel.Size = UDim2.new(0, 18, 0, 18)
-        IconLabel.Position = UDim2.new(0, 5, 0.5, -9)
+        IconLabel.Position = UDim2.new(0, nextX, 0.5, -9)
         IconLabel.BackgroundTransparency = 1
         IconLabel.Image = Mega.Images[iconKey]
         IconLabel.Parent = ToggleFrame
-        paddingOffset = 25
+        nextX = nextX + 22
+        paddingOffset = nextX
+    end
+    
+    if classIconKey and Mega.Images and Mega.Images[classIconKey] then
+        local ClassIcon = Instance.new("ImageLabel")
+        ClassIcon.Name = "ClassIcon"
+        ClassIcon.Size = UDim2.new(0, 14, 0, 14)
+        ClassIcon.Position = UDim2.new(0, nextX, 0.5, -7)
+        ClassIcon.BackgroundTransparency = 1
+        ClassIcon.Image = Mega.Images[classIconKey]
+        ClassIcon.Parent = ToggleFrame
+        nextX = nextX + 18
+        paddingOffset = nextX
     end
 
     local ToggleLabel = Instance.new("TextLabel")
@@ -645,7 +660,7 @@ function Mega.UI.CreateKeybindButton(parent, textKey, statePath, callback)
     return KeybindFrame
 end
 
-function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, settingsElements, iconKey)
+function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, settingsElements, iconKey, classIconKey)
     -- This is the main container for the whole component, its height will be animated
     local ComponentFrame = Instance.new("Frame")
     ComponentFrame.Name = textKey .. "Component"
@@ -665,7 +680,7 @@ function Mega.UI.CreateToggleWithSettings(parent, textKey, statePath, callback, 
     ControlFrame.Parent = ComponentFrame
 
     -- The actual toggle from CreateToggle, but adapted
-    local ToggleFrame = Mega.UI.CreateToggle(ControlFrame, textKey, statePath, callback, iconKey)
+    local ToggleFrame = Mega.UI.CreateToggle(ControlFrame, textKey, statePath, callback, iconKey, classIconKey)
     ToggleFrame.Size = UDim2.new(1, -50, 1, 0) -- Make space for settings button
 
     -- Settings Button (Gear Icon)
