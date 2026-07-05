@@ -127,7 +127,7 @@ Mega.Images = {
     ["class_movement"] = "rbxassetid://9964937845",
     ["class_ranged"] = "rbxassetid://12510116663",
     ["class_tank"] = "rbxassetid://9964938168",
-    ["class_destroyer"] = "rbxassetid://9964937712"
+    ["class_destroyer"] = "rbxassetid://9964937712",
     -- Seasons
     ["season_10"] = "rbxassetid://17017846628",
 }
