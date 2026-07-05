@@ -493,3 +493,4 @@ if States.Combat.Killaura.Enabled then
 end
 
 return Mega.Features.Killaura
+
