@@ -483,6 +483,20 @@ Mega.Localization = {
         ["toggle_build_reach"] = { ru = "Увеличенный радиус стройки", en = "Build Reach", es = "Alcance de Construcción", pt = "Alcance de Construção", ko = "건축 도달 거리", ja = "建築リーチ", uk = "Збільшений радіус будівництва" },
         ["slider_build_reach_range"] = { ru = "Дальность стройки", en = "Build Range", es = "Rango de Construcción", pt = "Alcance de Construção", ko = "건축 범위", ja = "建築範囲", uk = "Дальність будівництва" },
         ["slider_build_reach_delay"] = { ru = "Задержка стройки", en = "Build Delay", es = "Retraso de Construcción", pt = "Atraso de Construção", ko = "건축 지연", ja = "建築の遅延", uk = "Затримка будівництва" },
+
+        -- Home Tab
+        ["toggle_autosave"] = { ru = "Автосохранение", en = "Auto Save", es = "Guardado Automático", pt = "Salvar Automaticamente", ko = "자동 저장", ja = "自動保存", uk = "Автозбереження" },
+        ["toggle_perf_mode"] = { ru = "Режим производительности", en = "Performance Mode", es = "Modo de Rendimiento", pt = "Modo de Desempenho", ko = "성능 모드", ja = "パフォーマンスモード", uk = "Режим продуктивності" },
+        ["toggle_status_indicator"] = { ru = "Индикатор статуса", en = "Status Indicator", es = "Indicador de Estado", pt = "Indicador de Status", ko = "상태 표시기", ja = "ステータスインジケータ", uk = "Індикатор статусу" },
+        ["section_quick_access"] = { ru = "⚡ БЫСТРЫЙ ДОСТУП", en = "⚡ QUICK ACCESS", es = "⚡ ACCESO RÁPIDO", pt = "⚡ ACESSO RÁPIDO", ko = "⚡ 빠른 액세스", ja = "⚡ クイックアクセス", uk = "⚡ ШВИДКИЙ ДОСТУП" },
+        ["button_esp_toggle"] = { ru = "Переключить ESP", en = "Toggle ESP", es = "Alternar ESP", pt = "Alternar ESP", ko = "ESP 토글", ja = "ESPの切り替え", uk = "Перемикнути ESP" },
+        ["button_aim_toggle"] = { ru = "Переключить Аим", en = "Toggle Aim", es = "Alternar Aim", pt = "Alternar Aim", ko = "조준 토글", ja = "エイムの切り替え", uk = "Перемикнути Аїм" },
+        ["button_speed_toggle"] = { ru = "Переключить Скорость", en = "Toggle Speed", es = "Alternar Speed", pt = "Alternar Speed", ko = "속도 토글", ja = "スピードの切り替え", uk = "Перемикнути Швидкість" },
+        ["section_stats"] = { ru = "📊 СТАТИСТИКА", en = "📊 STATS", es = "📊 ESTADÍSTICAS", pt = "📊 ESTATÍSTICAS", ko = "📊 통계", ja = "📊 統計", uk = "📊 СТАТИСТИКА" },
+
+        -- Kit Ban Action Result
+        ["banned_kit_success"] = { ru = "✅ ЗАБАНЕНЫ! Успешно применено", en = "✅ BANNED! Successfully applied", es = "✅ ¡BANEADO! Aplicado con éxito", pt = "✅ BANIDO! Aplicado com sucesso", ko = "✅ 밴됨! 성공적으로 적용됨", ja = "✅ BANされました！正常に適用", uk = "✅ ЗАБАНЕНО! Успішно застосовано" },
+        ["banned_kit_fail"] = { ru = "❌ ОШИБКА! Ни один кит не забанен", en = "❌ ERROR! No kits were banned", es = "❌ ¡ERROR! Ningún kit fue baneado", pt = "❌ ERRO! Nenhum kit foi banido", ko = "❌ 오류! 밴된 키트 없음", ja = "❌ エラー！Banされたキットなし", uk = "❌ ПОМИЛКА! Жодного кіта не забанено" },
     }
 }
 
