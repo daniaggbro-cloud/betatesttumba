@@ -10,7 +10,7 @@ if not Mega.States.Cletus then Mega.States.Cletus = { Enabled = false, Range = 2
 if not Mega.States.Eldertree then Mega.States.Eldertree = { Enabled = false, Range = 30, ESP = false, AutoCollect = false } end
 if not Mega.States.StarCollector then Mega.States.StarCollector = { Enabled = false, Range = 60, ESP = false, AutoCollect = false } end
 if not Mega.States.Metal then Mega.States.Metal = { Enabled = false, ESP = true, AutoCollect = false, AutoCollectLegit = false, Range = 25 } end
-if not Mega.States.Taliah then Mega.States.Taliah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
+if not Mega.States.Taliyah then Mega.States.Taliyah = { Enabled = false, ESP = false, ESPTransparency = 0.2, AutoCollect = false, AutoCollectLegit = false, CollectRadius = 5 } end
 if not Mega.States.Fisherman then Mega.States.Fisherman = { Enabled = false } end
 if not Mega.States.Noelle then Mega.States.Noelle = { Enabled = false, SaveBinds = false, Binds = {} } end
 if not Mega.States.Lucia then Mega.States.Lucia = { Enabled = false, ESP = false, AutoDeposit = false, Range = 20, Legit = false } end
@@ -150,22 +150,22 @@ end, {
 }, "metal", "class_economy")
 --#endregion
 
---#region -- Taliah
-UI.CreateToggleWithSettings(TabFrame, "toggle_taliah", "Taliah.Enabled", function(state)
-    Mega.States.Taliah.Enabled = state
-    if Mega.Features.Taliah and Mega.Features.Taliah.SetEnabled then Mega.Features.Taliah.SetEnabled(state) end
-    notifyFeature("toggle_taliah", state)
+--#region -- Taliyah
+UI.CreateToggleWithSettings(TabFrame, "toggle_taliyah", "Taliyah.Enabled", function(state)
+    Mega.States.Taliyah.Enabled = state
+    if Mega.Features.Taliyah and Mega.Features.Taliyah.SetEnabled then Mega.Features.Taliyah.SetEnabled(state) end
+    notifyFeature("toggle_taliyah", state)
 end, {
-    UI.CreateToggle(nil, "toggle_taliah_esp", "Taliah.ESP"),
-    UI.CreateToggle(nil, "toggle_taliah_collect", "Taliah.AutoCollect"),
-    UI.CreateToggle(nil, "toggle_taliah_collect_legit", "Taliah.AutoCollectLegit"),
-    UI.CreateSlider(nil, "slider_taliah_radius", "Taliah.CollectRadius", 5, 50),
-    UI.CreateSlider(nil, "slider_taliah_esp_transparency", "Taliah.ESPTransparency", 0, 100, function(v) Mega.States.Taliah.ESPTransparency = v/100 end)
-}, "taliah", "class_fighter")
+    UI.CreateToggle(nil, "toggle_taliyah_esp", "Taliyah.ESP"),
+    UI.CreateToggle(nil, "toggle_taliyah_collect", "Taliyah.AutoCollect"),
+    UI.CreateToggle(nil, "toggle_taliyah_collect_legit", "Taliyah.AutoCollectLegit"),
+    UI.CreateSlider(nil, "slider_taliyah_radius", "Taliyah.CollectRadius", 5, 50),
+    UI.CreateSlider(nil, "slider_taliyah_esp_transparency", "Taliyah.ESPTransparency", 0, 100, function(v) Mega.States.Taliyah.ESPTransparency = v/100 end)
+}, "taliyah", "class_fighter")
 --#endregion
 
 --#region -- Fisherman
-UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled", nil, "fisherman", "class_economy")
+UI.CreateToggle(TabFrame, "toggle_fisherman", "Fisherman.Enabled", nil, "fisherman", "class_economy")
 --#endregion
 
 
