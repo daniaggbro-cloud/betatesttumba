@@ -255,8 +255,11 @@ do
     if not loc["section_raven_esp"] then
         loc["section_raven_esp"]      = { ru = "Raven ESP", en = "Raven ESP" }
         loc["toggle_raven_esp"]       = { ru = "Включить Raven ESP", en = "Enable Raven ESP" }
+        loc["toggle_raven_icons"]     = { ru = "Иконки воронов", en = "Raven Icons" }
         loc["toggle_raven_highlight"] = { ru = "Подсветка воронов", en = "Raven Highlight" }
+        loc["slider_raven_bg_transp"] = { ru = "Прозрачность фона иконки", en = "Icon BG Transparency" }
         loc["button_raven_color"]     = { ru = "Цвет подсветки", en = "Highlight Color" }
+        loc["toggle_raven_antifog"]   = { ru = "Убрать чёрный экран", en = "Remove Black Fog" }
     end
 
     UI.CreateSection(TabFrame, "section_raven_esp")
@@ -269,9 +272,16 @@ do
             Mega.Features.RavenESP.SetEnabled(state)
         end
     end, {
+        UI.CreateToggle(nil, "toggle_raven_icons", "RavenESP.ShowIcons", function() 
+            if Mega.Features.RavenESP then Mega.Features.RavenESP.UpdateVisuals() end 
+        end),
         UI.CreateToggle(nil, "toggle_raven_highlight", "RavenESP.ShowHighlight", function() 
             if Mega.Features.RavenESP then Mega.Features.RavenESP.UpdateVisuals() end 
         end),
+        UI.CreateSlider(nil, "slider_raven_bg_transp", "RavenESP.BgTransparency", 0, 100, function()
+            if Mega.Features.RavenESP then Mega.Features.RavenESP.UpdateVisuals() end
+        end),
+        UI.CreateToggle(nil, "toggle_raven_antifog", "RavenESP.RemoveFog", function() end),
         CreateColorPicker(nil, "button_raven_color", Mega.States.RavenESP and Mega.States.RavenESP.HighlightColor or Color3.fromRGB(150, 0, 255), function(col)
             if not Mega.States.RavenESP then Mega.States.RavenESP = {} end
             Mega.States.RavenESP.HighlightColor = col

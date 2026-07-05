@@ -118,7 +118,12 @@ function Mega.Features.DroneESP.SetEnabled(state)
         if not connections.DroneAdded then
             connections.DroneAdded = Services.Workspace.DescendantAdded:Connect(function(descendant)
                 if DroneESPState.Enabled and IsTargetDrone(descendant) then
-                    UpdateDroneESP(descendant)
+                    -- Delay to wait for drone parts (HumanoidRootPart) to load
+                    task.delay(0.5, function()
+                        if DroneESPState.Enabled and descendant.Parent then
+                            UpdateDroneESP(descendant)
+                        end
+                    end)
                 end
             end)
         end

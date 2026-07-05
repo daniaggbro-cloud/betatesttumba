@@ -10,9 +10,13 @@ if not States.RavenESP then
     States.RavenESP = {
         Enabled = false,
         ShowHighlight = true,
-        HighlightColor = Color3.fromRGB(150, 0, 255)
+        HighlightColor = Color3.fromRGB(150, 0, 255),
+        ShowIcons = true,
+        BgTransparency = 0
     }
 end
+if States.RavenESP.BgTransparency == nil then States.RavenESP.BgTransparency = 0 end
+if States.RavenESP.ShowIcons == nil then States.RavenESP.ShowIcons = true end
 local RavenESPState = States.RavenESP
 
 if not Mega.Objects.RavenCache then Mega.Objects.RavenCache = {} end
@@ -36,9 +40,40 @@ local function UpdateRavenESP(obj)
     
     -- Clean up if disabled or not target
     if not RavenESPState.Enabled or not IsTargetRaven(obj) then
+        if obj:FindFirstChild("RavenESP_Icon") then obj.RavenESP_Icon:Destroy() end
         if obj:FindFirstChild("RavenHighlight") then obj.RavenHighlight:Destroy() end
         ravenCache[obj] = nil
         return
+    end
+
+    local icon = obj:FindFirstChild("RavenESP_Icon")
+    if not icon then
+        local root = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChildWhichIsA("BasePart")
+        if root then
+            local bg = Instance.new("BillboardGui")
+            bg.Name = "RavenESP_Icon"
+            bg.Adornee = root
+            bg.Parent = obj
+            bg.Size = UDim2.new(0, 35, 0, 35)
+            bg.StudsOffset = Vector3.new(0, 5, 0)
+            bg.AlwaysOnTop = true
+            local img = Instance.new("ImageLabel")
+            img.Name = "Image"
+            img.Parent = bg
+            img.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            img.BackgroundTransparency = RavenESPState.BgTransparency / 100
+            img.Size = UDim2.new(1, 0, 1, 0)
+            img.Image = "rbxassetid://7343272003"
+            img.ImageTransparency = 0
+            Instance.new("UICorner", img).CornerRadius = UDim.new(0, 6)
+            icon = bg
+        end
+    end
+    if icon then 
+        icon.Enabled = RavenESPState.ShowIcons
+        if icon:FindFirstChild("Image") then
+            icon.Image.BackgroundTransparency = RavenESPState.BgTransparency / 100
+        end
     end
 
     local hl = obj:FindFirstChild("RavenHighlight")
@@ -97,7 +132,11 @@ function Mega.Features.RavenESP.SetEnabled(state)
                     if not connections.RavenAdded then
                         connections.RavenAdded = child.ChildAdded:Connect(function(descendant)
                             if RavenESPState.Enabled and IsTargetRaven(descendant) then
-                                UpdateRavenESP(descendant)
+                                task.delay(0.5, function()
+                                    if RavenESPState.Enabled and descendant.Parent then
+                                        UpdateRavenESP(descendant)
+                                    end
+                                end)
                             end
                         end)
                     end
@@ -110,7 +149,11 @@ function Mega.Features.RavenESP.SetEnabled(state)
         if ravensFolder and not connections.RavenAdded then
             connections.RavenAdded = ravensFolder.ChildAdded:Connect(function(descendant)
                 if RavenESPState.Enabled and IsTargetRaven(descendant) then
-                    UpdateRavenESP(descendant)
+                    task.delay(0.5, function()
+                        if RavenESPState.Enabled and descendant.Parent then
+                            UpdateRavenESP(descendant)
+                        end
+                    end)
                 end
             end)
         end
@@ -119,6 +162,40 @@ function Mega.Features.RavenESP.SetEnabled(state)
             connections.RavenRemoving = Services.Workspace.DescendantRemoving:Connect(function(descendant)
                 if ravenCache[descendant] then
                     ravenCache[descendant] = nil
+                end
+            end)
+        end
+        
+        if not connections.RavenAntiFog then
+            connections.RavenAntiFog = Services.RunService.RenderStepped:Connect(function()
+                if RavenESPState.RemoveFog then
+                    -- 1. Сбрасываем FogEnd, если он слишком близко
+                    if game.Lighting.FogEnd < 500 then
+                        game.Lighting.FogEnd = 100000
+                    end
+                    -- 2. Сбрасываем ColorCorrection, если он делает экран чёрным
+                    for _, effect in ipairs(game.Lighting:GetChildren()) do
+                        if effect:IsA("ColorCorrectionEffect") then
+                            if effect.Brightness < 0 or effect.TintColor == Color3.new(0,0,0) then
+                                effect.Brightness = 0
+                                effect.TintColor = Color3.new(1,1,1)
+                            end
+                        end
+                    end
+                    -- 3. Ищем и скрываем черные UI-рамки на весь экран (Vignette)
+                    local lp = game.Players.LocalPlayer
+                    if lp and lp:FindFirstChild("PlayerGui") then
+                        for _, gui in ipairs(lp.PlayerGui:GetDescendants()) do
+                            if gui:IsA("ImageLabel") or gui:IsA("Frame") then
+                                if gui.Visible and gui.AbsoluteSize.X > 800 and gui.AbsoluteSize.Y > 500 then
+                                    if gui.BackgroundColor3 == Color3.new(0,0,0) or (gui:IsA("ImageLabel") and gui.ImageColor3 == Color3.new(0,0,0)) then
+                                        -- Если это черный фрейм на весь экран, скрываем его
+                                        gui.Visible = false
+                                    end
+                                end
+                            end
+                        end
+                    end
                 end
             end)
         end
