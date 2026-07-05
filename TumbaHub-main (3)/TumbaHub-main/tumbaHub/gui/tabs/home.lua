@@ -107,7 +107,6 @@ Mega.Objects.Connections.HomeStatsUpdate = Mega.Services.RunService.Stepped:Conn
             )
         end
     end
-    end
 end)
 --#endregion
 
