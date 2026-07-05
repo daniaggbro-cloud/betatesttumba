@@ -31,8 +31,14 @@ local function IsTargetBee(obj)
     if not (obj:IsA("Model") or obj:IsA("BasePart")) then return false end
     local name = string.lower(obj.Name)
     if name == "tamedbee" or string.find(name, "tamed") then return false end
-    if name == "bee" then return true end
-    if obj:GetAttribute("BeeId") then return true end
+    
+    -- Catchable bees always have a valid BeeId (e.g. 194144).
+    -- Tamed/hived bees have BeeId = -1.
+    local beeId = obj:GetAttribute("BeeId") or obj:GetAttribute("Id")
+    if beeId and beeId ~= -1 then 
+        return true 
+    end
+    
     return false
 end
 
