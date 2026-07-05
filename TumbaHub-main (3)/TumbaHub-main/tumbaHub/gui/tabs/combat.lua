@@ -78,6 +78,13 @@ end, {
     UI.CreateSlider(nil, "slider_killaura_aim_radius", "Combat.Killaura.AimRadius", 10, 500),
     UI.CreateToggle(nil, "toggle_killaura_only_on_click", "Combat.Killaura.OnlyOnClick"),
     UI.CreateToggle(nil, "toggle_killaura_autoclick", "Combat.Killaura.AutoClick"),
+    
+    (function()
+        if not Mega.Localization.Strings["toggle_killaura_target_esp"] then
+            Mega.Localization.Strings["toggle_killaura_target_esp"] = { ru = "Показывать цель", en = "Show Target Enemy" }
+        end
+        return UI.CreateToggle(nil, "toggle_killaura_target_esp", "Combat.Killaura.TargetESP")
+    end)(),
 
     UI.CreateToggle(nil, "toggle_killaura_animation", "Combat.Killaura.AnimationEnabled"),
     UI.CreateDropdown(nil, "dropdown_killaura_animation_mode", "Combat.Killaura.AnimationMode", {"Normal", "Astral", "Smooth", "Exhibition", "Hamsterware", "Horizontal Spin"}, nil, false),

@@ -27,7 +27,8 @@ if not States.Combat.Killaura then
         AutoClick = false,
         AnimationEnabled = true,
         AnimationMode = "Normal",
-        AnimationSpeed = 1
+        AnimationSpeed = 1,
+        TargetESP = true
     }
 else
     local defaults = {
@@ -37,7 +38,8 @@ else
         AnimationSpeed = 1,
         AimRadius = 95,
         OnlyOnClick = false,
-        AutoClick = false
+        AutoClick = false,
+        TargetESP = true
     }
     for k, v in pairs(defaults) do
         if States.Combat.Killaura[k] == nil then
@@ -267,9 +269,57 @@ end
 local armC0 = nil
 local AnimTween = nil
 
+local targetMarkerArrow
+local targetMarkerCircle
+
+local function GetTargetVisuals()
+    if not targetMarkerArrow then
+        targetMarkerArrow = Instance.new("BillboardGui")
+        targetMarkerArrow.Name = "KillauraArrow"
+        targetMarkerArrow.Size = UDim2.new(0, 50, 0, 50)
+        targetMarkerArrow.StudsOffset = Vector3.new(0, 4, 0)
+        targetMarkerArrow.AlwaysOnTop = true
+        
+        local arrowText = Instance.new("TextLabel", targetMarkerArrow)
+        arrowText.Size = UDim2.new(1, 0, 1, 0)
+        arrowText.BackgroundTransparency = 1
+        arrowText.Text = "▼"
+        arrowText.TextColor3 = Color3.fromRGB(255, 50, 50)
+        arrowText.TextScaled = true
+        arrowText.TextStrokeTransparency = 0
+        arrowText.Font = Enum.Font.GothamBlack
+    end
+    
+    if not targetMarkerCircle then
+        targetMarkerCircle = Instance.new("CylinderHandleAdornment")
+        targetMarkerCircle.Name = "KillauraCircle"
+        targetMarkerCircle.Height = 0.05
+        targetMarkerCircle.Radius = 3
+        targetMarkerCircle.InnerRadius = 2.7
+        targetMarkerCircle.Color3 = Color3.fromRGB(255, 50, 50)
+        targetMarkerCircle.Transparency = 0.3
+        targetMarkerCircle.AlwaysOnTop = true
+        targetMarkerCircle.ZIndex = 1
+        targetMarkerCircle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+    end
+    
+    if Services.CoreGui then
+        local container = Services.CoreGui:FindFirstChild("TumbaESP_Container") or Services.CoreGui
+        if targetMarkerArrow.Parent ~= container then targetMarkerArrow.Parent = container end
+        if targetMarkerCircle.Parent ~= container then targetMarkerCircle.Parent = container end
+    end
+    
+    return targetMarkerArrow, targetMarkerCircle
+end
+
 function Mega.Features.Killaura.SetEnabled(state)
     States.Combat.Killaura.Enabled = state
     
+    if not state then
+        if targetMarkerArrow then targetMarkerArrow.Adornee = nil end
+        if targetMarkerCircle then targetMarkerCircle.Adornee = nil end
+    end
+
     if state then
         connectKillauraInputs()
     else
@@ -476,6 +526,24 @@ function Mega.Features.Killaura.SetEnabled(state)
 
                 if not success then
                     warn("[TumbaHub] Killaura loop error: ", err)
+                end
+                
+                local arrow, circle = GetTargetVisuals()
+                local cTarg = Mega.Features.Killaura.TargetChar
+                if States.Combat.Killaura.Enabled and cTarg and States.Combat.Killaura.TargetESP then
+                    local tHrp = cTarg:FindFirstChild("HumanoidRootPart") or cTarg.PrimaryPart
+                    if tHrp then
+                        arrow.Adornee = tHrp
+                        circle.Adornee = tHrp
+                        arrow.StudsOffset = Vector3.new(0, 4 + math.sin(tick() * 6) * 0.5, 0)
+                        circle.CFrame = CFrame.new(0, -2.5, 0) * CFrame.Angles(math.rad(90), 0, 0)
+                    else
+                        arrow.Adornee = nil
+                        circle.Adornee = nil
+                    end
+                else
+                    arrow.Adornee = nil
+                    circle.Adornee = nil
                 end
                 
                 Services.RunService.Heartbeat:Wait()

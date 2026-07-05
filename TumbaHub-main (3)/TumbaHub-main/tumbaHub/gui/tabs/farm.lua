@@ -48,10 +48,7 @@ local function notifyFeature(key, state)
     -- Handled automatically by ui_builder.lua
 end
 
---#region -- Main Farm
-UI.CreateSection(TabFrame, "section_farm_main")
-UI.CreateToggle(TabFrame, "toggle_autofarm", "Misc.AutoFarm")
---#endregion
+
 
 --#region -- Beekeeper
 UI.CreateToggleWithSettings(TabFrame, "toggle_beekeeper", "Beekeeper.Enabled", function(state)
@@ -168,35 +165,13 @@ end, {
 --#endregion
 
 --#region -- Fisherman
+if not Mega.Localization.Strings["toggle_autofish"] then
+    Mega.Localization.Strings["toggle_autofish"] = { ru = "Fisherman", en = "Fisherman" }
+end
 UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
 --#endregion
 
---#region -- Adetunde
-task.spawn(function()
-    pcall(function() Mega.LoadModule("features/adetunde.lua") end)
-end)
 
--- Жесткий сброс значения перед отрисовкой интерфейса, если кэш подвел
-if Mega.States.Misc.Adetunde and type(Mega.States.Misc.Adetunde.Range) == "number" and Mega.States.Misc.Adetunde.Range > 50 then
-    Mega.States.Misc.Adetunde.Range = 50
-end
-
-UI.CreateToggleWithSettings(TabFrame, "toggle_adetunde", "Misc.Adetunde.Enabled", function(state)
-    Mega.States.Misc.Adetunde.Enabled = state
-    if Mega.Features.Adetunde and Mega.Features.Adetunde.SetEnabled then Mega.Features.Adetunde.SetEnabled(state) end
-    notifyFeature("toggle_adetunde", state)
-end, {
-    UI.CreateKeybindButton(nil, "keybind_adetunde", "Misc.Adetunde.Keybind", function(key)
-        Mega.States.Misc.Adetunde.Keybind = key
-        if Mega.Features.Adetunde and Mega.Features.Adetunde.UpdateKeybind then
-            Mega.Features.Adetunde.UpdateKeybind()
-        end
-    end),
-    UI.CreateToggle(nil, "toggle_adetunde_target_esp", "Misc.Adetunde.TargetESP"),
-    UI.CreateSlider(nil, "slider_adetunde_range", "Misc.Adetunde.Range", 5, 50),
-    UI.CreateSlider(nil, "slider_adetunde_delay", "Misc.Adetunde.Delay", 0, 1000)
-})
---#endregion
 
 --#region -- Alchemist
 task.spawn(function()
@@ -284,6 +259,10 @@ task.spawn(function()
     pcall(function() Mega.LoadModule("features/auto_davey.lua") end)
 end)
 
+if not Mega.Localization.Strings["toggle_autodavey"] then
+    Mega.Localization.Strings["toggle_autodavey"] = { ru = "Pirate Davey", en = "Pirate Davey" }
+end
+
 UI.CreateToggleWithSettings(TabFrame, "toggle_autodavey", "Combat.AutoDavey.Enabled", function(state)
     Mega.States.Combat.AutoDavey.Enabled = state
     if Mega.Features.AutoDavey and Mega.Features.AutoDavey.SetEnabled then Mega.Features.AutoDavey.SetEnabled(state) end
@@ -300,11 +279,9 @@ do
     local loc = Mega.Localization.Strings
     if not loc["section_raven_farm"] then
         loc["section_raven_farm"] = { ru = "Raven", en = "Raven" }
-        loc["toggle_raven_kit"] = { ru = "Включить кит Raven", en = "Enable Raven Kit" }
+        loc["toggle_raven_kit"] = { ru = "Raven", en = "Raven" }
         loc["toggle_raven_antifog"] = { ru = "Убрать чёрный туман", en = "Remove Black Fog" }
     end
-
-    UI.CreateSection(TabFrame, "section_raven_farm")
     
     UI.CreateToggleWithSettings(TabFrame, "toggle_raven_kit", "RavenKit.Enabled", function(state)
         Mega.States.RavenKit.Enabled = state
