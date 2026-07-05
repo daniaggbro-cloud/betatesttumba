@@ -129,5 +129,5 @@ Mega.Images = {
     ["class_tank"] = "rbxassetid://9964938168",
     ["class_destroyer"] = "rbxassetid://9964937712",
     -- Seasons
-    ["season_10"] = "rbxassetid://17017846628",
+    ["season_10"] = "rbxassetid://17017846628"
 }
