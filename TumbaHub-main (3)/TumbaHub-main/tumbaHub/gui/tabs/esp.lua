@@ -223,6 +223,7 @@ do
         loc["toggle_drone_esp"]       = { ru = "Включить Drone ESP", en = "Enable Drone ESP" }
         loc["toggle_drone_icons"]     = { ru = "Иконки дронов", en = "Drone Icons" }
         loc["toggle_drone_highlight"] = { ru = "Подсветка дронов", en = "Drone Highlight" }
+        loc["slider_drone_bg_transp"] = { ru = "Прозрачность фона иконки", en = "Icon BG Transparency" }
     end
 
     UI.CreateSection(TabFrame, "section_drone_esp")
@@ -240,6 +241,9 @@ do
         end),
         UI.CreateToggle(nil, "toggle_drone_highlight", "DroneESP.ShowHighlight", function() 
             if Mega.Features.DroneESP then Mega.Features.DroneESP.UpdateVisuals() end 
+        end),
+        UI.CreateSlider(nil, "slider_drone_bg_transp", "DroneESP.BgTransparency", 0, 100, function()
+            if Mega.Features.DroneESP then Mega.Features.DroneESP.UpdateVisuals() end
         end)
     })
 end

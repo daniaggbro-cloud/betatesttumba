@@ -10,9 +10,11 @@ if not States.DroneESP then
     States.DroneESP = {
         Enabled = false,
         ShowIcons = true,
-        ShowHighlight = true
+        ShowHighlight = true,
+        BgTransparency = 0
     }
 end
+if States.DroneESP.BgTransparency == nil then States.DroneESP.BgTransparency = 0 end
 local DroneESPState = States.DroneESP
 
 if not Mega.Objects.DroneCache then Mega.Objects.DroneCache = {} end
@@ -46,19 +48,27 @@ local function UpdateDroneESP(obj)
             bg.Name = "DroneESP_Icon"
             bg.Adornee = root
             bg.Parent = obj
-            bg.Size = UDim2.new(0, 50, 0, 50)
-            bg.StudsOffset = Vector3.new(0, 6, 0)
+            bg.Size = UDim2.new(0, 35, 0, 35)
+            bg.StudsOffset = Vector3.new(0, 5, 0)
             bg.AlwaysOnTop = true
             local img = Instance.new("ImageLabel")
+            img.Name = "Image"
             img.Parent = bg
-            img.BackgroundTransparency = 1
+            img.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            img.BackgroundTransparency = DroneESPState.BgTransparency / 100
             img.Size = UDim2.new(1, 0, 1, 0)
             img.Image = "rbxassetid://9507317177"
-            img.ImageTransparency = 0.25
+            img.ImageTransparency = 0
+            Instance.new("UICorner", img).CornerRadius = UDim.new(0, 6)
             icon = bg
         end
     end
-    if icon then icon.Enabled = DroneESPState.ShowIcons end
+    if icon then 
+        icon.Enabled = DroneESPState.ShowIcons
+        if icon:FindFirstChild("Image") then
+            icon.Image.BackgroundTransparency = DroneESPState.BgTransparency / 100
+        end
+    end
 
     local hl = obj:FindFirstChild("DroneHighlight")
     if not hl then
