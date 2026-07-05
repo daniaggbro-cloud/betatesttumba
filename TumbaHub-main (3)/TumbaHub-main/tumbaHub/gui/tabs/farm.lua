@@ -19,7 +19,8 @@ if not Mega.States.Misc.Adetunde then Mega.States.Misc.Adetunde = { Enabled = fa
 if not Mega.States.Misc.Alchemist then Mega.States.Misc.Alchemist = { Enabled = false, AutoCollect = true, ESP = true } end
 if not Mega.States.Combat then Mega.States.Combat = {} end
 if not Mega.States.Combat.AutoDavey then Mega.States.Combat.AutoDavey = { Enabled = false, JumpOnImpact = false, BreakOnImpact = false, LegitSwitch = false } end
-
+if not Mega.States.RavenKit then Mega.States.RavenKit = { Enabled = false } end
+if not Mega.States.RavenESP then Mega.States.RavenESP = { RemoveFog = true } elseif Mega.States.RavenESP.RemoveFog == nil then Mega.States.RavenESP.RemoveFog = true end
 -- Create the container frame for this tab
 local TabFrame = Instance.new("ScrollingFrame")
 TabFrame.Name = tabKey
@@ -299,18 +300,39 @@ do
     local loc = Mega.Localization.Strings
     if not loc["section_raven_farm"] then
         loc["section_raven_farm"] = { ru = "Raven", en = "Raven" }
+        loc["toggle_raven_kit"] = { ru = "Включить кит Raven", en = "Enable Raven Kit" }
         loc["toggle_raven_antifog"] = { ru = "Убрать чёрный туман", en = "Remove Black Fog" }
     end
 
     UI.CreateSection(TabFrame, "section_raven_farm")
     
-    UI.CreateToggle(TabFrame, "toggle_raven_antifog", "RavenESP.RemoveFog", function(state)
-        if not Mega.Features.RavenAntiFog then
-            Mega.LoadModule("features/raven_antifog.lua")
+    UI.CreateToggleWithSettings(TabFrame, "toggle_raven_kit", "RavenKit.Enabled", function(state)
+        Mega.States.RavenKit.Enabled = state
+        -- When the kit is enabled, if AntiFog is on, we make sure it's active.
+        -- But AntiFog itself reacts to its own toggle as well.
+        if state and Mega.States.RavenESP.RemoveFog then
+            if not Mega.Features.RavenAntiFog then
+                Mega.LoadModule("features/raven_antifog.lua")
+            end
+            if Mega.Features.RavenAntiFog and Mega.Features.RavenAntiFog.SetEnabled then
+                Mega.Features.RavenAntiFog.SetEnabled(true)
+            end
+        elseif not state then
+            -- Disable anti-fog when kit is disabled? Up to preference, but let's do it
+            if Mega.Features.RavenAntiFog and Mega.Features.RavenAntiFog.SetEnabled then
+                Mega.Features.RavenAntiFog.SetEnabled(false)
+            end
         end
-        if Mega.Features.RavenAntiFog and Mega.Features.RavenAntiFog.SetEnabled then
-            Mega.Features.RavenAntiFog.SetEnabled(state)
-        end
-    end)
+    end, {
+        UI.CreateToggle(nil, "toggle_raven_antifog", "RavenESP.RemoveFog", function(state)
+            if not Mega.States.RavenKit.Enabled then return end
+            if not Mega.Features.RavenAntiFog then
+                Mega.LoadModule("features/raven_antifog.lua")
+            end
+            if Mega.Features.RavenAntiFog and Mega.Features.RavenAntiFog.SetEnabled then
+                Mega.Features.RavenAntiFog.SetEnabled(state)
+            end
+        end)
+    })
 end
 --#endregion
