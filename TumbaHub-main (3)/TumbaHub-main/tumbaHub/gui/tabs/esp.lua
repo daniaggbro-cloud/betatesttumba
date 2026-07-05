@@ -248,3 +248,35 @@ do
     })
 end
 --#endregion
+
+--#region -- Raven ESP
+do
+    local loc = Mega.Localization.Strings
+    if not loc["section_raven_esp"] then
+        loc["section_raven_esp"]      = { ru = "Raven ESP", en = "Raven ESP" }
+        loc["toggle_raven_esp"]       = { ru = "Включить Raven ESP", en = "Enable Raven ESP" }
+        loc["toggle_raven_highlight"] = { ru = "Подсветка воронов", en = "Raven Highlight" }
+        loc["button_raven_color"]     = { ru = "Цвет подсветки", en = "Highlight Color" }
+    end
+
+    UI.CreateSection(TabFrame, "section_raven_esp")
+
+    UI.CreateToggleWithSettings(TabFrame, "toggle_raven_esp", "RavenESP.Enabled", function(state)
+        if not Mega.Features.RavenESP then
+            Mega.LoadModule("features/raven_esp.lua")
+        end
+        if Mega.Features.RavenESP and Mega.Features.RavenESP.SetEnabled then
+            Mega.Features.RavenESP.SetEnabled(state)
+        end
+    end, {
+        UI.CreateToggle(nil, "toggle_raven_highlight", "RavenESP.ShowHighlight", function() 
+            if Mega.Features.RavenESP then Mega.Features.RavenESP.UpdateVisuals() end 
+        end),
+        CreateColorPicker(nil, "button_raven_color", Mega.States.RavenESP and Mega.States.RavenESP.HighlightColor or Color3.fromRGB(150, 0, 255), function(col)
+            if not Mega.States.RavenESP then Mega.States.RavenESP = {} end
+            Mega.States.RavenESP.HighlightColor = col
+            if Mega.Features.RavenESP then Mega.Features.RavenESP.UpdateVisuals() end
+        end)
+    })
+end
+--#endregion
