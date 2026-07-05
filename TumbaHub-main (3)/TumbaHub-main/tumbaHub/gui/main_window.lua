@@ -612,24 +612,64 @@ function Mega.UpdateStatus()
     local activeFeatures = {}
     for textKey, statePath in pairs(Mega.StatusRegistry or {}) do
         local value = Mega.States
+        local parentTable = Mega.States
+        local featureName = ""
+        
+        local parts = {}
         for part in statePath:gmatch("[^%.]+") do
-            value = value and type(value) == "table" and value[part] or nil
+            table.insert(parts, part)
+        end
+        
+        for i, part in ipairs(parts) do
+            if i == #parts then
+                featureName = parts[i-1] or part
+            else
+                if parentTable and type(parentTable) == "table" then
+                    parentTable = parentTable[part]
+                else
+                    parentTable = nil
+                end
+            end
+            if value and type(value) == "table" then
+                value = value[part]
+            else
+                value = nil
+            end
         end
         
         if value == true then
-            table.insert(activeFeatures, textKey)
+            local keybind = "None"
+            
+            -- Priority 1: Parent table has a Keybind property (e.g. Misc.Lani.Keybind)
+            if parentTable and type(parentTable) == "table" and parentTable.Keybind then
+                keybind = parentTable.Keybind
+            -- Priority 2: Exists in States.Keybinds (e.g. States.Keybinds.Killaura)
+            elseif featureName and Mega.States.Keybinds and Mega.States.Keybinds[featureName] then
+                keybind = Mega.States.Keybinds[featureName]
+            end
+            
+            table.insert(activeFeatures, { key = textKey, bind = keybind })
         end
     end
     
-    table.sort(activeFeatures)
+    table.sort(activeFeatures, function(a, b) return a.key < b.key end)
     
-    for _, textKey in ipairs(activeFeatures) do
+    for _, feature in ipairs(activeFeatures) do
+        local textKey = feature.key
+        local keybind = feature.bind
+        
         local hash = 0
         for i = 1, #textKey do
             hash = (hash * 31 + string.byte(textKey, i)) % 360
         end
         local color = Color3.fromHSV(hash / 360, 0.7, 1)
-        AddStatus(Mega.GetText(textKey) or textKey, color)
+        
+        local displayName = Mega.GetText(textKey) or textKey
+        if keybind and keybind ~= "None" and keybind ~= "" then
+            displayName = displayName .. " [" .. keybind .. "]"
+        end
+        
+        AddStatus(displayName, color)
     end
     
     -- Special cases not handled by toggles
