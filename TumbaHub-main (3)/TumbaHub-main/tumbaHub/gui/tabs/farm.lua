@@ -183,7 +183,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_alchemist", "Misc.Alchemist.Enable
 end, {
     UI.CreateToggle(nil, "toggle_alchemist_esp", "Misc.Alchemist.ESP"),
     UI.CreateToggle(nil, "toggle_alchemist_autocollect", "Misc.Alchemist.AutoCollect")
-})
+}, "alchemist", "class_economy")
 --#endregion
 
 --#region -- Noelle
@@ -231,7 +231,7 @@ end, {
         end
     end),
     laniContainer
-})
+}, "lani", "class_support")
 --#endregion
 
 --#region -- Lucia (Pinata)
