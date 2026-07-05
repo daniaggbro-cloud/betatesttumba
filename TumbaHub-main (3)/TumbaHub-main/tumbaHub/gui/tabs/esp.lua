@@ -214,3 +214,33 @@ do
     })
 end
 --#endregion
+
+--#region -- Drone ESP
+do
+    local loc = Mega.Localization.Strings
+    if not loc["section_drone_esp"] then
+        loc["section_drone_esp"]      = { ru = "Drone ESP", en = "Drone ESP" }
+        loc["toggle_drone_esp"]       = { ru = "Включить Drone ESP", en = "Enable Drone ESP" }
+        loc["toggle_drone_icons"]     = { ru = "Иконки дронов", en = "Drone Icons" }
+        loc["toggle_drone_highlight"] = { ru = "Подсветка дронов", en = "Drone Highlight" }
+    end
+
+    UI.CreateSection(TabFrame, "section_drone_esp")
+
+    UI.CreateToggleWithSettings(TabFrame, "toggle_drone_esp", "DroneESP.Enabled", function(state)
+        if not Mega.Features.DroneESP then
+            Mega.LoadModule("features/drone_esp.lua")
+        end
+        if Mega.Features.DroneESP and Mega.Features.DroneESP.SetEnabled then
+            Mega.Features.DroneESP.SetEnabled(state)
+        end
+    end, {
+        UI.CreateToggle(nil, "toggle_drone_icons", "DroneESP.ShowIcons", function() 
+            if Mega.Features.DroneESP then Mega.Features.DroneESP.UpdateVisuals() end 
+        end),
+        UI.CreateToggle(nil, "toggle_drone_highlight", "DroneESP.ShowHighlight", function() 
+            if Mega.Features.DroneESP then Mega.Features.DroneESP.UpdateVisuals() end 
+        end)
+    })
+end
+--#endregion
