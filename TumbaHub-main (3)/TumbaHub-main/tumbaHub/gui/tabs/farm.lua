@@ -61,7 +61,7 @@ end, {
     UI.CreateToggle(nil, "toggle_bee_highlight", "Beekeeper.ShowHighlight", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_hive_levels", "Beekeeper.ShowHiveLevels", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_auto_catch", "Beekeeper.AutoCatch")
-}, "beekeeper", "class_economy")
+}, "beekeeper_beatrix", "class_economy")
 --#endregion
 
 --#region -- Cletus
@@ -79,7 +79,7 @@ end, {
     UI.CreateToggle(nil, "toggle_cletus_esp", "Cletus.ESP", function() if Mega.Features.Cletus then Mega.Features.Cletus.RecreateESP() end end),
     UI.CreateSlider(nil, "slider_cletus_range", "Cletus.Range", 5, 100),
     UI.CreateSlider(nil, "slider_cletus_esp_transparency", "Cletus.ESPTransparency", 0, 100, function(v) Mega.States.Cletus.ESPTransparency = v/100; if Mega.Features.Cletus then Mega.Features.Cletus.UpdateVisuals() end end)
-}, "cletus", "class_economy")
+}, "farmer_cletus", "class_economy")
 --#endregion
 
 --#region -- Eldertree
@@ -127,7 +127,7 @@ end, {
     UI.CreateSlider(nil, "slider_star_collector_range", "StarCollector.Range", 5, 100, function(val)
         Mega.States.StarCollector.Range = val
     end)
-}, "star_collector", "class_economy")
+}, "star_collector_stella", "class_economy")
 --#endregion
 
 --#region -- Metal Detector
@@ -147,7 +147,7 @@ end, {
     UI.CreateToggle(nil, "toggle_metal_collect", "Metal.AutoCollect"),
     UI.CreateToggle(nil, "toggle_metal_collect_legit", "Metal.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_metal_range", "Metal.Range", 5, 100)
-}, "metal", "class_economy")
+}, "metal_detector", "class_economy")
 --#endregion
 
 --#region -- Taliyah
@@ -264,7 +264,7 @@ end, {
     UI.CreateToggle(nil, "toggle_autodavey_jump", "Combat.AutoDavey.JumpOnImpact"),
     UI.CreateToggle(nil, "toggle_autodavey_break", "Combat.AutoDavey.BreakOnImpact"),
     UI.CreateToggle(nil, "toggle_autodavey_legitswitch", "Combat.AutoDavey.LegitSwitch")
-}, "piratedavey", "class_fighter")
+}, "pirate_davey", "class_fighter")
 --#endregion
 
 --#region -- Raven
