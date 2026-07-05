@@ -61,7 +61,7 @@ end, {
     UI.CreateToggle(nil, "toggle_bee_highlight", "Beekeeper.ShowHighlight", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_hive_levels", "Beekeeper.ShowHiveLevels", function() if Mega.Features.Beekeeper then Mega.Features.Beekeeper.UpdateVisuals() end end),
     UI.CreateToggle(nil, "toggle_auto_catch", "Beekeeper.AutoCatch")
-})
+}, "beekeeper")
 --#endregion
 
 --#region -- Cletus
@@ -79,7 +79,7 @@ end, {
     UI.CreateToggle(nil, "toggle_cletus_esp", "Cletus.ESP", function() if Mega.Features.Cletus then Mega.Features.Cletus.RecreateESP() end end),
     UI.CreateSlider(nil, "slider_cletus_range", "Cletus.Range", 5, 100),
     UI.CreateSlider(nil, "slider_cletus_esp_transparency", "Cletus.ESPTransparency", 0, 100, function(v) Mega.States.Cletus.ESPTransparency = v/100; if Mega.Features.Cletus then Mega.Features.Cletus.UpdateVisuals() end end)
-})
+}, "cletus")
 --#endregion
 
 --#region -- Eldertree
@@ -106,7 +106,7 @@ end, {
     UI.CreateSlider(nil, "slider_eldertree_range", "Eldertree.Range", 5, 100, function(val)
         Mega.States.Eldertree.Range = val
     end)
-})
+}, "eldertree")
 --#endregion
 
 --#region -- Star Collector
@@ -127,7 +127,7 @@ end, {
     UI.CreateSlider(nil, "slider_star_collector_range", "StarCollector.Range", 5, 100, function(val)
         Mega.States.StarCollector.Range = val
     end)
-})
+}, "star_collector")
 --#endregion
 
 --#region -- Metal Detector
@@ -147,7 +147,7 @@ end, {
     UI.CreateToggle(nil, "toggle_metal_collect", "Metal.AutoCollect"),
     UI.CreateToggle(nil, "toggle_metal_collect_legit", "Metal.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_metal_range", "Metal.Range", 5, 100)
-})
+}, "metal")
 --#endregion
 
 --#region -- Taliah
@@ -161,11 +161,11 @@ end, {
     UI.CreateToggle(nil, "toggle_taliah_collect_legit", "Taliah.AutoCollectLegit"),
     UI.CreateSlider(nil, "slider_taliah_radius", "Taliah.CollectRadius", 5, 50),
     UI.CreateSlider(nil, "slider_taliah_esp_transparency", "Taliah.ESPTransparency", 0, 100, function(v) Mega.States.Taliah.ESPTransparency = v/100 end)
-})
+}, "taliah")
 --#endregion
 
 --#region -- Fisherman
-UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled")
+UI.CreateToggle(TabFrame, "toggle_autofish", "Fisherman.Enabled", nil, "fisherman")
 --#endregion
 
 
@@ -204,7 +204,7 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_noelle", "Noelle.Enabled", functio
 end, {
     UI.CreateToggle(nil, "toggle_noelle_save_binds", "Noelle.SaveBinds"),
     noelleContainer
-})
+}, "noelle")
 --#endregion
 
 --#region -- Lani
@@ -248,7 +248,7 @@ end, {
     UI.CreateToggle(nil, "toggle_lucia_deposit", "Lucia.AutoDeposit"),
     UI.CreateToggle(nil, "toggle_lucia_legit", "Lucia.Legit"),
     UI.CreateSlider(nil, "slider_lucia_range", "Lucia.Range", 5, 50)
-})
+}, "lucia")
 --#endregion
 
 --#region -- Auto Davey
@@ -264,7 +264,7 @@ end, {
     UI.CreateToggle(nil, "toggle_autodavey_jump", "Combat.AutoDavey.JumpOnImpact"),
     UI.CreateToggle(nil, "toggle_autodavey_break", "Combat.AutoDavey.BreakOnImpact"),
     UI.CreateToggle(nil, "toggle_autodavey_legitswitch", "Combat.AutoDavey.LegitSwitch")
-})
+}, "piratedavey")
 --#endregion
 
 --#region -- Raven
@@ -303,6 +303,6 @@ do
                 Mega.Features.RavenAntiFog.SetEnabled(state)
             end
         end)
-    })
+    }, "raven")
 end
 --#endregion
