@@ -228,8 +228,6 @@ function Mega.LoadModule(path)
                 if success then break end
             end
         end
-    end
-
     -- 2. Если локального файла нет, качаем с GitHub
     if not success or not content then
         local url = repositoryBaseURL .. path
@@ -297,8 +295,10 @@ local function InitializePhase(phaseId, moduleList)
             loaderUI.Update(overallPercent, loadingText)
         end
         Mega.LoadModule(path)
-        -- INCREASED DELAY FOR FREE EXECUTORS (Prevents Luna socket crash)
-        task.wait(0.15)
+        -- Minor yield to prevent thread starvation, optimized for speed
+        if i % 5 == 0 then
+            task.wait()
+        end
     end
 end
 
@@ -363,7 +363,7 @@ end
 -- Finish Initialization
 if loaderUI then
     loaderUI.Update(100, Mega.GetText("loader_ready"))
-    task.wait(1)
+    task.wait(0.2)
     loaderUI.Destroy()
 end
 
