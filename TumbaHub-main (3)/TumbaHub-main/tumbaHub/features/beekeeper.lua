@@ -207,7 +207,7 @@ local function PopulateBeeCache()
     -- Count bees for debug print (since beeCache is a dictionary)
     local count = 0
     for _ in pairs(beeCache) do count = count + 1 end
-    print("Beekeeper cache populated with " .. tostring(count) .. " bees.")
+    --print("Beekeeper cache populated with " .. tostring(count) .. " bees.")
 end
 
 -- Auto Catch Loop

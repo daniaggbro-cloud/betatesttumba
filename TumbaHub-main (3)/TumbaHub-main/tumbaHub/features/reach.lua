@@ -189,7 +189,7 @@ end
 
 -- Cleanup if module reloaded
 if Mega.UnloadedSignal then
-    Mega.UnloadedSignal:Connect(function()
+    Mega.UnloadedSignal.Event:Connect(function()
         for _, conn in pairs(connections) do conn:Disconnect() end
     end)
 end

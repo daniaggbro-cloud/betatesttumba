@@ -129,7 +129,7 @@ if States.Player.Freecam.Enabled then
 end
 
 if Mega.UnloadedSignal then
-    Mega.UnloadedSignal:Connect(function()
+    Mega.UnloadedSignal.Event:Connect(function()
         disableFreecam()
     end)
 end

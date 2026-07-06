@@ -64,7 +64,7 @@ function Mega.Features.AutoPlay.SetEnabled(state)
                     }
                 }
                 pcall(function()
-                    print("[TumbaHub] Auto-joining queue: " .. tostring(States.Bot.AutoPlay.Mode))
+                    --print("[TumbaHub] Auto-joining queue: " .. tostring(States.Bot.AutoPlay.Mode))
                     joinQueueRemote:FireServer(unpack(args))
                 end)
             end

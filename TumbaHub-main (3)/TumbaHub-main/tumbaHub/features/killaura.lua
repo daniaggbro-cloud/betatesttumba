@@ -142,7 +142,7 @@ local function disconnectKillauraInputs()
 end
 
 if Mega.UnloadedSignal then
-    Mega.UnloadedSignal:Connect(disconnectKillauraInputs)
+    Mega.UnloadedSignal.Event:Connect(disconnectKillauraInputs)
 end
 
 

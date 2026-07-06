@@ -110,7 +110,7 @@ local function findShopNPC()
     -- МЕТОД 1: Точный путь из GameDump
     local shopObj = Workspace:FindFirstChild("2_item_shop_1")
     if shopObj then
-        print("[TumbaHub] Found shop: 2_item_shop_1 (" .. shopObj.ClassName .. ")")
+        --print("[TumbaHub] Found shop: 2_item_shop_1 (" .. shopObj.ClassName .. ")")
         -- Если это уже BasePart — возвращаем напрямую
         if shopObj:IsA("BasePart") then
             return shopObj
@@ -130,19 +130,19 @@ local function findShopNPC()
         local n = obj.Name:lower()
         if n:find("item_shop") or n:find("shop") then
             if obj:IsA("BasePart") then
-                print("[TumbaHub] Found shop (Part): " .. obj.Name)
+                --print("[TumbaHub] Found shop (Part): " .. obj.Name)
                 return obj
             elseif obj:IsA("Model") then
                 local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart", true)
                 if part then
-                    print("[TumbaHub] Found shop (Model): " .. obj.Name)
+                    --print("[TumbaHub] Found shop (Model): " .. obj.Name)
                     return part
                 end
             end
         end
     end
 
-    print("[TumbaHub] WARNING: Shop not found in workspace!")
+    --print("[TumbaHub] WARNING: Shop not found in workspace!")
     return nil
 end
 
@@ -152,37 +152,37 @@ end
 
 -- Полный дебаг-сканер: выводит в F9 консоль ВСЕ места где может быть железо
 function Mega.Features.Bot.DebugScanIron()
-    print("=== [TumbaHub] IRON DEBUG SCAN ===")
-    print("--- LocalPlayer Attributes ---")
+    --print("=== [TumbaHub] IRON DEBUG SCAN ===")
+    --print("--- LocalPlayer Attributes ---")
     for k, v in pairs(LocalPlayer:GetAttributes()) do
-        print("  LP." .. tostring(k) .. " = " .. tostring(v))
+        --print("  LP." .. tostring(k) .. " = " .. tostring(v))
     end
     local char = LocalPlayer.Character
     if char then
-        print("--- Character Attributes ---")
+        --print("--- Character Attributes ---")
         for k, v in pairs(char:GetAttributes()) do
-            print("  Char." .. tostring(k) .. " = " .. tostring(v))
+            --print("  Char." .. tostring(k) .. " = " .. tostring(v))
         end
-        print("--- Character Children (IntValue/NumberValue) ---")
+        --print("--- Character Children (IntValue/NumberValue) ---")
         for _, v in ipairs(char:GetDescendants()) do
             if v:IsA("IntValue") or v:IsA("NumberValue") or v:IsA("StringValue") then
-                print("  " .. v:GetFullName() .. " = " .. tostring(v.Value))
+                --print("  " .. v:GetFullName() .. " = " .. tostring(v.Value))
             end
         end
     end
-    print("--- LocalPlayer Children ---")
+    --print("--- LocalPlayer Children ---")
     for _, v in ipairs(LocalPlayer:GetDescendants()) do
         if v:IsA("IntValue") or v:IsA("NumberValue") then
-            print("  " .. v:GetFullName() .. " = " .. tostring(v.Value))
+            --print("  " .. v:GetFullName() .. " = " .. tostring(v.Value))
         end
     end
-    print("--- Workspace items named 'iron' ---")
+    --print("--- Workspace items named 'iron' ---")
     for _, v in ipairs(Workspace:GetDescendants()) do
         if v.Name:lower() == "iron" and v:IsA("BasePart") then
-            print("  Workspace iron part at " .. tostring(v.Position))
+            --print("  Workspace iron part at " .. tostring(v.Position))
         end
     end
-    print("=== END DEBUG SCAN ===")
+    --print("=== END DEBUG SCAN ===")
 end
 
 -- Таймерный метод: бот стоит на генераторе N секунд
@@ -230,7 +230,7 @@ local function getBotTarget()
             if gen then
                 if not isFarmingIron then
                     isFarmingIron = true
-                    print(string.format("[TumbaHub] Farming iron at generator (need %ds)...", ironFarmRequired))
+                    --print(string.format("[TumbaHub] Farming iron at generator (need %ds)...", ironFarmRequired))
                 end
                 return gen, "farm_iron"
             end
@@ -242,10 +242,10 @@ local function getBotTarget()
                 return shop, "go_shop"
             else
                 -- Магазин не найден — дебаг
-                print("[TumbaHub] WARNING: Shop not found! Check workspace:")
+                --print("[TumbaHub] WARNING: Shop not found! Check workspace:")
                 for _, obj in ipairs(Workspace:GetChildren()) do
                     if obj.Name:lower():find("shop") or obj.Name:lower():find("merchant") then
-                        print("  Found: " .. obj.Name .. " (" .. obj.ClassName .. ")")
+                        --print("  Found: " .. obj.Name .. " (" .. obj.ClassName .. ")")
                     end
                 end
                 -- Сбрасываем таймер чтобы не зависнуть
@@ -321,7 +321,7 @@ local function tryBuy()
         task.spawn(function()
             for i = 1, 3 do
                 pcall(function()
-                    print(string.format("[TumbaHub] Purchase %d/3: wool_white x16...", i))
+                    --print(string.format("[TumbaHub] Purchase %d/3: wool_white x16...", i))
                     purchaseRemote:InvokeServer({
                         shopItem = {
                             currency = "iron",
@@ -337,10 +337,10 @@ local function tryBuy()
                 if i < 3 then task.wait(0.5) end
             end
             shopDone = true -- Больше не фармим железо!
-            print("[TumbaHub] Shop done! Switching to full combat mode.")
+            --print("[TumbaHub] Shop done! Switching to full combat mode.")
         end)
     else
-        warn("[TumbaHub] BedwarsPurchaseItem remote not found!")
+        --warn("[TumbaHub] BedwarsPurchaseItem remote not found!")
     end
 end
 
@@ -429,7 +429,7 @@ function Mega.Features.Bot.SetEnabled(state)
                     :WaitForChild("out", 10)
                     :WaitForChild("_NetManaged", 10)
                     :WaitForChild("BedwarsPurchaseItem", 10)
-                print("[TumbaHub] BedwarsPurchaseItem remote loaded!")
+                --print("[TumbaHub] BedwarsPurchaseItem remote loaded!")
             end)
         end)
 

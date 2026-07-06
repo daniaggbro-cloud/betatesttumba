@@ -36,7 +36,7 @@ task.spawn(function()
         ConsumeTreeOrbRemote = Services.ReplicatedStorage:WaitForChild("rbxts_include", 10):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("ConsumeTreeOrb")
     end)
     if not ConsumeTreeOrbRemote then
-        warn("TumbaHub: ConsumeTreeOrbRemote not found! Eldertree AutoCollect will not work.")
+        --warn("TumbaHub: ConsumeTreeOrbRemote not found! Eldertree AutoCollect will not work.")
     end
 end)
 

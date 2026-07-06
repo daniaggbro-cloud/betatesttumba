@@ -269,7 +269,7 @@ Mega.Features.LongJump.UpdateKeybind = updateKeybindConnection
 updateKeybindConnection()
 if Mega.UnloadedSignal then
     if not connections.Unload then
-        connections.Unload = Mega.UnloadedSignal:Connect(function()
+        connections.Unload = Mega.UnloadedSignal.Event:Connect(function()
             for _, conn in pairs(connections) do 
                 if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
             end

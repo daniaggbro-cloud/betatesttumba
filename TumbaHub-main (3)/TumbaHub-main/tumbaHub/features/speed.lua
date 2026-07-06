@@ -201,7 +201,7 @@ end
 
 if Mega.UnloadedSignal then
     if not connections.Unload then
-        connections.Unload = Mega.UnloadedSignal:Connect(function()
+        connections.Unload = Mega.UnloadedSignal.Event:Connect(function()
             CleanupConnections()
             local char = LocalPlayer.Character
             local hum = char and char:FindFirstChildOfClass("Humanoid")

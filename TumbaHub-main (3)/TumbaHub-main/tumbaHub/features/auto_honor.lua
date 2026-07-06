@@ -53,13 +53,13 @@ local function findHonorRemote()
 
     local rbxts = Services.ReplicatedStorage:FindFirstChild("rbxts_include")
     if not rbxts then
-        warn("[TumbaHub] AutoHonor: rbxts_include not found in ReplicatedStorage")
+        --warn("[TumbaHub] AutoHonor: rbxts_include not found in ReplicatedStorage")
         return nil
     end
 
     local netManaged = findNetManaged(rbxts)
     if not netManaged then
-        warn("[TumbaHub] AutoHonor: _NetManaged not found")
+        --warn("[TumbaHub] AutoHonor: _NetManaged not found")
         return nil
     end
 
@@ -70,13 +70,13 @@ local function findHonorRemote()
         for _, kw in ipairs(honorKeywords) do
             if nameLower:find(kw) then
                 cachedRemote = remote
-                print("[TumbaHub] AutoHonor: Found remote → " .. remote.Name)
+                --print("[TumbaHub] AutoHonor: Found remote → " .. remote.Name)
                 return remote
             end
         end
     end
 
-    warn("[TumbaHub] AutoHonor: No honor remote found in _NetManaged")
+    --warn("[TumbaHub] AutoHonor: No honor remote found in _NetManaged")
     return nil
 end
 
@@ -91,7 +91,7 @@ local function callRemote(remote, args)
         end
     end)
     if not ok then
-        warn("[TumbaHub] AutoHonor: Error calling remote: " .. tostring(err))
+        --warn("[TumbaHub] AutoHonor: Error calling remote: " .. tostring(err))
     end
 end
 
@@ -102,12 +102,12 @@ local function giveHonor(teammate, enemy)
 
         if teammate then
             callRemote(remote, { toPlayerId = teammate.UserId })
-            print("[TumbaHub] Auto Honor → teammate: " .. teammate.Name)
+            --print("[TumbaHub] Auto Honor → teammate: " .. teammate.Name)
             task.wait(0.5)
         end
         if enemy then
             callRemote(remote, { toPlayerId = enemy.UserId })
-            print("[TumbaHub] Auto Honor → enemy: " .. enemy.Name)
+            --print("[TumbaHub] Auto Honor → enemy: " .. enemy.Name)
         end
     end)
 end
@@ -193,14 +193,14 @@ function Mega.Features.AutoHonor.SetEnabled(state)
             end
         end)
 
-        print("[TumbaHub] AutoHonor: Enabled")
+        --print("[TumbaHub] AutoHonor: Enabled")
     else
         if teamChangeConnection then
             teamChangeConnection:Disconnect()
             teamChangeConnection = nil
         end
         lastPlayingTeam = nil
-        print("[TumbaHub] AutoHonor: Disabled")
+        --print("[TumbaHub] AutoHonor: Disabled")
     end
 end
 

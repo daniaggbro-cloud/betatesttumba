@@ -56,12 +56,12 @@ local function initBedwars()
             bedwars.BlockBreakController = Knit.Controllers.BlockBreakController
             bedwars.BlockBreaker = Knit.Controllers.BlockBreakController and Knit.Controllers.BlockBreakController.blockBreaker or nil
         else
-            warn("FastBreak: Knit client not found.")
+            --warn("FastBreak: Knit client not found.")
         end
     end)
     
     if not success then
-        warn("FastBreak: initBedwars error: " .. tostring(err))
+        --warn("FastBreak: initBedwars error: " .. tostring(err))
     end
     
     return bedwars.BlockBreakController ~= nil
@@ -87,11 +87,11 @@ end
 
 local function hookHitBlock()
     if not initBedwars() then 
-        warn("FastBreak: Cannot hook, controllers not loaded.")
+        --warn("FastBreak: Cannot hook, controllers not loaded.")
         return 
     end
     if not bedwars.BlockBreaker then 
-        warn("FastBreak: Cannot hook, blockBreaker is nil.")
+        --warn("FastBreak: Cannot hook, blockBreaker is nil.")
         return 
     end
     if connections.Hooked then return end
@@ -122,7 +122,7 @@ local function hookHitBlock()
         return connections.OldHitBlock(self, ...)
     end
     connections.Hooked = true
-    print("✅ FastBreak: Successfully hooked hitBlock!")
+    --print("✅ FastBreak: Successfully hooked hitBlock!")
 end
 
 local function unhookHitBlock()
@@ -132,7 +132,7 @@ local function unhookHitBlock()
         end
         connections.OldHitBlock = nil
         connections.Hooked = false
-        print("❌ FastBreak: Unhooked hitBlock.")
+        --print("❌ FastBreak: Unhooked hitBlock.")
     end
     pcall(function()
         if initBedwars() then
@@ -163,7 +163,7 @@ end
 
 -- Cleanup if module reloaded or unloaded
 if Mega.UnloadedSignal then
-    connections.Unload = Mega.UnloadedSignal:Connect(function()
+    connections.Unload = Mega.UnloadedSignal.Event:Connect(function()
         unhookHitBlock()
         if connections.Unload then
             connections.Unload:Disconnect()

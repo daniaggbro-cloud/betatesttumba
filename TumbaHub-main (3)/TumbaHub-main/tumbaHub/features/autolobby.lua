@@ -30,7 +30,7 @@ local function leaveMatch()
         if folder then
             local remote = folder:FindFirstChild("leaveMatch")
             if remote then
-                print("[TumbaHub] Leaving match via: " .. path)
+                --print("[TumbaHub] Leaving match via: " .. path)
                 remote:FireServer()
                 return true
             end
@@ -54,7 +54,7 @@ function Mega.Features.AutoLobby.SetEnabled(state)
                 if gameOver then
                     gameOverConnection = gameOver.OnClientEvent:Connect(function()
                         if not States.Bot.AutoLobby.Enabled then return end
-                        print("[TumbaHub] Match ended! Returning to lobby in 5 seconds...")
+                        --print("[TumbaHub] Match ended! Returning to lobby in 5 seconds...")
                         task.wait(5)
                         leaveMatch()
                     end)

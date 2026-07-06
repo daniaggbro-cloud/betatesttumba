@@ -79,7 +79,7 @@ if States.Player.Swim then
 end
 
 if Mega.UnloadedSignal then
-    Mega.UnloadedSignal:Connect(function()
+    Mega.UnloadedSignal.Event:Connect(function()
         disableSwim()
     end)
 end

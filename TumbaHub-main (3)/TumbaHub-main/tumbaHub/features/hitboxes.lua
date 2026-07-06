@@ -139,7 +139,7 @@ if States.Combat.HitBoxes.Enabled then
 end
 
 if Mega.UnloadedSignal then
-    Mega.UnloadedSignal:Connect(function()
+    Mega.UnloadedSignal.Event:Connect(function()
         disableHitBoxes()
     end)
 end

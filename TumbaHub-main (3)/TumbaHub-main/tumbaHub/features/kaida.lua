@@ -80,13 +80,13 @@ local function FindRemotes()
     -- Основной ремоут Kaida (коготь дракона)
     SummonerClawRemote = net:FindFirstChild("SummonerClawAttackRequest")
     if SummonerClawRemote then
-        print("[KaidaAura] ✅ SummonerClawAttackRequest найден!")
+        --print("[KaidaAura] ✅ SummonerClawAttackRequest найден!")
     end
     
     -- Fallback: стандартный SwordHit
     SwordHitRemote = net:FindFirstChild("SwordHit")
     if SwordHitRemote then
-        print("[KaidaAura] ✅ SwordHit (fallback) найден!")
+        --print("[KaidaAura] ✅ SwordHit (fallback) найден!")
     end
     
     -- Если оба не найдены — ищем по ключевым словам
@@ -95,10 +95,10 @@ local function FindRemotes()
             local n = r.Name:lower()
             if n:find("summoner") and n:find("claw") then
                 SummonerClawRemote = r
-                print("[KaidaAura] ✅ Summoner claw remote (by keyword): " .. r.Name)
+                --print("[KaidaAura] ✅ Summoner claw remote (by keyword): " .. r.Name)
             elseif n:find("sword") and n:find("hit") then
                 SwordHitRemote = r
-                print("[KaidaAura] ✅ Sword hit remote (by keyword): " .. r.Name)
+                --print("[KaidaAura] ✅ Sword hit remote (by keyword): " .. r.Name)
             end
         end
     end

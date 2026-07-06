@@ -257,7 +257,7 @@ end
 
 -- Unload handler
 if Mega.UnloadedSignal then
-    table.insert(connections, Mega.UnloadedSignal:Connect(function()
+    table.insert(connections, Mega.UnloadedSignal.Event:Connect(function()
         for _, conn in ipairs(connections) do
             pcall(function() conn:Disconnect() end)
         end

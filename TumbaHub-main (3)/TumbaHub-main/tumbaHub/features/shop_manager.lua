@@ -61,7 +61,7 @@ local function purchaseBlocks()
             }
         }
         pcall(function()
-            print("[TumbaHub] Purchasing wool...")
+            --print("[TumbaHub] Purchasing wool...")
             purchaseRemote:InvokeServer(unpack(args))
         end)
     end
