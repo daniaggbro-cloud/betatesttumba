@@ -95,6 +95,16 @@ pcall(function()
     end
 end)
 
+pcall(function()
+    local req = request or (syn and syn.request) or (http and http.request)
+    if req then
+        req({
+            Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. gameMode:gsub(" ", "%%20"),
+            Method = "GET"
+        })
+    end
+end)
+
 Mega = {
     Objects = {
         Connections = {},
