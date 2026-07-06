@@ -84,25 +84,36 @@ pcall(function()
 end)
 
 local gameMode = "Unknown"
-pcall(function()
-    local Workspace = game:GetService("Workspace")
-    if game.PlaceId == 6872265039 or Workspace:GetAttribute("QueueType") == nil then
-        gameMode = "Lobby"
-    elseif LocalPlayer:GetAttribute("CustomMatchRole") ~= nil then
-        gameMode = "CustomMatch (" .. tostring(Workspace:GetAttribute("QueueType") or "Unknown") .. ")"
-    else
-        gameMode = tostring(Workspace:GetAttribute("QueueType") or "Unknown")
-    end
-end)
-
-pcall(function()
-    local req = request or (syn and syn.request) or (http and http.request)
-    if req then
-        req({
-            Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. gameMode:gsub(" ", "%%20"),
-            Method = "GET"
-        })
-    end
+task.spawn(function()
+    pcall(function()
+        local Workspace = game:GetService("Workspace")
+        if game.PlaceId == 6872265039 then
+            gameMode = "Lobby"
+        else
+            -- Wait for QueueType to replicate (up to 5 seconds)
+            local t = 0
+            while Workspace:GetAttribute("QueueType") == nil and t < 50 do
+                task.wait(0.1)
+                t = t + 1
+            end
+            
+            if LocalPlayer:GetAttribute("CustomMatchRole") ~= nil then
+                gameMode = "CustomMatch (" .. tostring(Workspace:GetAttribute("QueueType") or "Unknown") .. ")"
+            else
+                gameMode = tostring(Workspace:GetAttribute("QueueType") or "Unknown")
+            end
+        end
+        
+        Mega.UserData.gamemode = gameMode
+        
+        local req = request or (syn and syn.request) or (http and http.request)
+        if req then
+            req({
+                Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. gameMode:gsub(" ", "%%20"),
+                Method = "GET"
+            })
+        end
+    end)
 end)
 
 Mega = {
