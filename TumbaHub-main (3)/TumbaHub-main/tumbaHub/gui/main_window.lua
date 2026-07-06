@@ -636,6 +636,18 @@ function Mega.UpdateStatus()
                 value = nil
             end
         end
+        if value == true then
+            -- Hide sub-features of BOT to keep the indicator clean
+            if Mega.States.Bot and Mega.States.Bot.Enabled then
+                local botFeatures = {
+                    Killaura = true, Scaffold = true, BedNuke = true,
+                    AntiVoid = true, Spider = true, Sprint = true
+                }
+                if botFeatures[featureName] then
+                    value = false
+                end
+            end
+        end
         
         if value == true then
             local keybind = "None"
