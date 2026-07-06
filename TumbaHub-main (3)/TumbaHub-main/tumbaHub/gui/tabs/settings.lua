@@ -277,17 +277,18 @@ UI.CreateButton(TabFrame, "button_cleanup", function()
             loader.SetStage("unloading")
             loader.Update(0, "Unloading features...")
             
-            -- Turn off all toggles gracefully to trigger their cleanup logic
-            for _, toggle in pairs(Mega.Objects.Toggles or {}) do
-                if toggle and type(toggle) == "table" and toggle.Set then
-                    pcall(function() toggle:Set(false) end)
-                end
-            end
-            
             Mega.Unloaded = true
             if Mega.UnloadedSignal then
                 Mega.UnloadedSignal:Fire()
             end
+            
+            -- Turn off all toggles gracefully to trigger their cleanup logic without saving
+            for _, toggle in pairs(Mega.Objects.Toggles or {}) do
+                if type(toggle) == "function" then
+                    pcall(function() toggle(false, true) end)
+                end
+            end
+            
             task.wait(0.5)
             loader.Update(40, "Disconnecting events...")
             
@@ -316,13 +317,14 @@ UI.CreateButton(TabFrame, "button_cleanup", function()
             loader.Destroy()
         else
             Mega.ShowNotification(Mega.GetText("notify_cleanup"), 2)
-            for _, toggle in pairs(Mega.Objects.Toggles or {}) do
-                if toggle and type(toggle) == "table" and toggle.Set then
-                    pcall(function() toggle:Set(false) end)
-                end
-            end
             Mega.Unloaded = true
             if Mega.UnloadedSignal then Mega.UnloadedSignal:Fire() end
+            
+            for _, toggle in pairs(Mega.Objects.Toggles or {}) do
+                if type(toggle) == "function" then
+                    pcall(function() toggle(false, true) end)
+                end
+            end
             for _, c in ipairs(Mega.Objects.Connections) do pcall(function() c:Disconnect() end) end
             for _, c in pairs(Mega.Objects.ESP or {}) do
                 if type(c) == "table" then
