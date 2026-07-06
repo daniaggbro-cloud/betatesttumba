@@ -83,6 +83,18 @@ pcall(function()
     regionCode = game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(LocalPlayer)
 end)
 
+local gameMode = "Unknown"
+pcall(function()
+    local Workspace = game:GetService("Workspace")
+    if game.PlaceId == 6872265039 or Workspace:GetAttribute("QueueType") == nil then
+        gameMode = "Lobby"
+    elseif LocalPlayer:GetAttribute("CustomMatchRole") ~= nil then
+        gameMode = "CustomMatch (" .. tostring(Workspace:GetAttribute("QueueType") or "Unknown") .. ")"
+    else
+        gameMode = tostring(Workspace:GetAttribute("QueueType") or "Unknown")
+    end
+end)
+
 Mega = {
     Objects = {
         Connections = {},
@@ -97,7 +109,8 @@ Mega = {
         jobId = game.JobId,
         placeId = game.PlaceId,
         canChat = canChat,
-        region = regionCode
+        region = regionCode,
+        gamemode = gameMode
     },
     Features = {},
     LoadedModules = {}
