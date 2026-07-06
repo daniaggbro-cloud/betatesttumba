@@ -269,19 +269,52 @@ UI.CreateButton(TabFrame, "button_config_refresh", refreshConfigList)
 UI.CreateSection(TabFrame, "button_cleanup")
 
 UI.CreateButton(TabFrame, "button_cleanup", function()
-    Mega.ShowNotification(Mega.GetText("notify_cleanup"), 2)
-    Mega.Unloaded = true
-    -- Disconnect all connections
-    for _, c in ipairs(Mega.Objects.Connections) do pcall(c.Disconnect, c) end
-    for _, c in pairs(Mega.Objects.ESP or {}) do
-        if type(c) == "table" then
-            for _, d in pairs(c) do pcall(function() d:Remove() end) end
+    task.spawn(function()
+        local loaderModule = Mega.Loader or Mega.LoadModule("gui/loader_screen.lua")
+        
+        if loaderModule and loaderModule.Create then
+            local loader = loaderModule.Create()
+            loader.SetStage("unloading")
+            loader.Update(0, "Unloading features...")
+            
+            Mega.Unloaded = true
+            if Mega.UnloadedSignal then
+                Mega.UnloadedSignal:Fire()
+            end
+            task.wait(0.5)
+            loader.Update(40, "Disconnecting events...")
+            
+            for _, c in ipairs(Mega.Objects.Connections) do pcall(function() c:Disconnect() end) end
+            for _, c in pairs(Mega.Objects.ESP or {}) do
+                if type(c) == "table" then
+                    for _, d in pairs(c) do pcall(function() d:Remove() end) end
+                end
+            end
+            task.wait(0.5)
+            loader.Update(80, "Destroying GUI...")
+            
+            if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
+            if Mega.Services.CoreGui:FindFirstChild("TumbaESP_Container") then Mega.Services.CoreGui.TumbaESP_Container:Destroy() end
+            if Mega.Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then Mega.Services.CoreGui.TumbaStatusIndicator:Destroy() end
+            
+            task.wait(0.5)
+            loader.Update(100, "Unloaded successfully!")
+            task.wait(0.5)
+            loader.Destroy()
+        else
+            Mega.ShowNotification(Mega.GetText("notify_cleanup"), 2)
+            Mega.Unloaded = true
+            if Mega.UnloadedSignal then Mega.UnloadedSignal:Fire() end
+            for _, c in ipairs(Mega.Objects.Connections) do pcall(function() c:Disconnect() end) end
+            for _, c in pairs(Mega.Objects.ESP or {}) do
+                if type(c) == "table" then
+                    for _, d in pairs(c) do pcall(function() d:Remove() end) end
+                end
+            end
+            if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
+            if Mega.Services.CoreGui:FindFirstChild("TumbaESP_Container") then Mega.Services.CoreGui.TumbaESP_Container:Destroy() end
+            if Mega.Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then Mega.Services.CoreGui.TumbaStatusIndicator:Destroy() end
         end
-    end
-    -- Destroy all GUI elements
-    if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
-    if Mega.Services.CoreGui:FindFirstChild("TumbaESP_Container") then Mega.Services.CoreGui.TumbaESP_Container:Destroy() end
-    if Mega.Services.CoreGui:FindFirstChild("TumbaStatusIndicator") then Mega.Services.CoreGui.TumbaStatusIndicator:Destroy() end
-    -- You might need to restore more original settings here (e.g. from Visuals)
+    end)
 end)
 --#endregion
