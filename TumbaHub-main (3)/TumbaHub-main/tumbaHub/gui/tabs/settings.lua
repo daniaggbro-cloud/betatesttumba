@@ -277,6 +277,13 @@ UI.CreateButton(TabFrame, "button_cleanup", function()
             loader.SetStage("unloading")
             loader.Update(0, "Unloading features...")
             
+            -- Turn off all toggles gracefully to trigger their cleanup logic
+            for _, toggle in pairs(Mega.Objects.Toggles or {}) do
+                if toggle and type(toggle) == "table" and toggle.Set then
+                    pcall(function() toggle:Set(false) end)
+                end
+            end
+            
             Mega.Unloaded = true
             if Mega.UnloadedSignal then
                 Mega.UnloadedSignal:Fire()
@@ -287,7 +294,13 @@ UI.CreateButton(TabFrame, "button_cleanup", function()
             for _, c in ipairs(Mega.Objects.Connections) do pcall(function() c:Disconnect() end) end
             for _, c in pairs(Mega.Objects.ESP or {}) do
                 if type(c) == "table" then
-                    for _, d in pairs(c) do pcall(function() d:Remove() end) end
+                    for _, d in pairs(c) do 
+                        pcall(function() 
+                            if typeof(d) == "Instance" then d:Destroy() 
+                            elseif type(d) == "table" and d.Remove then d:Remove() 
+                            end 
+                        end) 
+                    end
                 end
             end
             task.wait(0.5)
@@ -303,12 +316,23 @@ UI.CreateButton(TabFrame, "button_cleanup", function()
             loader.Destroy()
         else
             Mega.ShowNotification(Mega.GetText("notify_cleanup"), 2)
+            for _, toggle in pairs(Mega.Objects.Toggles or {}) do
+                if toggle and type(toggle) == "table" and toggle.Set then
+                    pcall(function() toggle:Set(false) end)
+                end
+            end
             Mega.Unloaded = true
             if Mega.UnloadedSignal then Mega.UnloadedSignal:Fire() end
             for _, c in ipairs(Mega.Objects.Connections) do pcall(function() c:Disconnect() end) end
             for _, c in pairs(Mega.Objects.ESP or {}) do
                 if type(c) == "table" then
-                    for _, d in pairs(c) do pcall(function() d:Remove() end) end
+                    for _, d in pairs(c) do 
+                        pcall(function() 
+                            if typeof(d) == "Instance" then d:Destroy() 
+                            elseif type(d) == "table" and d.Remove then d:Remove() 
+                            end 
+                        end) 
+                    end
                 end
             end
             if Mega.Objects.GUI then Mega.Objects.GUI:Destroy() end
