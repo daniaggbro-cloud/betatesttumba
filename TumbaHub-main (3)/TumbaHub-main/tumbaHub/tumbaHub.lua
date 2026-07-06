@@ -84,37 +84,6 @@ pcall(function()
 end)
 
 local gameMode = "Unknown"
-task.spawn(function()
-    pcall(function()
-        local Workspace = game:GetService("Workspace")
-        if game.PlaceId == 6872265039 then
-            gameMode = "Lobby"
-        else
-            -- Wait for QueueType to replicate (up to 5 seconds)
-            local t = 0
-            while Workspace:GetAttribute("QueueType") == nil and t < 50 do
-                task.wait(0.1)
-                t = t + 1
-            end
-            
-            if LocalPlayer:GetAttribute("CustomMatchRole") ~= nil then
-                gameMode = "CustomMatch (" .. tostring(Workspace:GetAttribute("QueueType") or "Unknown") .. ")"
-            else
-                gameMode = tostring(Workspace:GetAttribute("QueueType") or "Unknown")
-            end
-        end
-        
-        Mega.UserData.gamemode = gameMode
-        
-        local req = request or (syn and syn.request) or (http and http.request)
-        if req then
-            req({
-                Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. gameMode:gsub(" ", "%%20"),
-                Method = "GET"
-            })
-        end
-    end)
-end)
 
 Mega = {
     Objects = {
@@ -137,6 +106,39 @@ Mega = {
     LoadedModules = {}
 }
 
+task.spawn(function()
+    pcall(function()
+        local Workspace = game:GetService("Workspace")
+        local newGameMode = "Unknown"
+        if game.PlaceId == 6872265039 then
+            newGameMode = "Lobby"
+        else
+            -- Wait for QueueType to replicate (up to 5 seconds)
+            local t = 0
+            while Workspace:GetAttribute("QueueType") == nil and t < 50 do
+                task.wait(0.1)
+                t = t + 1
+            end
+            
+            if LocalPlayer:GetAttribute("CustomMatchRole") ~= nil then
+                newGameMode = "CustomMatch (" .. tostring(Workspace:GetAttribute("QueueType") or "Unknown") .. ")"
+            else
+                newGameMode = tostring(Workspace:GetAttribute("QueueType") or "Unknown")
+            end
+        end
+        
+        Mega.UserData.gamemode = newGameMode
+        
+        local req = request or (syn and syn.request) or (http and http.request)
+        if req then
+            local safeMode, _ = newGameMode:gsub(" ", "%%20")
+            req({
+                Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. safeMode,
+                Method = "GET"
+            })
+        end
+    end)
+end)
 local repositoryBaseURL = "https://raw.githubusercontent.com/daniaggbro-cloud/betatesttumba/main/TumbaHub-main%20(3)/TumbaHub-main/tumbaHub/"
 
 function Mega.GetImageFromURL(url, fileName)
