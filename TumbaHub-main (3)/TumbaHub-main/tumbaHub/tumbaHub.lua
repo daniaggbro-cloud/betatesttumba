@@ -103,7 +103,9 @@ Mega = {
         gamemode = gameMode
     },
     Features = {},
-    LoadedModules = {}
+    LoadedModules = {},
+    Unloaded = false,
+    UnloadedSignal = Instance.new("BindableEvent")
 }
 
 task.spawn(function()
@@ -157,7 +159,7 @@ function Mega.GetImageFromURL(url, fileName)
                 if success and data and #data > 0 then
                     writefile(fullPath, data)
                 else
-                    warn("TumbaHub: Failed to download icon from " .. url)
+                    --warn("TumbaHub: Failed to download icon from " .. url)
                 end
             end
         end
@@ -244,15 +246,15 @@ function Mega.LoadModule(path)
             local moduleFunc = chunk()
             local success, err = pcall(moduleFunc, Mega, game, script)
             if not success then
-                warn("Execution error in module:", path, "|", err)
+                --warn("Execution error in module:", path, "|", err)
                 Mega.LoadedModules[path] = nil
             end
         else
-            warn("Syntax error in module:", path, "|", err)
+            --warn("Syntax error in module:", path, "|", err)
             Mega.LoadedModules[path] = nil
         end
     else
-        warn("Failed to download module from GitHub:", path)
+        --warn("Failed to download module from GitHub:", path)
         Mega.LoadedModules[path] = nil
     end
 end
@@ -352,7 +354,7 @@ InitializePhase("ui", {
 -- Создаем основной интерфейс
 if Mega.GUI and Mega.GUI.Create then
     Mega.GUI.Create()
-    print("🎨 TumbaHub UI Initialized.")
+    --print("🎨 TumbaHub UI Initialized.")
 end
 
 -- Finish Initialization
@@ -368,8 +370,8 @@ if Mega.ConfigSystem then
 end
 
 
-print("🔥 TUMBA MEGA SYSTEM (Refactored) LOADED SUCCESSFULLY!")
-print("🎮 Use RightShift to open the menu")
+--print("🔥 TUMBA MEGA SYSTEM (Refactored) LOADED SUCCESSFULLY!")
+--print("🎮 Use RightShift to open the menu")
 
 -- === AUTO-INJECT ON TELEPORT (QUEUE ON TELEPORT) ===
 local queue_on_teleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or queueonteleport
@@ -387,5 +389,5 @@ if queue_on_teleport then
         end
     ]]
     queue_on_teleport(teleportCode)
-    print("🔄 Auto-Inject (Queue on Teleport) is active")
+    --print("🔄 Auto-Inject (Queue on Teleport) is active")
 end
