@@ -2,6 +2,9 @@
 -- Main entry point & module loader
 -- Made by @kreml1nAgent (tg)
 
+local print = function() end
+local warn = function() end
+
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
@@ -241,7 +244,7 @@ function Mega.LoadModule(path)
     if success and content then
         -- Wrap the module content in a function to pass the Mega table
         -- and control the environment.
-        local chunk, err = loadstring("return function(Mega, game, script) " .. content .. " end")
+        local chunk, err = loadstring("local print = function() end; local warn = function() end; return function(Mega, game, script) " .. content .. " end")
         if chunk then
             local moduleFunc = chunk()
             local success, err = pcall(moduleFunc, Mega, game, script)
