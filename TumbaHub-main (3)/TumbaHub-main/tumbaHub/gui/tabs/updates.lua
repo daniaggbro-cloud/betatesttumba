@@ -94,6 +94,13 @@ local isRu = (language == "ru")
 
 -- Update Items
 CreateUpdateItem(
+    isRu and "🛠️ Глобальный фикс стабильности и Unload" or "🛠️ Global Stability & Unload Fix",
+    isRu and "Исправлена кнопка Unload: теперь она плавно выключает все активные функции (убирает ночь, ESP и т.д.) без сброса вашего конфига. Также аппаратно удален весь спам в консоль F9 и исправлен баг, из-за которого более 12 функций (Killaura, Speed и др.) могли ломаться при инжекте."
+       or "Unload button fixed: it now smoothly turns off all active features (weather, ESP, etc.) without resetting your config. Also completely silenced F9 console spam and fixed a core bug that broke 12+ features on load.",
+    Color3.fromRGB(50, 200, 100)
+)
+
+CreateUpdateItem(
     isRu and "✨ Умный Status Indicator" or "✨ Smart Status Indicator",
     isRu and "Индикатор статуса был полностью переписан! Теперь он динамически подхватывает все активированные функции, автоматически переводит их названия и выдает каждой уникальный цвет."
        or "The Status Indicator has been completely rewritten! It now dynamically tracks active features, automatically translates them, and assigns each a unique color.",
