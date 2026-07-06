@@ -228,6 +228,8 @@ function Mega.LoadModule(path)
                 if success then break end
             end
         end
+    end
+
     -- 2. Если локального файла нет, качаем с GitHub
     if not success or not content then
         local url = repositoryBaseURL .. path
