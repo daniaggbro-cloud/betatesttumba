@@ -32,22 +32,23 @@ UI.CreateButton(TabFrame, "button_clear_chat", function()
     Mega.ShowNotification(Mega.GetText("notify_chat_cleared"), 2)
 end)
 
-UI.CreateButton(TabFrame, "button_streamproof_clip", function()
-    if keypress and keyrelease then
-        local success = pcall(function()
-            keypress(0x7B) -- F12
-            task.wait(0.1)
-            keyrelease(0x7B)
-        end)
-        if success then
-            Mega.ShowNotification(Mega.GetText("notify_streamproof_started"), 5)
-        else
-            Mega.ShowNotification(Mega.GetText("notify_streamproof_error"), 5)
-        end
+if not Mega.States.Misc.StreamProofMode then Mega.States.Misc.StreamProofMode = false end
+
+UI.CreateToggleWithSettings(TabFrame, "toggle_streamproof_mode", "Misc.StreamProofMode", function(state)
+    Mega.States.Misc.StreamProofMode = state
+    if state then
+        -- Hide GUI and ESP
+        if Mega.Objects.GUI then Mega.Objects.GUI.Enabled = false end
+        if Mega.Objects.ESPFolder then Mega.Objects.ESPFolder.Parent = nil end
+        Mega.ShowNotification(Mega.GetText("notify_streamproof_started"), 5)
     else
-        Mega.ShowNotification(Mega.GetText("notify_streamproof_error"), 5)
+        -- Restore GUI and ESP
+        if Mega.Objects.GUI then Mega.Objects.GUI.Enabled = true end
+        if Mega.Objects.ESPFolder then Mega.Objects.ESPFolder.Parent = game:GetService("CoreGui") end
+        Mega.ShowNotification(Mega.GetText("notify_streamproof_stopped"), 3)
     end
 end)
+
 local kitBanContainer = Instance.new("Frame")
 kitBanContainer.Name = "KitBanContainer"
 kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
