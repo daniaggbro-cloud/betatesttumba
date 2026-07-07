@@ -32,8 +32,22 @@ UI.CreateButton(TabFrame, "button_clear_chat", function()
     Mega.ShowNotification(Mega.GetText("notify_chat_cleared"), 2)
 end)
 
--- Removed Screenshot and Server Info buttons (Not Implemented)
-
+UI.CreateButton(TabFrame, "button_streamproof_clip", function()
+    if keypress and keyrelease then
+        local success = pcall(function()
+            keypress(0x7B) -- F12
+            task.wait(0.1)
+            keyrelease(0x7B)
+        end)
+        if success then
+            Mega.ShowNotification(Mega.GetText("notify_streamproof_started"), 5)
+        else
+            Mega.ShowNotification(Mega.GetText("notify_streamproof_error"), 5)
+        end
+    else
+        Mega.ShowNotification(Mega.GetText("notify_streamproof_error"), 5)
+    end
+end)
 local kitBanContainer = Instance.new("Frame")
 kitBanContainer.Name = "KitBanContainer"
 kitBanContainer.Size = UDim2.new(1, 0, 0, 300)
