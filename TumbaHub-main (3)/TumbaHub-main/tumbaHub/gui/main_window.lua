@@ -647,6 +647,11 @@ function Mega.UpdateStatus()
                     value = false
                 end
             end
+            
+            -- ALSO hide any toggle that comes from the Bot tab itself (like AutoKillaura, TargetBeds), except the main Bot toggle
+            if statePath and statePath:sub(1, 4) == "Bot." and statePath ~= "Bot.Enabled" then
+                value = false
+            end
         end
         
         if value == true then
