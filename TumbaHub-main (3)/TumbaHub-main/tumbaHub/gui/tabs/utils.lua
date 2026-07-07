@@ -32,9 +32,10 @@ UI.CreateButton(TabFrame, "button_clear_chat", function()
     Mega.ShowNotification(Mega.GetText("notify_chat_cleared"), 2)
 end)
 
+if not Mega.States.Misc then Mega.States.Misc = {} end
 if not Mega.States.Misc.StreamProofMode then Mega.States.Misc.StreamProofMode = false end
 
-UI.CreateToggleWithSettings(TabFrame, "toggle_streamproof_mode", "Misc.StreamProofMode", function(state)
+UI.CreateToggle(TabFrame, "toggle_streamproof_mode", "Misc.StreamProofMode", function(state)
     Mega.States.Misc.StreamProofMode = state
     if state then
         -- Hide GUI and ESP
