@@ -9,6 +9,7 @@ local Settings = Mega.Settings
 
 local espFolder = Instance.new("Folder", Services.CoreGui)
 espFolder.Name = "TumbaESP_Container"
+Mega.Objects.ESPFolder = espFolder
 
 local kitEspFolder = Instance.new("Folder", espFolder)
 kitEspFolder.Name = "TumbaKitESP_Container"
