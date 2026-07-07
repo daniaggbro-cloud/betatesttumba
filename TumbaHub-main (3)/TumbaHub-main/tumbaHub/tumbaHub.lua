@@ -138,7 +138,7 @@ task.spawn(function()
         if req then
             local safeMode, _ = newGameMode:gsub(" ", "%%20")
             req({
-                Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. safeMode,
+                Url = "https://tubmahub-server.onrender.com/api/ping?username=" .. safeUsername .. "&gamemode=" .. safeMode .. "&userId=" .. tostring(LocalPlayer.UserId),
                 Method = "GET"
             })
         end
