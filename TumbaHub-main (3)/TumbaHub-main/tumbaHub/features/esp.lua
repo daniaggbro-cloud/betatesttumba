@@ -404,6 +404,25 @@ local function UpdateESP()
                         if health ~= health then health = 0 end
                         local maxHealth = humanoid.MaxHealth
                         if maxHealth <= 0 or maxHealth ~= maxHealth then maxHealth = 100 end
+                        
+                        if not esp.lastHealth then esp.lastHealth = health end
+                        if health < esp.lastHealth then
+                            esp.damageRefreshTimer = 30 -- Wait ~0.5s after taking damage to recreate
+                        end
+                        esp.lastHealth = health
+
+                        if esp.damageRefreshTimer and esp.damageRefreshTimer > 0 then
+                            esp.damageRefreshTimer = esp.damageRefreshTimer - 1
+                            if esp.damageRefreshTimer == 0 then
+                                -- Fully recreate highlight to bypass Roblox bug
+                                esp.chams:Destroy()
+                                esp.chams = Instance.new("Highlight")
+                                esp.chams.Name = player.Name .. "_Chams"
+                                esp.chams.Parent = espFolder
+                                esp.chams.FillTransparency = 0.5
+                                esp.chams.OutlineTransparency = 0.2
+                            end
+                        end
 
                         -- Handling off-screen players for tracers
                         if not onScreen and screenPos.Z < 0 then
@@ -526,8 +545,13 @@ local function UpdateESP()
                                 else
                                     if esp.wasGameHighlight then
                                         esp.wasGameHighlight = false
-                                        -- Force refresh Adornee to fix Roblox bug
-                                        esp.chams.Adornee = nil
+                                        -- Fully recreate highlight to bypass Roblox bug
+                                        esp.chams:Destroy()
+                                        esp.chams = Instance.new("Highlight")
+                                        esp.chams.Name = player.Name .. "_Chams"
+                                        esp.chams.Parent = espFolder
+                                        esp.chams.FillTransparency = 0.5
+                                        esp.chams.OutlineTransparency = 0.2
                                     end
                                     esp.chams.Adornee = player.Character
                                     esp.chams.Enabled = States.ESP.Enabled
