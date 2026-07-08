@@ -40,10 +40,9 @@ local function findNetManaged(parent, depth)
     return nil
 end
 
--- Ищет Honor remote в _NetManaged по ключевым словам
+-- Ищет Honor remote в _NetManaged
 local function findHonorRemote()
     if cachedRemote then
-        -- Проверяем что remote ещё существует
         if cachedRemote.Parent then
             return cachedRemote
         else
@@ -52,42 +51,45 @@ local function findHonorRemote()
     end
 
     local rbxts = Services.ReplicatedStorage:FindFirstChild("rbxts_include")
-    if not rbxts then
-        --warn("[TumbaHub] AutoHonor: rbxts_include not found in ReplicatedStorage")
-        return nil
-    end
+    if not rbxts then return nil end
 
     local netManaged = findNetManaged(rbxts)
-    if not netManaged then
-        --warn("[TumbaHub] AutoHonor: _NetManaged not found")
-        return nil
+    if not netManaged then return nil end
+
+    -- 1. Сначала ищем по точному имени (самое надёжное)
+    local exactNames = { "TryGiveMatchHonorPoints", "GiveMatchHonorPoints" }
+    for _, exact in ipairs(exactNames) do
+        local r = netManaged:FindFirstChild(exact)
+        if r then
+            cachedRemote = r
+            return r
+        end
     end
 
-    -- Ищем remote по ключевым словам в имени
-    local honorKeywords = { "honor", "matchhonor", "givehonor", "trygive", "honorpoint" }
+    -- 2. Если точное имя не найдено, ищем по ключевым словам
+    local honorKeywords = { "trygivematchhonor", "givematchhonor", "matchhonor", "givehonor", "honorpoint", "trygive", "honor" }
     for _, remote in pairs(netManaged:GetChildren()) do
         local nameLower = remote.Name:lower()
         for _, kw in ipairs(honorKeywords) do
             if nameLower:find(kw) then
                 cachedRemote = remote
-                --print("[TumbaHub] AutoHonor: Found remote → " .. remote.Name)
                 return remote
             end
         end
     end
 
-    --warn("[TumbaHub] AutoHonor: No honor remote found in _NetManaged")
     return nil
 end
 
--- Безопасно вызывает remote (поддерживает RemoteEvent и RemoteFunction)
-local function callRemote(remote, args)
+-- Безопасно вызывает remote
+local function callRemote(remote, ...)
     if not remote or not remote.Parent then return end
+    local args = {...}
     local ok, err = pcall(function()
         if remote:IsA("RemoteFunction") then
-            remote:InvokeServer(args)
+            remote:InvokeServer(unpack(args))
         elseif remote:IsA("RemoteEvent") then
-            remote:FireServer(args)
+            remote:FireServer(unpack(args))
         end
     end)
     if not ok then
