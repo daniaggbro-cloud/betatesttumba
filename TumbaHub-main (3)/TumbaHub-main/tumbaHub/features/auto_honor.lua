@@ -50,13 +50,26 @@ local function findHonorRemote()
         end
     end
 
-    local rbxts = Services.ReplicatedStorage:FindFirstChild("rbxts_include")
+    -- 1. Сначала пробуем точный путь, который скинул юзер!
+    local rs = Services.ReplicatedStorage
+    local function get(p, n) return p and p:FindFirstChild(n) end
+    local exactNet = get(get(get(get(get(get(rs, "rbxts_include"), "node_modules"), "@rbxts"), "net"), "out"), "_NetManaged")
+    
+    if exactNet then
+        local r = exactNet:FindFirstChild("TryGiveMatchHonorPoints")
+        if r then
+            cachedRemote = r
+            return r
+        end
+    end
+
+    -- 2. Если точный путь не сработал, ищем рекурсивно
+    local rbxts = rs:FindFirstChild("rbxts_include")
     if not rbxts then return nil end
 
     local netManaged = findNetManaged(rbxts)
     if not netManaged then return nil end
 
-    -- 1. Сначала ищем по точному имени (самое надёжное)
     local exactNames = { "TryGiveMatchHonorPoints", "GiveMatchHonorPoints" }
     for _, exact in ipairs(exactNames) do
         local r = netManaged:FindFirstChild(exact)
@@ -66,7 +79,6 @@ local function findHonorRemote()
         end
     end
 
-    -- 2. Если точное имя не найдено, ищем по ключевым словам
     local honorKeywords = { "trygivematchhonor", "givematchhonor", "matchhonor", "givehonor", "honorpoint", "trygive", "honor" }
     for _, remote in pairs(netManaged:GetChildren()) do
         local nameLower = remote.Name:lower()
@@ -81,35 +93,34 @@ local function findHonorRemote()
     return nil
 end
 
--- Безопасно вызывает remote
-local function callRemote(remote, ...)
-    if not remote or not remote.Parent then return end
-    local args = {...}
-    local ok, err = pcall(function()
-        if remote:IsA("RemoteFunction") then
-            remote:InvokeServer(unpack(args))
-        elseif remote:IsA("RemoteEvent") then
-            remote:FireServer(unpack(args))
-        end
-    end)
-    if not ok then
-        --warn("[TumbaHub] AutoHonor: Error calling remote: " .. tostring(err))
-    end
-end
-
 local function giveHonor(teammate, enemy)
     task.spawn(function()
         local remote = findHonorRemote()
         if not remote then return end
 
+        local function send(targetPlayer)
+            if not targetPlayer then return end
+            -- Полностью повторяем структуру аргументов из рабочего сниппета
+            local args = {
+                {
+                    toPlayerId = targetPlayer.UserId
+                }
+            }
+            local ok, err = pcall(function()
+                if remote:IsA("RemoteFunction") then
+                    remote:InvokeServer(unpack(args))
+                elseif remote:IsA("RemoteEvent") then
+                    remote:FireServer(unpack(args))
+                end
+            end)
+        end
+
         if teammate then
-            callRemote(remote, { toPlayerId = teammate.UserId })
-            --print("[TumbaHub] Auto Honor → teammate: " .. teammate.Name)
+            send(teammate)
             task.wait(0.5)
         end
         if enemy then
-            callRemote(remote, { toPlayerId = enemy.UserId })
-            --print("[TumbaHub] Auto Honor → enemy: " .. enemy.Name)
+            send(enemy)
         end
     end)
 end
