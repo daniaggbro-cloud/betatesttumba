@@ -151,7 +151,7 @@ local function giveHonor(teammate, enemy)
 
         if teammate then
             send(teammate)
-            task.wait(2.5) -- КД в пару секунд
+            task.wait(0.5) -- КД 0.5 сек
         end
         if enemy then
             send(enemy)
