@@ -164,6 +164,9 @@ local function giveHonor(teammate, enemy)
 end
 
 local function triggerAutoHonor()
+    if hasTriggeredThisMatch then return end
+    hasTriggeredThisMatch = true
+
     local players = Services.Players:GetPlayers()
     local teammates = matchCache.teammates
     local enemies = matchCache.enemies
@@ -214,18 +217,26 @@ function Mega.Features.AutoHonor.SetEnabled(state)
     States.Misc.AutoHonor.Enabled = state
 
     if state then
-        -- Сбрасываем кэш remote при включении (на случай если игра перезагрузилась)
         cachedRemote = nil
 
         if teamChangeConnection then
             teamChangeConnection:Disconnect()
             teamChangeConnection = nil
         end
+        if guiAddedConnection then
+            guiAddedConnection:Disconnect()
+            guiAddedConnection = nil
+        end
+
+        local function resetMatchState()
+            lastPlayingTeam = LocalPlayer.Team
+            hasTriggeredThisMatch = false
+            startMatchCacheLoop()
+        end
 
         -- Запоминаем текущую боевую команду
         if LocalPlayer.Team and not LocalPlayer.Team.Name:lower():find("spectator") then
-            lastPlayingTeam = LocalPlayer.Team
-            startMatchCacheLoop()
+            resetMatchState()
         end
 
         teamChangeConnection = LocalPlayer:GetPropertyChangedSignal("Team"):Connect(function()
@@ -236,8 +247,7 @@ function Mega.Features.AutoHonor.SetEnabled(state)
             local isSpectator = teamName:find("spectator") ~= nil
 
             if not isSpectator then
-                lastPlayingTeam = LocalPlayer.Team
-                startMatchCacheLoop()
+                resetMatchState()
             elseif lastPlayingTeam ~= nil then
                 -- Только если игрок БЫЛ в боевой команде и попал в спектаторы
                 task.wait(3) -- Ждём появления экрана хонора
@@ -248,6 +258,27 @@ function Mega.Features.AutoHonor.SetEnabled(state)
             end
         end)
 
+        -- Триггер по экрану победы (если игрок не попадает в спектаторы при победе)
+        local playerGui = LocalPlayer:WaitForChild("PlayerGui", 5)
+        if playerGui then
+            local function onGuiAdded(gui)
+                if not States.Misc.AutoHonor.Enabled then return end
+                if gui:IsA("ScreenGui") and gui.Name == "MatchEndControls" then
+                    task.wait(2) -- Даём интерфейсу полностью загрузиться
+                    if States.Misc.AutoHonor.Enabled then
+                        triggerAutoHonor()
+                    end
+                end
+            end
+            guiAddedConnection = playerGui.ChildAdded:Connect(onGuiAdded)
+            
+            -- Если уже существует
+            local existing = playerGui:FindFirstChild("MatchEndControls")
+            if existing then
+                onGuiAdded(existing)
+            end
+        end
+        
         --print("[TumbaHub] AutoHonor: Enabled")
     else
         if teamChangeConnection then
