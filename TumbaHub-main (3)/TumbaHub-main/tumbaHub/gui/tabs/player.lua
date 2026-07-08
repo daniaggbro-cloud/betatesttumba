@@ -297,12 +297,12 @@ end)
 
 -- Removed old WalkSpeed loop to allow features/speed.lua to handle it properly.
 
-if getgenv().TumbaInfJumpConnection then
-    pcall(function() getgenv().TumbaInfJumpConnection:Disconnect() end)
-    getgenv().TumbaInfJumpConnection = nil
+if shared.TumbaInfJumpConnection then
+    pcall(function() shared.TumbaInfJumpConnection:Disconnect() end)
+    shared.TumbaInfJumpConnection = nil
 end
 
-getgenv().TumbaInfJumpConnection = Mega.Services.UserInputService.JumpRequest:Connect(function()
+shared.TumbaInfJumpConnection = Mega.Services.UserInputService.JumpRequest:Connect(function()
     if Mega.States.Player.InfiniteJump then
         local char = Mega.Services.LocalPlayer.Character
         if char and char:FindFirstChildOfClass("Humanoid") then
@@ -310,4 +310,4 @@ getgenv().TumbaInfJumpConnection = Mega.Services.UserInputService.JumpRequest:Co
         end
     end
 end)
-Mega.Objects.Connections.InfiniteJump = getgenv().TumbaInfJumpConnection
+Mega.Objects.Connections.InfiniteJump = shared.TumbaInfJumpConnection
