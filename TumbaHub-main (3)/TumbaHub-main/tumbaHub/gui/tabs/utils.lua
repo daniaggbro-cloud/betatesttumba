@@ -100,7 +100,8 @@ UI.CreateToggleWithSettings(TabFrame, "toggle_auto_honor", "Misc.AutoHonor.Enabl
     if Mega.Features.AutoHonor and Mega.Features.AutoHonor.SetEnabled then Mega.Features.AutoHonor.SetEnabled(state) end
     -- Notification is handled by ui_builder.lua automatically
 end, {
-    UI.CreateDropdown(nil, "dropdown_auto_honor_target", "Misc.AutoHonor.Target", {"Teammate", "Enemy", "Teammate and Enemy"}, function(val) Mega.States.Misc.AutoHonor.Target = val end)
+    UI.CreateDropdown(nil, "dropdown_auto_honor_target", "Misc.AutoHonor.Target", {"Teammate", "Enemy", "Teammate and Enemy"}, function(val) Mega.States.Misc.AutoHonor.Target = val end),
+    UI.CreateSlider(nil, "slider_auto_honor_delay", "Misc.AutoHonor.Delay", 0, 10, function(val) Mega.States.Misc.AutoHonor.Delay = val end)
 })
 --#endregion
 
