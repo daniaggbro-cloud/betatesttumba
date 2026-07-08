@@ -420,22 +420,12 @@ local function UpdateESP()
                             local height = scale * 3
                             
                             -- Tracer Origin
-                            local tOrigin = screenBottom
-                            if States.ESP.TracerOrigin == "Top" then tOrigin = screenTop
-                            elseif States.ESP.TracerOrigin == "Center" then tOrigin = screenCenter
+                            local tOrigin = screenCenter
+                            if States.ESP.TracerOrigin == "Bottom" then tOrigin = screenBottom
+                            elseif States.ESP.TracerOrigin == "Top" then tOrigin = screenTop
                             elseif States.ESP.TracerOrigin == "Mouse" then 
                                 local mp = Services.UserInputService:GetMouseLocation()
                                 tOrigin = Vector2.new(mp.X, mp.Y)
-                            elseif States.ESP.TracerOrigin == "Self" then
-                                local selfPos, selfOnScreen = camera:WorldToViewportPoint(localRoot.Position)
-                                if not selfOnScreen and selfPos.Z < 0 then
-                                    local center = Vector2.new(vp.X / 2, vp.Y / 2)
-                                    local diff = Vector2.new(selfPos.X, selfPos.Y) - center
-                                    local targetEdge = center - (diff * 1000)
-                                    tOrigin = Vector2.new(targetEdge.X, targetEdge.Y)
-                                else
-                                    tOrigin = Vector2.new(selfPos.X, selfPos.Y)
-                                end
                             end
 
                             local drawNormalESP = onScreen and States.ESP.Enabled

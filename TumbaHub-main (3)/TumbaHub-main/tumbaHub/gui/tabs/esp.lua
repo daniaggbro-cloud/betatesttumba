@@ -127,7 +127,7 @@ end, {
     UI.CreateToggle(nil, "toggle_esp_skeleton", "ESP.Skeleton"),
     UI.CreateToggle(nil, "toggle_esp_chams", "ESP.Chams"),
     UI.CreateToggle(nil, "toggle_esp_tracers", "ESP.Tracers"),
-    UI.CreateDropdown(nil, "dropdown_tracer_origin", "ESP.TracerOrigin", {"Bottom", "Center", "Top", "Mouse", "Self"}),
+    UI.CreateDropdown(nil, "dropdown_tracer_origin", "ESP.TracerOrigin", {"Bottom", "Center", "Top", "Mouse"}),
     UI.CreateToggle(nil, "toggle_esp_team", "ESP.ShowTeam"),
     UI.CreateSlider(nil, "slider_esp_max_dist", "ESP.MaxDistance", 50, 2000),
     UI.CreateSection(nil, "section_esp_colors"),
