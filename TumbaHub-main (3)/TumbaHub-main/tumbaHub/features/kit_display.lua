@@ -123,9 +123,21 @@ local function setupDraftApp(DraftApp)
                 
                 local function onRowAdded(row)
                     task.spawn(function()
-                        local card = row:WaitForChild("MatchDraftPlayerCard", 2)
+                        local card = row:FindFirstChild("MatchDraftPlayerCard", true)
                         if card then
                             task.delay(0.2, function() callbackCard(card) end)
+                        else
+                            local conn
+                            conn = row.DescendantAdded:Connect(function(desc)
+                                if desc.Name == "MatchDraftPlayerCard" then
+                                    if conn then conn:Disconnect() conn = nil end
+                                    task.delay(0.2, function() callbackCard(desc) end)
+                                end
+                            end)
+                            -- Timeout after 3 seconds to prevent memory leak
+                            task.delay(3, function()
+                                if conn then conn:Disconnect() conn = nil end
+                            end)
                         end
                     end)
                 end
