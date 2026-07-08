@@ -405,7 +405,15 @@ local function UpdateESP()
                         local maxHealth = humanoid.MaxHealth
                         if maxHealth <= 0 or maxHealth ~= maxHealth then maxHealth = 100 end
 
-                        if onScreen and distance <= States.ESP.MaxDistance and distance > 0.1 then
+                        -- Handling off-screen players for tracers
+                        if not onScreen and screenPos.Z < 0 then
+                            local center = Vector2.new(vp.X / 2, vp.Y / 2)
+                            local diff = Vector2.new(screenPos.X, screenPos.Y) - center
+                            local targetEdge = center - (diff * 1000)
+                            screenPos = Vector3.new(targetEdge.X, targetEdge.Y, screenPos.Z)
+                        end
+
+                        if distance <= States.ESP.MaxDistance and distance > 0.1 then
                             isVisible = true
                             local scale = 1000 / distance
                             local width = scale * 2
@@ -418,14 +426,26 @@ local function UpdateESP()
                             elseif States.ESP.TracerOrigin == "Mouse" then 
                                 local mp = Services.UserInputService:GetMouseLocation()
                                 tOrigin = Vector2.new(mp.X, mp.Y)
+                            elseif States.ESP.TracerOrigin == "Self" then
+                                local selfPos, selfOnScreen = camera:WorldToViewportPoint(localRoot.Position)
+                                if not selfOnScreen and selfPos.Z < 0 then
+                                    local center = Vector2.new(vp.X / 2, vp.Y / 2)
+                                    local diff = Vector2.new(selfPos.X, selfPos.Y) - center
+                                    local targetEdge = center - (diff * 1000)
+                                    tOrigin = Vector2.new(targetEdge.X, targetEdge.Y)
+                                else
+                                    tOrigin = Vector2.new(selfPos.X, selfPos.Y)
+                                end
                             end
 
-                            if States.ESP.Boxes then
-                                esp.box.Visible = States.ESP.Enabled
+                            local drawNormalESP = onScreen and States.ESP.Enabled
+
+                            if States.ESP.Boxes and drawNormalESP then
+                                esp.box.Visible = true
                                 esp.box.Position = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
                                 esp.box.Size = Vector2.new(width, height)
                                 
-                                esp.boxOutline.Visible = States.ESP.Enabled and States.ESP.Outline
+                                esp.boxOutline.Visible = States.ESP.Outline
                                 esp.boxOutline.Position = esp.box.Position
                                 esp.boxOutline.Size = esp.box.Size
                             else
@@ -433,8 +453,8 @@ local function UpdateESP()
                                 esp.boxOutline.Visible = false
                             end
 
-                            if States.ESP.Names then
-                                esp.name.Visible = States.ESP.Enabled
+                            if States.ESP.Names and drawNormalESP then
+                                esp.name.Visible = true
                                 esp.name.Position = Vector2.new(screenPos.X, screenPos.Y - height / 2 - 20)
                                 esp.name.Text = player.Name
                             else
@@ -442,8 +462,8 @@ local function UpdateESP()
                             end
 
                             local textOffset = 10
-                            if States.ESP.Distance then
-                                esp.distance.Visible = States.ESP.Enabled
+                            if States.ESP.Distance and drawNormalESP then
+                                esp.distance.Visible = true
                                 esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + textOffset)
                                 esp.distance.Text = Mega.GetText("esp_studs", math.floor(distance))
                                 textOffset = textOffset + 14
@@ -451,10 +471,10 @@ local function UpdateESP()
                                 esp.distance.Visible = false
                             end
                             
-                            if States.ESP.HeldItem then
+                            if States.ESP.HeldItem and drawNormalESP then
                                 local tool = player.Character:FindFirstChildOfClass("Tool")
                                 if tool then
-                                    esp.toolText.Visible = States.ESP.Enabled
+                                    esp.toolText.Visible = true
                                     esp.toolText.Position = Vector2.new(screenPos.X, screenPos.Y + height / 2 + textOffset)
                                     esp.toolText.Text = tool.Name
                                     textOffset = textOffset + 14
@@ -465,22 +485,22 @@ local function UpdateESP()
                                 esp.toolText.Visible = false
                             end
 
-                            if States.ESP.Health then
+                            if States.ESP.Health and drawNormalESP then
                                 local healthPercent = math.clamp(health / maxHealth, 0, 1)
                                 local barHeight = height * healthPercent
                                 local barColor = Color3.fromHSV(0.33 * healthPercent, 1, 1)
 
-                                esp.healthBarBack.Visible = States.ESP.Enabled
+                                esp.healthBarBack.Visible = true
                                 esp.healthBarBack.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2)
                                 esp.healthBarBack.Size = Vector2.new(4, height)
 
-                                esp.healthBarFront.Visible = States.ESP.Enabled
+                                esp.healthBarFront.Visible = true
                                 esp.healthBarFront.Color = barColor
                                 esp.healthBarFront.Position = Vector2.new(screenPos.X - width / 2 - 7, screenPos.Y - height / 2 + (height - barHeight))
                                 esp.healthBarFront.Size = Vector2.new(4, barHeight)
                                 
                                 if States.ESP.HealthText then
-                                    esp.healthText.Visible = States.ESP.Enabled
+                                    esp.healthText.Visible = true
                                     esp.healthText.Position = Vector2.new(screenPos.X - width / 2 - 28, screenPos.Y - height / 2 + (height - barHeight) - 6)
                                     esp.healthText.Text = tostring(math.floor(health))
                                     esp.healthText.Color = barColor
