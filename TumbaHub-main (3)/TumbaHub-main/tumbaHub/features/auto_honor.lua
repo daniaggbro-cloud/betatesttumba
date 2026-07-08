@@ -35,23 +35,19 @@ local function startMatchCacheLoop()
             end
 
             if lastPlayingTeam then
-                local t = {}
-                local e = {}
                 for _, p in ipairs(Services.Players:GetPlayers()) do
                     if p ~= LocalPlayer and p.Team then
-                        -- Сравниваем по имени, так как Roblox может пересоздавать объекты Team
+                        -- Сравниваем по имени
                         if p.Team.Name == lastPlayingTeam.Name then
-                            table.insert(t, p)
+                            if not table.find(matchCache.teammates, p) then
+                                table.insert(matchCache.teammates, p)
+                            end
                         elseif not p.Team.Name:lower():find("spectator") then
-                            table.insert(e, p)
+                            if not table.find(matchCache.enemies, p) then
+                                table.insert(matchCache.enemies, p)
+                            end
                         end
                     end
-                end
-                
-                -- Записываем только если списки не пусты (страховка от очистки)
-                if #t > 0 or #e > 0 then
-                    matchCache.teammates = t
-                    matchCache.enemies = e
                 end
             end
         end
@@ -231,6 +227,7 @@ function Mega.Features.AutoHonor.SetEnabled(state)
         local function resetMatchState()
             lastPlayingTeam = LocalPlayer.Team
             hasTriggeredThisMatch = false
+            matchCache = { teammates = {}, enemies = {} }
             startMatchCacheLoop()
         end
 
