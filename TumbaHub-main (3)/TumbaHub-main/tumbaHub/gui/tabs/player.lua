@@ -98,7 +98,7 @@ UI.CreateToggle(TabFrame, "toggle_swim", "Player.Swim", function(state)
     end
 end)
 
-UI.CreateToggle(TabFrame, "toggle_inf_jump", "Player.InfiniteJump")
+-- UI.CreateToggle(TabFrame, "toggle_inf_jump", "Player.InfiniteJump")
 
 task.spawn(function()
     pcall(function() Mega.LoadModule("features/high_jump.lua") end)
@@ -297,6 +297,7 @@ end)
 
 -- Removed old WalkSpeed loop to allow features/speed.lua to handle it properly.
 
+--[[ Temporarily removed Infinite Jump due to bug
 local env = (getgenv and getgenv()) or shared
 if env.TumbaInfJumpConnection then
     pcall(function() env.TumbaInfJumpConnection:Disconnect() end)
@@ -312,3 +313,4 @@ env.TumbaInfJumpConnection = Mega.Services.UserInputService.JumpRequest:Connect(
     end
 end)
 Mega.Objects.Connections.InfiniteJump = env.TumbaInfJumpConnection
+]]
