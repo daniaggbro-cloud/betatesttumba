@@ -297,14 +297,17 @@ end)
 
 -- Removed old WalkSpeed loop to allow features/speed.lua to handle it properly.
 
--- Подключаем Infinite Jump ровно один раз, чтобы избежать утечки памяти и лагов
-if not Mega.Objects.Connections.InfiniteJump then
-    Mega.Objects.Connections.InfiniteJump = Mega.Services.UserInputService.JumpRequest:Connect(function()
-        if Mega.States.Player.InfiniteJump then
-            local char = Mega.Services.LocalPlayer.Character
-            if char and char:FindFirstChildOfClass("Humanoid") then
-                char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end
-    end)
+if getgenv().TumbaInfJumpConnection then
+    pcall(function() getgenv().TumbaInfJumpConnection:Disconnect() end)
+    getgenv().TumbaInfJumpConnection = nil
 end
+
+getgenv().TumbaInfJumpConnection = Mega.Services.UserInputService.JumpRequest:Connect(function()
+    if Mega.States.Player.InfiniteJump then
+        local char = Mega.Services.LocalPlayer.Character
+        if char and char:FindFirstChildOfClass("Humanoid") then
+            char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+Mega.Objects.Connections.InfiniteJump = getgenv().TumbaInfJumpConnection
