@@ -523,12 +523,21 @@ local function UpdateESP()
                                     -- Will receive colors on next UpdateESPColors tick
                                 end
                                 
-                                -- Parenting directly to Character avoids Adornee bugs
-                                if esp.chams.Parent ~= player.Character then
-                                    esp.chams.Parent = player.Character
+                                -- Parenting to espFolder prevents destruction from character updates
+                                if esp.chams.Parent ~= espFolder then
+                                    esp.chams.Parent = espFolder
                                 end
-                                esp.chams.Adornee = nil
+                                if esp.chams.Adornee ~= player.Character then
+                                    esp.chams.Adornee = player.Character
+                                end
                                 esp.chams.Enabled = States.ESP.Enabled
+
+                                -- Prevent game's highlights (like damage effects) from overriding our ESP
+                                for _, child in ipairs(player.Character:GetChildren()) do
+                                    if child:IsA("Highlight") and child ~= esp.chams then
+                                        child.Enabled = false
+                                    end
+                                end
                             else
                                 if esp.chams then
                                     esp.chams.Enabled = false
