@@ -297,13 +297,14 @@ end)
 
 -- Removed old WalkSpeed loop to allow features/speed.lua to handle it properly.
 
---[[ Temporarily removed Infinite Jump due to bug
+-- Temporarily removed Infinite Jump due to bug
 local env = (getgenv and getgenv()) or shared
 if env.TumbaInfJumpConnection then
     pcall(function() env.TumbaInfJumpConnection:Disconnect() end)
     env.TumbaInfJumpConnection = nil
 end
 
+--[[
 env.TumbaInfJumpConnection = Mega.Services.UserInputService.JumpRequest:Connect(function()
     if Mega.States.Player.InfiniteJump then
         local char = Mega.Services.LocalPlayer.Character
