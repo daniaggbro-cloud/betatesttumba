@@ -20,6 +20,33 @@ end
 local teamChangeConnection = nil
 local lastPlayingTeam = nil
 local cachedRemote = nil  -- Кэш remote чтобы не искать каждый раз
+local matchCache = { teammates = {}, enemies = {} }
+
+local cacheLoop = nil
+local function startMatchCacheLoop()
+    if cacheLoop then return end
+    cacheLoop = task.spawn(function()
+        while task.wait(1) do
+            if not States.Misc.AutoHonor.Enabled then break end
+            if lastPlayingTeam then
+                local t = {}
+                local e = {}
+                for _, p in ipairs(Services.Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Team then
+                        if p.Team == lastPlayingTeam then
+                            table.insert(t, p)
+                        elseif not p.Team.Name:lower():find("spectator") then
+                            table.insert(e, p)
+                        end
+                    end
+                end
+                matchCache.teammates = t
+                matchCache.enemies = e
+            end
+        end
+        cacheLoop = nil
+    end)
+end
 
 -- Рекурсивно ищет _NetManaged через ВСЕ дочерние объекты
 -- (путь: rbxts_include/node_modules/@rbxts/net/out/_NetManaged)
@@ -117,7 +144,7 @@ local function giveHonor(teammate, enemy)
 
         if teammate then
             send(teammate)
-            task.wait(0.5)
+            task.wait(2.5) -- КД в пару секунд
         end
         if enemy then
             send(enemy)
@@ -127,20 +154,8 @@ end
 
 local function triggerAutoHonor()
     local players = Services.Players:GetPlayers()
-    local teammates = {}
-    local enemies = {}
-
-    for _, p in ipairs(players) do
-        if p ~= LocalPlayer then
-            if p.Team then
-                if lastPlayingTeam and p.Team == lastPlayingTeam then
-                    table.insert(teammates, p)
-                elseif p.Team.Name ~= "Spectators" then
-                    table.insert(enemies, p)
-                end
-            end
-        end
-    end
+    local teammates = matchCache.teammates
+    local enemies = matchCache.enemies
 
     local targetSetting = States.Misc.AutoHonor.Target or "Teammate and Enemy"
     local selectedTeammate = nil
@@ -154,16 +169,29 @@ local function triggerAutoHonor()
         selectedEnemy = enemies[math.random(1, #enemies)]
     end
 
-    -- Fallback: если никого не нашли — даём случайному игроку
+    -- Fallback: если никого не нашли (например игра только началась и команд не было)
     if not selectedTeammate and not selectedEnemy then
+        local validPlayers = {}
         for _, p in ipairs(players) do
             if p ~= LocalPlayer then
-                if targetSetting == "Teammate" then
-                    selectedTeammate = p
+                table.insert(validPlayers, p)
+            end
+        end
+        
+        if #validPlayers > 0 then
+            if targetSetting == "Teammate and Enemy" then
+                selectedTeammate = validPlayers[math.random(1, #validPlayers)]
+                if #validPlayers > 1 then
+                    repeat
+                        selectedEnemy = validPlayers[math.random(1, #validPlayers)]
+                    until selectedEnemy ~= selectedTeammate
                 else
-                    selectedEnemy = p
+                    selectedEnemy = nil
                 end
-                break
+            elseif targetSetting == "Teammate" then
+                selectedTeammate = validPlayers[math.random(1, #validPlayers)]
+            else
+                selectedEnemy = validPlayers[math.random(1, #validPlayers)]
             end
         end
     end
@@ -184,8 +212,9 @@ function Mega.Features.AutoHonor.SetEnabled(state)
         end
 
         -- Запоминаем текущую боевую команду
-        if LocalPlayer.Team and LocalPlayer.Team.Name ~= "Spectators" then
+        if LocalPlayer.Team and not LocalPlayer.Team.Name:lower():find("spectator") then
             lastPlayingTeam = LocalPlayer.Team
+            startMatchCacheLoop()
         end
 
         teamChangeConnection = LocalPlayer:GetPropertyChangedSignal("Team"):Connect(function()
@@ -193,12 +222,18 @@ function Mega.Features.AutoHonor.SetEnabled(state)
             if not LocalPlayer.Team then return end
 
             local teamName = LocalPlayer.Team.Name:lower()
-            if teamName:find("spectator") then
-                -- Игрок перешёл в Spectators после игры — даём хонор
+            local isSpectator = teamName:find("spectator") ~= nil
+
+            if not isSpectator then
+                lastPlayingTeam = LocalPlayer.Team
+                startMatchCacheLoop()
+            elseif lastPlayingTeam ~= nil then
+                -- Только если игрок БЫЛ в боевой команде и попал в спектаторы
                 task.wait(3) -- Ждём появления экрана хонора
                 if States.Misc.AutoHonor.Enabled then
                     triggerAutoHonor()
                 end
+                lastPlayingTeam = nil
             end
         end)
 
