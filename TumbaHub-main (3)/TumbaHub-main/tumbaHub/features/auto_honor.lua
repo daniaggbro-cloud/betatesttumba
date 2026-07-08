@@ -28,20 +28,31 @@ local function startMatchCacheLoop()
     cacheLoop = task.spawn(function()
         while task.wait(1) do
             if not States.Misc.AutoHonor.Enabled then break end
+            
+            -- Если мы попали в спектаторы, прекращаем обновлять кэш, чтобы сохранить последние боевые составы
+            if not LocalPlayer.Team or LocalPlayer.Team.Name:lower():find("spectator") then
+                break
+            end
+
             if lastPlayingTeam then
                 local t = {}
                 local e = {}
                 for _, p in ipairs(Services.Players:GetPlayers()) do
                     if p ~= LocalPlayer and p.Team then
-                        if p.Team == lastPlayingTeam then
+                        -- Сравниваем по имени, так как Roblox может пересоздавать объекты Team
+                        if p.Team.Name == lastPlayingTeam.Name then
                             table.insert(t, p)
                         elseif not p.Team.Name:lower():find("spectator") then
                             table.insert(e, p)
                         end
                     end
                 end
-                matchCache.teammates = t
-                matchCache.enemies = e
+                
+                -- Записываем только если списки не пусты (страховка от очистки)
+                if #t > 0 or #e > 0 then
+                    matchCache.teammates = t
+                    matchCache.enemies = e
+                end
             end
         end
         cacheLoop = nil
