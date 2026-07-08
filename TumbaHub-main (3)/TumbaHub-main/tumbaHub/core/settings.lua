@@ -287,7 +287,8 @@ Mega.States = {
         },
         AutoHonor = {
             Enabled = false,
-            Target = "Teammate and Enemy"
+            Target = "Teammate and Enemy",
+            Delay = 3
         }
     },
     Beekeeper = {
