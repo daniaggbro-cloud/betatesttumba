@@ -512,9 +512,26 @@ local function UpdateESP()
                             end
                             
                             if States.ESP.Chams then
-                                esp.chams.Adornee = player.Character
-                                -- Important: if head/root present, char is rendered
-                                esp.chams.Enabled = States.ESP.Enabled
+                                local hasGameHighlight = false
+                                for _, v in ipairs(player.Character:GetChildren()) do
+                                    if v:IsA("Highlight") and v ~= esp.chams then
+                                        hasGameHighlight = true
+                                        break
+                                    end
+                                end
+
+                                if hasGameHighlight then
+                                    esp.chams.Enabled = false
+                                    esp.wasGameHighlight = true
+                                else
+                                    if esp.wasGameHighlight then
+                                        esp.wasGameHighlight = false
+                                        -- Force refresh Adornee to fix Roblox bug
+                                        esp.chams.Adornee = nil
+                                    end
+                                    esp.chams.Adornee = player.Character
+                                    esp.chams.Enabled = States.ESP.Enabled
+                                end
                             else
                                 esp.chams.Enabled = false
                             end
