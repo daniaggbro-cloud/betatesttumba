@@ -202,10 +202,10 @@ local function CreateESP(player)
     }
 
     esp.chams.Name = player.Name .. "_Chams"
-    esp.chams.Parent = espFolder
     esp.chams.Enabled = false
     esp.chams.FillTransparency = 0.5
     esp.chams.OutlineTransparency = 0.2
+    esp.chams.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 
     local skeletonLinks = {"Head_Torso", "Torso_LeftArm", "Torso_RightArm", "Torso_LeftLeg", "Torso_RightLeg", "LeftArm_LeftHand", "RightArm_RightHand", "LeftLeg_LeftFoot", "RightLeg_RightFoot"}
     for _, linkName in ipairs(skeletonLinks) do
@@ -404,25 +404,6 @@ local function UpdateESP()
                         if health ~= health then health = 0 end
                         local maxHealth = humanoid.MaxHealth
                         if maxHealth <= 0 or maxHealth ~= maxHealth then maxHealth = 100 end
-                        
-                        if not esp.lastHealth then esp.lastHealth = health end
-                        if health < esp.lastHealth then
-                            esp.damageRefreshTimer = 30 -- Wait ~0.5s after taking damage to recreate
-                        end
-                        esp.lastHealth = health
-
-                        if esp.damageRefreshTimer and esp.damageRefreshTimer > 0 then
-                            esp.damageRefreshTimer = esp.damageRefreshTimer - 1
-                            if esp.damageRefreshTimer == 0 then
-                                -- Fully recreate highlight to bypass Roblox bug
-                                esp.chams:Destroy()
-                                esp.chams = Instance.new("Highlight")
-                                esp.chams.Name = player.Name .. "_Chams"
-                                esp.chams.Parent = espFolder
-                                esp.chams.FillTransparency = 0.5
-                                esp.chams.OutlineTransparency = 0.2
-                            end
-                        end
 
                         -- Handling off-screen players for tracers
                         if not onScreen and screenPos.Z < 0 then
@@ -531,33 +512,27 @@ local function UpdateESP()
                             end
                             
                             if States.ESP.Chams then
-                                local hasGameHighlight = false
-                                for _, v in ipairs(player.Character:GetChildren()) do
-                                    if v:IsA("Highlight") and v ~= esp.chams then
-                                        hasGameHighlight = true
-                                        break
-                                    end
+                                -- Auto-recreate if destroyed by the game
+                                if not esp.chams or esp.chams.Parent == nil then
+                                    pcall(function() if esp.chams then esp.chams:Destroy() end end)
+                                    esp.chams = Instance.new("Highlight")
+                                    esp.chams.Name = player.Name .. "_Chams"
+                                    esp.chams.FillTransparency = 0.5
+                                    esp.chams.OutlineTransparency = 0.2
+                                    esp.chams.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                    -- Will receive colors on next UpdateESPColors tick
                                 end
-
-                                if hasGameHighlight then
-                                    esp.chams.Enabled = false
-                                    esp.wasGameHighlight = true
-                                else
-                                    if esp.wasGameHighlight then
-                                        esp.wasGameHighlight = false
-                                        -- Fully recreate highlight to bypass Roblox bug
-                                        esp.chams:Destroy()
-                                        esp.chams = Instance.new("Highlight")
-                                        esp.chams.Name = player.Name .. "_Chams"
-                                        esp.chams.Parent = espFolder
-                                        esp.chams.FillTransparency = 0.5
-                                        esp.chams.OutlineTransparency = 0.2
-                                    end
-                                    esp.chams.Adornee = player.Character
-                                    esp.chams.Enabled = States.ESP.Enabled
+                                
+                                -- Parenting directly to Character avoids Adornee bugs
+                                if esp.chams.Parent ~= player.Character then
+                                    esp.chams.Parent = player.Character
                                 end
+                                esp.chams.Adornee = nil
+                                esp.chams.Enabled = States.ESP.Enabled
                             else
-                                esp.chams.Enabled = false
+                                if esp.chams then
+                                    esp.chams.Enabled = false
+                                end
                             end
                         end
                     end
