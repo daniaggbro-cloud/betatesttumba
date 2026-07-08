@@ -14,7 +14,7 @@ local LocalPlayer = Services.Players.LocalPlayer
 local States = Mega.States
 if not States.Misc then States.Misc = {} end
 if not States.Misc.AutoHonor then
-    States.Misc.AutoHonor = { Enabled = false, Target = "Teammate and Enemy" }
+    States.Misc.AutoHonor = { Enabled = false, Target = "Teammate and Enemy", Delay = 3 }
 end
 
 local teamChangeConnection = nil
@@ -247,7 +247,7 @@ function Mega.Features.AutoHonor.SetEnabled(state)
                 resetMatchState()
             elseif lastPlayingTeam ~= nil then
                 -- Только если игрок БЫЛ в боевой команде и попал в спектаторы
-                task.wait(3) -- Ждём появления экрана хонора
+                task.wait(States.Misc.AutoHonor.Delay or 3) -- Ждём появления экрана хонора
                 if States.Misc.AutoHonor.Enabled then
                     triggerAutoHonor()
                 end
@@ -261,7 +261,7 @@ function Mega.Features.AutoHonor.SetEnabled(state)
             local function onGuiAdded(gui)
                 if not States.Misc.AutoHonor.Enabled then return end
                 if gui:IsA("ScreenGui") and gui.Name == "MatchEndControls" then
-                    task.wait(2) -- Даём интерфейсу полностью загрузиться
+                    task.wait(States.Misc.AutoHonor.Delay or 3) -- Даём интерфейсу полностью загрузиться
                     if States.Misc.AutoHonor.Enabled then
                         triggerAutoHonor()
                     end
