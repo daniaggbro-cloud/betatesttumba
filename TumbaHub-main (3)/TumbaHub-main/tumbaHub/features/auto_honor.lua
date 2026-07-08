@@ -181,17 +181,13 @@ function Mega.Features.AutoHonor.SetEnabled(state)
             if not States.Misc.AutoHonor.Enabled then return end
             if not LocalPlayer.Team then return end
 
-            local teamName = LocalPlayer.Team.Name
-            if teamName ~= "Spectators" then
-                -- Игрок в боевой команде — запоминаем
-                lastPlayingTeam = LocalPlayer.Team
-            elseif lastPlayingTeam ~= nil then
+            local teamName = LocalPlayer.Team.Name:lower()
+            if teamName:find("spectator") then
                 -- Игрок перешёл в Spectators после игры — даём хонор
                 task.wait(3) -- Ждём появления экрана хонора
                 if States.Misc.AutoHonor.Enabled then
                     triggerAutoHonor()
                 end
-                lastPlayingTeam = nil
             end
         end)
 
