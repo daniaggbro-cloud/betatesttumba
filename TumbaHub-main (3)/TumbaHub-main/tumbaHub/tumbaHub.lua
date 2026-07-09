@@ -232,7 +232,7 @@ function Mega.LoadModule(path)
 
     -- 2. Если локального файла нет, качаем с GitHub
     if not success or not content then
-        local url = repositoryBaseURL .. path
+        local url = repositoryBaseURL .. path .. "?nocache=" .. tostring(tick())
         success, content = pcall(function() return game:HttpGet(url) end)
         -- Защита от ошибок бесплатных экзекьюторов (timeout, 404, пустые файлы)
         if success and (content:find("404: Not Found") or content:lower():match("timeout") or #content < 10) then 
