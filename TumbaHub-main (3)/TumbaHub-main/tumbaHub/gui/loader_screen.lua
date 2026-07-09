@@ -40,7 +40,7 @@ function Loader.Create()
     Status.Font = Enum.Font.GothamBold
     Status.TextSize = 13
     Status.TextXAlignment = Enum.TextXAlignment.Left
-    Status.Text = "TumbaHub v5 | Connecting..."
+    Status.Text = "TumbaHub v5 (TEST) | Connecting..."
     Status.Parent = MainFrame
     
     local Percentage = Instance.new("TextLabel")
