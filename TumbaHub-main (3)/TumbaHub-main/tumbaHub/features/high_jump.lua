@@ -77,8 +77,10 @@ function Mega.Features.HighJump.SetEnabled(state)
                 end
             end)
         else
-            connections.RenderStep = Services.RunService.RenderStepped:Connect(function()
-                if not Services.UserInputService:GetFocusedTextBox() and Services.UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            connections.RenderStep = Services.UserInputService.JumpRequest:Connect(function()
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum and hum.FloorMaterial ~= Enum.Material.Air then
                     jump()
                 end
             end)
