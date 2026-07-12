@@ -346,7 +346,7 @@ Mega.Icons = {
 }
 
 -- Tab System
-local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player2", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot", "tab_ai_chat" }
+local TabKeys = { "tab_home", "tab_updates", "tab_esp", "tab_aim", "tab_player", "tab_combat", "tab_visuals", "tab_farm", "tab_users", "tab_utils", "tab_settings", "tab_bot", "tab_ai_chat" }
 local TabButtons = {}
 Mega.Objects.TabFrames = {}
 
